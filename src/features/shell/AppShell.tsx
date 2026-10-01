@@ -54,7 +54,8 @@ function initials(email: string) {
 export function AppShell() {
   const { user, signOut } = useAuth()
   const apiStatus = useApiStatus()
-  const capabilities = useApi<Capabilities>(apiStatus === 'ready' ? '/api/v1/capabilities' : null)
+  // Capabilities need no database, so they also explain a degraded API (e.g. missing setup).
+  const capabilities = useApi<Capabilities>(apiStatus === 'ready' || apiStatus === 'degraded' ? '/api/v1/capabilities' : null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -93,6 +94,7 @@ export function AppShell() {
   }, [menuOpen, drawerOpen])
 
   const caps = capabilities.data
+  const setupGaps = caps?.setupRequired ?? []
   const gemini = caps?.items.find((i) => i.key === 'gemini')
   const gmail = caps?.items.find((i) => i.key === 'gmail')
 
@@ -182,7 +184,13 @@ export function AppShell() {
               minute.
             </div>
           )}
-          {apiStatus === 'degraded' && (
+          {setupGaps.length > 0 && (
+            <div className="banner banner-danger" role="alert">
+              <strong>Server setup required.</strong> {setupGaps.join(' ')} Data screens will not work until this is set
+              in the API's hosting environment.
+            </div>
+          )}
+          {apiStatus === 'degraded' && setupGaps.length === 0 && (
             <div className="banner banner-danger" role="alert">
               The API is running but reports its database as unavailable. Data screens will fail until it recovers.
             </div>

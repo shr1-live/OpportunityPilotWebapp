@@ -37,6 +37,8 @@ export interface Capabilities {
   environment: string
   databaseProvider: string
   aiMode: string
+  /** Missing server configuration in plain words; empty when setup is complete. */
+  setupRequired: string[]
   items: Capability[]
 }
 

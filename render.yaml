@@ -13,7 +13,7 @@ services:
         value: "22.12.0"
       # The API's public URL. Change if Render gave the API service a different URL.
       - key: VITE_API_BASE_URL
-        value: https://opportunitypilot-api.onrender.com
+        value: https://opportunitypilotwebapi.onrender.com
       # Supabase > Project Settings > API: project URL and publishable (anon) key.
       - key: VITE_SUPABASE_URL
         sync: false
