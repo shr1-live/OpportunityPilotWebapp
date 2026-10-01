@@ -2,10 +2,15 @@ import { createBrowserRouter, Link, RouterProvider } from 'react-router-dom'
 import { ApplicationsPage } from './features/applications/ApplicationsPage'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider'
 import { SignInPage } from './features/auth/SignInPage'
+import { CampaignBuilder } from './features/campaigns/CampaignBuilder'
+import { CampaignsPage } from './features/campaigns/CampaignsPage'
 import { IntegrationsPage } from './features/integrations/IntegrationsPage'
+import { OpportunitiesPage } from './features/opportunities/OpportunitiesPage'
+import { OpportunityDetailPage } from './features/opportunities/OpportunityDetailPage'
 import { OverviewPage } from './features/overview/OverviewPage'
 import { NotBuiltPage } from './features/placeholder/NotBuiltPage'
 import { ProfilesPage } from './features/profiles/ProfilesPage'
+import { ResearchProgressPage } from './features/research/ResearchProgressPage'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { AppShell } from './features/shell/AppShell'
 
@@ -30,35 +35,20 @@ function NotFound() {
   )
 }
 
-// A data router is required: ProfilesPage uses useBlocker to guard unsaved edits.
+// A data router is required: ProfilesPage and CampaignBuilder use useBlocker to guard unsaved edits.
 const router = createBrowserRouter([
   {
     element: <AuthGate />,
     children: [
       { index: true, element: <OverviewPage />, handle: { title: 'Overview' } },
       { path: 'applications', element: <ApplicationsPage />, handle: { title: 'Applications' } },
-      {
-        path: 'campaigns',
-        handle: { title: 'Campaigns' },
-        element: (
-          <NotBuiltPage
-            heading="Campaigns"
-            milestone="M2"
-            description="Describe a goal, confirm the parsed criteria and sources, then queue a research run."
-          />
-        ),
-      },
-      {
-        path: 'opportunities',
-        handle: { title: 'Opportunities' },
-        element: (
-          <NotBuiltPage
-            heading="Opportunities"
-            milestone="M3"
-            description="Matches from research runs, each with its fit score and the evidence behind it."
-          />
-        ),
-      },
+      { path: 'campaigns', element: <CampaignsPage />, handle: { title: 'Campaigns' } },
+      { path: 'campaigns/new', element: <CampaignBuilder />, handle: { title: 'New campaign' } },
+      { path: 'campaigns/:id/edit', element: <CampaignBuilder />, handle: { title: 'Campaign builder' } },
+      { path: 'campaigns/:id/opportunities', element: <OpportunitiesPage />, handle: { title: 'Opportunities' } },
+      { path: 'research/:jobId', element: <ResearchProgressPage />, handle: { title: 'Research run' } },
+      { path: 'opportunities', element: <OpportunitiesPage />, handle: { title: 'Opportunities' } },
+      { path: 'opportunities/:id', element: <OpportunityDetailPage />, handle: { title: 'Opportunity' } },
       {
         path: 'outreach',
         handle: { title: 'Outreach' },

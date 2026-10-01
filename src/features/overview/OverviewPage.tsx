@@ -12,6 +12,8 @@ export function OverviewPage() {
   const profiles = overview.data?.profiles
   const applied = overview.data?.applied
   const needsManual = overview.data?.needsManual
+  const campaigns = overview.data?.campaigns
+  const shortlisted = overview.data?.shortlisted
   const pending = overview.loading && !overview.data
   const hasProfile = (profiles ?? 0) > 0
 
@@ -22,7 +24,7 @@ export function OverviewPage() {
           <h2 className="page-title">Your opportunity workspace</h2>
           <p className="page-sub">
             {hasProfile
-              ? 'Your profiles are ready for campaigns. Research arrives in a later milestone; nothing is searched yet.'
+              ? 'Your profiles are ready for campaigns. Nothing is researched until you queue a run.'
               : 'Nothing has been researched yet. Start by describing what you offer — you can stop after any step.'}
           </p>
         </div>
@@ -62,14 +64,17 @@ export function OverviewPage() {
             </Link>
           </div>
         </li>
-        <li className="card step">
+        <li className={`card step ${campaigns ? 'step-done' : ''}`}>
           <span className="step-num" aria-hidden="true">3</span>
           <div className="stack-2">
             <div className="row">
               <h3 className="section-heading">Start a campaign</h3>
-              <span className="badge badge-neutral">Not built yet · M2</span>
+              {(campaigns ?? 0) > 0 && <span className="badge badge-success">Done</span>}
             </div>
-            <p className="muted-small">Describe a goal, confirm the parsed criteria, then queue the run.</p>
+            <p className="muted-small">Describe a goal, enter your criteria and sources, then queue the run.</p>
+            <Link className={`btn ${hasProfile && !campaigns ? 'btn-primary' : 'btn-secondary'} btn-sm`} to="/campaigns/new">
+              New campaign
+            </Link>
           </div>
         </li>
       </ol>
@@ -79,6 +84,16 @@ export function OverviewPage() {
           <div className="stat-label">Profiles</div>
           <div className="stat-value op-numeric">{profiles ?? '—'}</div>
           <div className="muted-small">{pending ? 'Loading…' : 'Owned by your account'}</div>
+        </section>
+        <section className="card stat">
+          <div className="stat-label">Campaigns</div>
+          <div className="stat-value op-numeric">{campaigns ?? '—'}</div>
+          <div className="muted-small">{pending ? 'Loading…' : <Link to="/campaigns">Research setups you own</Link>}</div>
+        </section>
+        <section className="card stat">
+          <div className="stat-label">Shortlisted</div>
+          <div className="stat-value op-numeric">{shortlisted ?? '—'}</div>
+          <div className="muted-small">{pending ? 'Loading…' : <Link to="/opportunities">Opportunities you picked</Link>}</div>
         </section>
         <section className="card stat">
           <div className="stat-label">Applications sent</div>

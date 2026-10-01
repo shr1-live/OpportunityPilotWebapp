@@ -28,14 +28,24 @@ const STEPS: { title: string; code: string; note?: string }[] = [
     note: 'Log in in the window that opens; repeat with naukri.',
   },
   {
+    title: 'Collect postings for a campaign',
+    code: 'npm run agent -- campaigns\nnpm run agent -- collect linkedin --campaign <id>',
+    note: 'Searches with the campaign’s keywords and sends what it reads for research. It applies to nothing.',
+  },
+  {
+    title: 'Shortlist the best matches',
+    code: '# In this app: Campaigns → your campaign → Opportunities → Shortlist',
+    note: 'Research scores every posting with evidence. Only jobs you shortlist are applied to.',
+  },
+  {
     title: 'Do a dry run',
-    code: 'npm run agent -- run linkedin',
-    note: 'Dry run: fills forms, does not submit.',
+    code: 'npm run agent -- apply linkedin',
+    note: 'Fills the forms of your shortlisted jobs, does not submit.',
   },
   {
     title: 'Send real applications',
-    code: 'npm run agent -- run linkedin --submit',
-    note: 'Submits the applications for real. Check a dry run first.',
+    code: 'npm run agent -- apply linkedin --submit',
+    note: 'Submits your shortlisted jobs for real. Check a dry run first.',
   },
 ]
 

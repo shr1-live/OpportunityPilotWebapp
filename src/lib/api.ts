@@ -32,7 +32,8 @@ interface ProblemDetails {
   errors?: Record<string, string[]>
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** Sends a request with the auth headers and turns failures into ApiError / ApiUnreachableError. */
+async function send(path: string, init: RequestInit): Promise<Response> {
   let response: Response
   try {
     response = await fetch(`${config.apiBaseUrl}${path}`, {
@@ -64,6 +65,16 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       problem.errors,
     )
   }
+  return response
+}
 
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await send(path, init)
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T)
+}
+
+/** For non-JSON responses such as CSV exports: the body as a blob plus the Content-Disposition header. */
+export async function apiDownload(path: string, accept = '*/*'): Promise<{ blob: Blob; disposition: string | null }> {
+  const response = await send(path, { headers: { Accept: accept } })
+  return { blob: await response.blob(), disposition: response.headers.get('Content-Disposition') }
 }

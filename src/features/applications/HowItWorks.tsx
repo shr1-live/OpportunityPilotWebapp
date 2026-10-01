@@ -5,39 +5,38 @@ const SUBMIT = <code className="nowrap">--submit</code>
 
 const FLOW: { who: string; where: string; what: ReactNode; tone: 'local' | 'site' | 'cloud' }[] = [
   {
-    who: 'You',
+    who: 'Campaign',
+    where: 'This app',
+    what: 'You set the criteria: keywords, required skills, locations, your experience.',
+    tone: 'cloud',
+  },
+  {
+    who: 'Agent collects',
     where: 'Your computer',
-    what: 'Write your search and saved answers in config.json, and log in to LinkedIn or Naukri once.',
+    what: 'Searches LinkedIn or Naukri in your own logged-in browser and sends the postings it reads. It applies to nothing.',
     tone: 'local',
   },
   {
-    who: 'Apply agent',
-    where: 'Your computer',
-    what: 'Opens your own browser, searches jobs and skips any that fail your filters or were already handled.',
-    tone: 'local',
-  },
-  {
-    who: 'LinkedIn · Naukri',
-    where: 'Your logged-in session',
-    what: <>Each application is filled from your saved answers. A dry run stops before sending; {SUBMIT} sends it.</>,
-    tone: 'site',
-  },
-  {
-    who: 'OpportunityPilot API',
+    who: 'Research',
     where: 'Server',
-    what: 'Receives each result signed with your agent key. It never sees your password or browser session.',
+    what: 'Scores each posting against your criteria, with the evidence and what is still unknown.',
     tone: 'cloud',
   },
   {
-    who: 'This page',
-    where: 'Web app',
-    what: 'Shows what was applied, skipped or needs you, with a link to every job.',
+    who: 'You shortlist',
+    where: 'This app',
+    what: 'Pick the matches worth applying to on the Opportunities page.',
     tone: 'cloud',
+  },
+  {
+    who: 'Agent applies',
+    where: 'Your logged-in session',
+    what: <>Only shortlisted jobs, filled from your saved answers. A dry run stops before sending; {SUBMIT} sends it.</>,
+    tone: 'site',
   },
 ]
 
 const PATH: { step: string; outcome: string; tone: string; when: ReactNode }[] = [
-  { step: 'Job found in search', outcome: 'Skipped', tone: 'neutral', when: 'title or company fails your filters' },
   { step: 'Job page opened', outcome: 'Skipped', tone: 'neutral', when: 'already applied, or it applies on the company site' },
   { step: 'Form filled step by step', outcome: 'Needs you', tone: 'warning', when: 'a required question your answers do not cover — nothing is sent' },
   { step: 'Last step reached', outcome: 'Dry run · not submitted', tone: 'primary', when: <>running without {SUBMIT}</> },
@@ -53,7 +52,7 @@ export function HowItWorks() {
         How the apply agent works
       </h3>
 
-      <ol className="plain-list flow" aria-label="From your saved answers to this page">
+      <ol className="plain-list flow" aria-label="From a campaign to an application">
         {FLOW.map((n, i) => (
           <li key={n.who} className={`flow-node flow-${n.tone}`}>
             <span className="flow-num" aria-hidden="true">
@@ -73,12 +72,12 @@ export function HowItWorks() {
           <span className="flow-swatch flow-site" aria-hidden="true" /> The job site, in your own session
         </li>
         <li>
-          <span className="flow-swatch flow-cloud" aria-hidden="true" /> OpportunityPilot
+          <span className="flow-swatch flow-cloud" aria-hidden="true" /> OpportunityPilot (this app and its server)
         </li>
       </ul>
 
       <div className="stack-2">
-        <h4 className="section-heading">What happens to each job</h4>
+        <h4 className="section-heading">What happens to each shortlisted job</h4>
         <ol className="plain-list decision">
           {PATH.map((p, i) => (
             <li key={`${p.outcome}-${i}`} className="decision-row">
