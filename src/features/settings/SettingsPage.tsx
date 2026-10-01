@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useShell } from '../shell/ShellContext'
 
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-const AUTH_LABEL = { supabase: 'Supabase', dev: 'Development sign-in (local only)', unconfigured: 'Not configured' }
+const AUTH_LABEL = { supabase: 'Supabase', dev: 'Development sign-in (local only)', guest: 'Guest (demo mode)' }
 
 /** Read-only in this build: nothing here is saved server-side yet, so no control pretends to be. */
 export function SettingsPage() {

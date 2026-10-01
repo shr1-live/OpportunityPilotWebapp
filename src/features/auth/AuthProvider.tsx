@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { configureApiAuth } from '../../lib/api'
+import { api, configureApiAuth } from '../../lib/api'
 import { config, supabaseConfigured } from '../../lib/config'
 import { supabase } from '../../lib/supabase'
 
-export type AuthMode = 'supabase' | 'dev' | 'unconfigured'
+/** guest: demo mode while Supabase is not configured — the API issues a random, signed guest identity. */
+export type AuthMode = 'supabase' | 'dev' | 'guest'
 
 interface AuthState {
   mode: AuthMode
@@ -13,23 +14,35 @@ interface AuthState {
   sessionExpired: boolean
   signOut: () => Promise<void>
   devSignIn: (name: string) => void
+  guestSignIn: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
 const DEV_USER_KEY = 'op.devUser'
+const GUEST_TOKEN_KEY = 'op.guestToken'
 
-function readDevUser(): string | null {
+function read(key: string): string | null {
   try {
-    return localStorage.getItem(DEV_USER_KEY)
+    return localStorage.getItem(key)
   } catch {
     return null
   }
 }
 
+function write(key: string, value: string | null) {
+  try {
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
+  } catch {
+    /* storage unavailable; the session lasts for this tab only */
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const mode: AuthMode = supabaseConfigured ? 'supabase' : config.devAuth ? 'dev' : 'unconfigured'
+  const mode: AuthMode = supabaseConfigured ? 'supabase' : config.devAuth ? 'dev' : 'guest'
   const [session, setSession] = useState<Session | null>(null)
-  const [devUser, setDevUser] = useState<string | null>(mode === 'dev' ? readDevUser() : null)
+  const [devUser, setDevUser] = useState<string | null>(mode === 'dev' ? read(DEV_USER_KEY) : null)
+  const [guestToken, setGuestToken] = useState<string | null>(mode === 'guest' ? read(GUEST_TOKEN_KEY) : null)
   const [ready, setReady] = useState(mode !== 'supabase')
   const [sessionExpired, setSessionExpired] = useState(false)
 
@@ -46,12 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthState>(() => {
     const signOut = async () => {
       if (supabase) await supabase.auth.signOut()
-      try {
-        localStorage.removeItem(DEV_USER_KEY)
-      } catch {
-        /* storage unavailable */
-      }
+      write(DEV_USER_KEY, null)
+      write(GUEST_TOKEN_KEY, null)
       setDevUser(null)
+      setGuestToken(null)
     }
 
     configureApiAuth(
@@ -61,10 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {}
         }
         if (mode === 'dev' && devUser) return { 'X-Dev-User': devUser }
+        if (mode === 'guest' && guestToken) return { Authorization: `Bearer ${guestToken}` }
         return {}
       },
       () => {
-        // The API rejected the token: drop the session and say why on the sign-in screen.
+        // The API rejected the credentials: drop them and say why on the sign-in screen.
         setSessionExpired(true)
         void signOut()
       },
@@ -75,7 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? { id: session.user.id, email: session.user.email ?? 'Signed in' }
         : mode === 'dev' && devUser
           ? { email: devUser }
-          : null
+          : mode === 'guest' && guestToken
+            ? { email: 'Guest' }
+            : null
 
     return {
       mode,
@@ -84,16 +98,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionExpired,
       signOut,
       devSignIn: (name: string) => {
-        try {
-          localStorage.setItem(DEV_USER_KEY, name)
-        } catch {
-          /* storage unavailable; session lasts for this tab only */
-        }
+        write(DEV_USER_KEY, name)
         setSessionExpired(false)
         setDevUser(name)
       },
+      guestSignIn: async () => {
+        const { token } = await api<{ token: string; expiresAt: string }>('/api/v1/auth/guest', { method: 'POST' })
+        write(GUEST_TOKEN_KEY, token)
+        setSessionExpired(false)
+        setGuestToken(token)
+      },
     }
-  }, [mode, ready, session, devUser, sessionExpired])
+  }, [mode, ready, session, devUser, guestToken, sessionExpired])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

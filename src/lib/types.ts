@@ -39,6 +39,10 @@ export interface Capabilities {
   aiMode: string
   /** Missing server configuration in plain words; empty when setup is complete. */
   setupRequired: string[]
+  /** Demo mode: no sign-in provider, visitors continue as random guests. */
+  guestSignIn: boolean
+  /** Demo mode: no database, data is kept in memory until the server restarts. */
+  temporaryStorage: boolean
   items: Capability[]
 }
 

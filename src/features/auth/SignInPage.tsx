@@ -1,14 +1,34 @@
 import { useState, type FormEvent } from 'react'
+import { ErrorNotice } from '../../components/ErrorNotice'
+import { ApiError } from '../../lib/api'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 
 export function SignInPage() {
-  const { mode, sessionExpired, devSignIn } = useAuth()
+  const { mode, sessionExpired, devSignIn, guestSignIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [creating, setCreating] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
+
+  const [guestError, setGuestError] = useState<Error>()
+
+  async function continueAsGuest() {
+    setBusy(true)
+    setGuestError(undefined)
+    try {
+      await guestSignIn()
+    } catch (e) {
+      setGuestError(
+        e instanceof ApiError && e.status === 404
+          ? new Error('Guest sign-in is switched off on this server because real sign-in is configured. Set the web app’s Supabase values and redeploy.')
+          : (e as Error),
+      )
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -32,19 +52,28 @@ export function SignInPage() {
     <main className="signin">
       <div className="signin-card">
         <div className="signin-brand">OpportunityPilot</div>
-        <h1 className="signin-title">{creating ? 'Create your account' : 'Sign in'}</h1>
+        <h1 className="signin-title">{mode === 'guest' ? 'Try it as a guest' : creating ? 'Create your account' : 'Sign in'}</h1>
 
         {sessionExpired && (
           <p className="notice notice-warning" role="status">
-            Your session expired. Sign in again to continue.
+            {mode === 'guest'
+              ? 'Your guest session ended — the demo server restarted, which also clears its temporary data.'
+              : 'Your session expired. Sign in again to continue.'}
           </p>
         )}
 
-        {mode === 'unconfigured' ? (
-          <div className="notice notice-warning" role="alert">
-            <strong>Sign-in setup required.</strong> Set <code>VITE_SUPABASE_URL</code> and{' '}
-            <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>, or for local development only set{' '}
-            <code>VITE_DEV_AUTH=true</code>. See the README.
+        {mode === 'guest' ? (
+          <div className="stack-3">
+            <p className="notice notice-neutral">
+              <strong>Demo mode.</strong> Accounts are not set up yet, so you get a private guest space in this browser.
+              Other visitors cannot see it. Data is temporary: it is cleared when the server restarts, which on free
+              hosting happens after a few idle minutes.
+            </p>
+            {guestError && <ErrorNotice error={guestError} />}
+            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void continueAsGuest()}>
+              {busy ? 'Starting…' : 'Continue as guest'}
+            </button>
+            <p className="hint">The first visit can take up to a minute while the server wakes up.</p>
           </div>
         ) : (
           <form onSubmit={submit} className="stack-3">

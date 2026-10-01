@@ -94,7 +94,6 @@ export function AppShell() {
   }, [menuOpen, drawerOpen])
 
   const caps = capabilities.data
-  const setupGaps = caps?.setupRequired ?? []
   const gemini = caps?.items.find((i) => i.key === 'gemini')
   const gmail = caps?.items.find((i) => i.key === 'gmail')
 
@@ -184,13 +183,16 @@ export function AppShell() {
               minute.
             </div>
           )}
-          {setupGaps.length > 0 && (
-            <div className="banner banner-danger" role="alert">
-              <strong>Server setup required.</strong> {setupGaps.join(' ')} Data screens will not work until this is set
-              in the API's hosting environment.
+          {(caps?.temporaryStorage || caps?.guestSignIn) && (
+            <div className="banner" role="status">
+              <strong>Demo mode.</strong>{' '}
+              {caps.temporaryStorage
+                ? 'Your data is temporary and is cleared when the server restarts.'
+                : 'Data is stored, but sign-in is guest-only.'}{' '}
+              {caps.guestSignIn && 'You are signed in as a private guest.'}
             </div>
           )}
-          {apiStatus === 'degraded' && setupGaps.length === 0 && (
+          {apiStatus === 'degraded' && (
             <div className="banner banner-danger" role="alert">
               The API is running but reports its database as unavailable. Data screens will fail until it recovers.
             </div>
