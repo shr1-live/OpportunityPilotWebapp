@@ -1,4 +1,5 @@
 import { createBrowserRouter, Link, RouterProvider } from 'react-router-dom'
+import { ApplicationsPage } from './features/applications/ApplicationsPage'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider'
 import { SignInPage } from './features/auth/SignInPage'
 import { IntegrationsPage } from './features/integrations/IntegrationsPage'
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
     element: <AuthGate />,
     children: [
       { index: true, element: <OverviewPage />, handle: { title: 'Overview' } },
+      { path: 'applications', element: <ApplicationsPage />, handle: { title: 'Applications' } },
       {
         path: 'campaigns',
         handle: { title: 'Campaigns' },

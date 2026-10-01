@@ -10,6 +10,9 @@ export function OverviewPage() {
   const overview = useApi<Overview>('/api/v1/overview')
   const { capabilities } = useShell()
   const profiles = overview.data?.profiles
+  const applied = overview.data?.applied
+  const needsManual = overview.data?.needsManual
+  const pending = overview.loading && !overview.data
   const hasProfile = (profiles ?? 0) > 0
 
   return (
@@ -47,12 +50,15 @@ export function OverviewPage() {
           <span className="step-num" aria-hidden="true">2</span>
           <div className="stack-2">
             <div className="row">
-              <h3 className="section-heading">Connect sources</h3>
-              <span className="badge badge-neutral">Not built yet · M2–M3</span>
+              <h3 className="section-heading">Set up the apply agent</h3>
+              <span className="badge badge-primary">Beta</span>
             </div>
-            <p className="muted-small">CSV import, public company URLs and permitted feeds. See what each source can do today.</p>
-            <Link className="btn btn-secondary btn-sm" to="/integrations">
-              View sources
+            <p className="muted-small">
+              Apply to LinkedIn and Naukri jobs from your own logged-in browser, using only your saved answers. It starts
+              in dry-run mode and submits nothing until you say so.
+            </p>
+            <Link className="btn btn-secondary btn-sm" to="/applications">
+              Set up agent
             </Link>
           </div>
         </li>
@@ -72,17 +78,19 @@ export function OverviewPage() {
         <section className="card stat">
           <div className="stat-label">Profiles</div>
           <div className="stat-value op-numeric">{profiles ?? '—'}</div>
-          <div className="muted-small">{overview.loading && profiles === undefined ? 'Loading…' : 'Owned by your account'}</div>
+          <div className="muted-small">{pending ? 'Loading…' : 'Owned by your account'}</div>
         </section>
         <section className="card stat">
-          <div className="stat-label">Opportunities</div>
-          <div className="stat-value stat-empty">None yet</div>
-          <div className="muted-small">Matches appear with their evidence once research exists.</div>
+          <div className="stat-label">Applications sent</div>
+          <div className="stat-value op-numeric">{applied ?? '—'}</div>
+          <div className="muted-small">
+            {pending ? 'Loading…' : <Link to="/applications">Via the local agent</Link>}
+          </div>
         </section>
         <section className="card stat">
-          <div className="stat-label">Drafts awaiting review</div>
-          <div className="stat-value stat-empty">None yet</div>
-          <div className="muted-small">Outreach always needs your approval before it can be sent.</div>
+          <div className="stat-label">Need your input</div>
+          <div className={`stat-value op-numeric ${needsManual ? 'text-warning' : ''}`}>{needsManual ?? '—'}</div>
+          <div className="muted-small">{pending ? 'Loading…' : 'Questions your saved answers don’t cover'}</div>
         </section>
       </div>
 
@@ -97,7 +105,7 @@ export function OverviewPage() {
           </div>
           <ul className="plain-list cap-mini">
             {capabilities.items
-              .filter((c) => ['database', 'gemini', 'csv-import', 'gmail'].includes(c.key))
+              .filter((c) => ['database', 'auth', 'linkedin', 'naukri'].includes(c.key))
               .map((c) => (
                 <li key={c.key} className="row">
                   <span>{c.name}</span>

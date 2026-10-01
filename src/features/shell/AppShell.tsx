@@ -8,6 +8,7 @@ import { ShellContext } from './ShellContext'
 
 const NAV = [
   { to: '/', label: 'Overview', end: true },
+  { to: '/applications', label: 'Applications' },
   { to: '/campaigns', label: 'Campaigns' },
   { to: '/opportunities', label: 'Opportunities' },
   { to: '/outreach', label: 'Outreach' },

@@ -7,6 +7,7 @@ const LABELS: Record<CapabilityStatus, { text: string; tone: string }> = {
   Disabled: { text: 'Disabled', tone: 'neutral' },
   ManualHandoff: { text: 'Manual handoff', tone: 'neutral' },
   NotBuilt: { text: 'Not built yet', tone: 'neutral' },
+  LocalAgent: { text: 'Local agent · beta', tone: 'primary' },
 }
 
 /** Status colour is always paired with words. */

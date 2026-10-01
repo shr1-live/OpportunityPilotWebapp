@@ -96,7 +96,8 @@ p { margin: 0; }
   position: sticky; top: 0; z-index: 10;
 }
 .topbar-title { font-size: var(--op-text-screen); font-weight: 600; }
-.menu-toggle { display: none; }
+/* Scoped so it outranks .btn, which is declared later. */
+.topbar .menu-toggle { display: none; }
 
 .account { position: relative; }
 .avatar {
@@ -274,6 +275,98 @@ p { margin: 0; }
   padding: var(--op-space-3);
 }
 
+/* ---------- Applications ---------- */
+
+.filters { display: flex; flex-wrap: wrap; gap: var(--op-space-3); }
+.filters .field { flex: 0 1 200px; }
+
+.table-card { padding: 0; overflow: hidden; }
+/* Wide tables scroll inside the card so the page itself never scrolls sideways. */
+.table-scroll { overflow-x: auto; }
+.table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: var(--op-text-table); }
+.table th {
+  text-align: left; font-weight: 500; color: var(--op-muted); font-size: var(--op-text-meta);
+  background: var(--op-surface-muted); border-bottom: 1px solid var(--op-border);
+  padding: var(--op-space-2) var(--op-space-4); white-space: nowrap;
+}
+.table td { padding: var(--op-space-3) var(--op-space-4); border-top: 1px solid var(--op-border-subtle); vertical-align: top; }
+.table tbody tr:first-child td { border-top: 0; }
+.table-role { min-width: 220px; font-weight: 500; }
+.table-role .muted-small { font-weight: 400; }
+.table-when { white-space: nowrap; }
+
+.key-list li { padding: var(--op-space-3) 0; border-top: 1px solid var(--op-border-subtle); }
+.key-list li:first-child { border-top: 0; padding-top: 0; }
+.key-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--op-space-3); max-width: 520px; }
+.key-form .field { flex: 1 1 220px; }
+.key-reveal { flex-direction: column; align-items: stretch; }
+.key-reveal > .btn { align-self: flex-start; }
+/* The whole key must be visible at once to be copied by hand. */
+.key-reveal pre { white-space: pre-wrap; word-break: break-all; }
+
+.setup-steps { margin: 0; padding-left: var(--op-space-5); }
+.setup-steps > li + li { margin-top: var(--op-space-4); }
+.setup-step-title { font-weight: 500; }
+.code-block { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--op-space-2); }
+.code-block pre {
+  flex: 1 1 260px; min-width: 0; margin: 0; overflow-x: auto;
+  background: var(--op-surface-muted); color: var(--op-text);
+  border: 1px solid var(--op-border); border-radius: var(--op-radius-chip);
+  padding: var(--op-space-2) var(--op-space-3); font-size: var(--op-text-meta); line-height: 1.6;
+}
+.copy { display: inline-flex; flex-direction: column; gap: 2px; max-width: 220px; }
+
+/* ---------- How the apply agent works ---------- */
+
+.flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--op-space-6); }
+.flow-node {
+  position: relative; display: flex; flex-direction: column; gap: var(--op-space-1);
+  padding: var(--op-space-4); border-radius: var(--op-radius); border: 1px solid var(--op-border);
+  border-top-width: 4px;
+}
+.flow-local { background: var(--op-primary-tint-strong); border-top-color: var(--op-primary); }
+.flow-site { background: var(--op-neutral-tint); border-top-color: var(--op-on-neutral-tint); }
+.flow-cloud { background: var(--op-surface); border-top-color: var(--op-navigation); }
+/* Connector to the next node: right on wide screens, down when stacked. */
+.flow-node:not(:last-child)::after {
+  content: '→'; position: absolute; right: calc(-1 * var(--op-space-6) + 4px); top: 50%;
+  transform: translateY(-50%); color: var(--op-muted); font-weight: 600; font-size: 18px;
+}
+.flow-num {
+  width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--op-surface); border: 1px solid var(--op-border-strong); font-size: var(--op-text-micro); font-weight: 600;
+}
+.flow-who { font-weight: 600; }
+.nowrap { white-space: nowrap; }
+.flow-where { font-size: var(--op-text-micro); color: var(--op-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.flow-what { font-size: var(--op-text-meta); color: var(--op-text); }
+.flow-legend { display: flex; flex-wrap: wrap; gap: var(--op-space-2) var(--op-space-5); color: var(--op-muted); }
+.flow-legend li { display: flex; align-items: center; gap: var(--op-space-2); }
+.flow-swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--op-border); display: inline-block; }
+.flow-swatch.flow-local { border-top: 4px solid var(--op-primary); }
+.flow-swatch.flow-site { border-top: 4px solid var(--op-on-neutral-tint); }
+.flow-swatch.flow-cloud { border-top: 4px solid var(--op-navigation); }
+
+.decision { border: 1px solid var(--op-border); border-radius: var(--op-radius); overflow: hidden; }
+.decision-row {
+  display: grid; grid-template-columns: minmax(160px, 220px) 24px minmax(0, 1fr); align-items: center;
+  gap: var(--op-space-2); padding: var(--op-space-2) var(--op-space-4); border-top: 1px solid var(--op-border-subtle);
+}
+.decision-row:first-child { border-top: 0; }
+.decision-step { font-weight: 500; }
+.decision-arrow { color: var(--op-muted); text-align: center; }
+
+@media (max-width: 1080px) {
+  .flow { grid-template-columns: 1fr; gap: var(--op-space-5); }
+  .flow-node:not(:last-child)::after {
+    content: '↓'; right: auto; left: 50%; top: auto; bottom: calc(-1 * var(--op-space-5) + 2px); transform: translateX(-50%);
+  }
+}
+@media (max-width: 600px) {
+  .decision-row { grid-template-columns: 1fr; gap: 2px; }
+  .decision-arrow { display: none; }
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1080px) {
@@ -286,7 +379,7 @@ p { margin: 0; }
     transition: transform 0.2s ease;
   }
   .rail-open { transform: none; }
-  .menu-toggle { display: inline-flex; }
+  .topbar .menu-toggle { display: inline-flex; }
   .topbar { padding: 0 var(--op-space-4); }
   .topbar .pill { display: none; }
   .content { padding: var(--op-space-4); }

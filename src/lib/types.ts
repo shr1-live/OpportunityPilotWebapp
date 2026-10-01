@@ -21,7 +21,14 @@ export interface Profile extends ProfileSummary {
   createdAt: string
 }
 
-export type CapabilityStatus = 'Ready' | 'Configured' | 'NotConfigured' | 'Disabled' | 'ManualHandoff' | 'NotBuilt'
+export type CapabilityStatus =
+  | 'Ready'
+  | 'Configured'
+  | 'NotConfigured'
+  | 'Disabled'
+  | 'ManualHandoff'
+  | 'NotBuilt'
+  | 'LocalAgent'
 
 export interface Capability {
   key: string
@@ -48,4 +55,54 @@ export interface Capabilities {
 
 export interface Overview {
   profiles: number
+  applied: number
+  needsManual: number
+}
+
+export type ApplicationPlatform = 'LinkedIn' | 'Naukri' | 'Instahyre'
+
+/** DryRun: the form was filled but not submitted. NeedsManual: a question the saved answers do not cover. */
+export type ApplicationStatus = 'Applied' | 'DryRun' | 'NeedsManual' | 'Skipped' | 'Failed'
+
+export interface ApplicationItem {
+  id: string
+  platform: ApplicationPlatform
+  externalJobId: string
+  jobUrl: string
+  title: string
+  company: string
+  location: string | null
+  status: ApplicationStatus
+  detail: string | null
+  occurredAt: string
+  updatedAt: string
+}
+
+export interface ApplicationPage {
+  total: number
+  items: ApplicationItem[]
+}
+
+export interface ApplicationSummary {
+  applied: number
+  appliedLast7Days: number
+  needsManual: number
+  dryRun: number
+  skipped: number
+  failed: number
+  lastActivityAt: string | null
+}
+
+export interface AgentKey {
+  id: string
+  name: string
+  /** First characters of the key, enough to recognise it. The full key is never returned again. */
+  prefix: string
+  createdAt: string
+  lastUsedAt: string | null
+}
+
+/** Returned once, on creation only. */
+export interface CreatedAgentKey extends AgentKey {
+  key: string
 }
