@@ -1,0 +1,39 @@
+# Render Blueprint — OpportunityPilot web app (static site).
+# Dashboard: New > Blueprint > pick this repo. VITE_ values are compiled into the bundle at
+# build time, so changing one needs a redeploy. Only public values belong here.
+services:
+  - type: web
+    name: opportunitypilot-web
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22.12.0"
+      # The API's public URL. Change if Render gave the API service a different URL.
+      - key: VITE_API_BASE_URL
+        value: https://opportunitypilot-api.onrender.com
+      # Supabase > Project Settings > API: project URL and publishable (anon) key.
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+    routes:
+      # Client-side routing: every unknown path serves the SPA.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable

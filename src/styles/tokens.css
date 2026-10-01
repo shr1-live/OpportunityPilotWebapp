@@ -1,0 +1,95 @@
+/* OpportunityPilot — design tokens
+ * Drop this in as the single source of truth for the React/Vite frontend.
+ * Contrast ratios noted below are measured against the surface each token
+ * is used on, not assumed.
+ */
+
+:root {
+  /* Surfaces */
+  --op-background: #f6f8fa;   /* app canvas */
+  --op-surface: #ffffff;      /* cards, tables, panels */
+  --op-surface-muted: #fafbfc;/* table headers, inert strips */
+  --op-navigation: #142235;   /* left rail only */
+  --op-navigation-active: #1d3049;
+  --op-navigation-text: #9fb0c4;   /* 7.26:1 on --op-navigation */
+  --op-navigation-divider: #23374f;
+
+  /* Text */
+  --op-text: #172b42;
+  --op-muted: #536579;        /* 5.99:1 on white */
+  --op-text-inverse: #ffffff;
+
+  /* Lines */
+  --op-border: #dce4ec;
+  --op-border-strong: #c8d4e0;  /* form controls */
+  --op-border-subtle: #f0f4f7;  /* row dividers */
+
+  /* Action */
+  --op-primary: #087f72;        /* 4.90:1 on white, and white text on it */
+  --op-primary-hover: #06685e;
+  --op-primary-tint: #eaf5f3;
+  --op-primary-tint-strong: #f2faf8;
+  --op-on-primary-tint: #0a5d54;
+
+  /* Status — every one of these is always paired with words, never used alone */
+  --op-success: #187344;        /* 5.89:1 on white */
+  --op-success-tint: #e7f3ec;
+  --op-on-success-tint: #146237;
+
+  --op-warning: #916000;        /* 5.42:1 on white */
+  --op-warning-tint: #fdf8ec;
+  --op-warning-border: #f0d9a8;
+  --op-on-warning-tint: #7a5200;
+
+  --op-danger: #b32c35;         /* 6.31:1 on white */
+  --op-danger-tint: #fbeced;
+  --op-on-danger-tint: #98252d;
+
+  --op-neutral-tint: #eef2f6;
+  --op-on-neutral-tint: #3d4f63;
+
+  /* AI-generated text is visually distinct from verified evidence.
+     Never reuse these for anything sourced. */
+  --op-ai-surface: #f4f2fb;
+  --op-ai-border: #d8d2ee;
+  --op-ai-text: #2f2a4d;
+  --op-ai-badge: #4b3f86;
+
+  /* Shape */
+  --op-radius: 10px;        /* cards, panels */
+  --op-radius-control: 9px; /* buttons, inputs */
+  --op-radius-chip: 6px;
+
+  /* Type */
+  --op-font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --op-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --op-text-page: 24px;     /* 600, -0.02em */
+  --op-text-screen: 16.5px; /* 600 */
+  --op-text-section: 13.5px;/* 600 */
+  --op-text-body: 13.5px;
+  --op-text-table: 12.5px;
+  --op-text-meta: 12px;
+  --op-text-micro: 11.5px;
+
+  /* Spacing — 4 / 8 scale */
+  --op-space-1: 4px;
+  --op-space-2: 8px;
+  --op-space-3: 12px;
+  --op-space-4: 16px;
+  --op-space-5: 20px;
+  --op-space-6: 24px;
+  --op-space-8: 32px;
+
+  /* Layout */
+  --op-nav-width: 232px;
+  --op-header-height: 60px;
+  --op-touch-target: 44px;  /* minimum on touch surfaces */
+}
+
+/* Numbers that are compared down a column are tabular. */
+.op-numeric { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
