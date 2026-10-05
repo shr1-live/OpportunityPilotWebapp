@@ -122,6 +122,7 @@ None. There is no `paths`/`baseUrl` in `tsconfig.app.json` and no `resolve.alias
 ### Git workflow
 
 - Every feature or change goes on a **new branch** (`feature/`, `fix/`, `docs/`, `chore/` + name); never commit to `main`. Run this repo's checks, commit, then from the workspace root run `bash tools/pr.sh <repo> "<title>" <body-file>`: it pushes, raises a PR to `main` and **squash-merges** it (auto-merge authorised by the user *for now*; if withdrawn, pass `--no-merge` and wait), deletes the branch and pulls `main`. `main` deploys automatically, so a merge is a release.
+- **Always push**: never leave changes uncommitted or unpushed. At the end of every task, and before stopping for any reason (credit limit, session end, waiting for the user), run `git status` and push everything: finished work → PR merged; unfinished work → committed on its branch, pushed, PR raised with `--no-merge` titled `WIP: …`, and listed in the workspace `PENDING_TASKS.md`. Delete throwaway `scratch-*` files instead of leaving them untracked.
 
 ### Do not
 
