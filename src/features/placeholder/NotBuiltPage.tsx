@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { PageHeader } from '../../components/PageHeader'
 
 interface Props {
   heading: string
@@ -10,12 +11,7 @@ interface Props {
 export function NotBuiltPage({ heading, milestone, description }: Props) {
   return (
     <div className="page">
-      <div className="page-head">
-        <div>
-          <h2 className="page-title">{heading}</h2>
-          <p className="page-sub">{description}</p>
-        </div>
-      </div>
+      <PageHeader title={heading} subtitle={description} />
       <div className="empty">
         <div className="empty-title">Not built yet — milestone {milestone}</div>
         <p className="empty-text">

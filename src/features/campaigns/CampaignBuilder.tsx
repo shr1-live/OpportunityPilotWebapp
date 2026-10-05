@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBlocker, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import { api, ApiError } from '../../lib/api'
 import type { Campaign, ProfileSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -149,24 +150,20 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
 
   return (
     <div className="page stack-4">
-      <div className="page-head">
-        <div className="grow">
-          <div className="row wrap">
-            <h2 className="page-title">{saved ? saved.name : 'New campaign'}</h2>
-            {saved && <Badge>{MODE_LABELS[saved.mode]}</Badge>}
-          </div>
-          <p className="muted-small">
-            {saved ? (
-              <>
-                Version {saved.version} · saved <time dateTime={saved.updatedAt}>{formatWhen(saved.updatedAt)}</time>
-                {changed ? ' · Unsaved changes' : justSaved ? ' · Saved' : ''}
-              </>
-            ) : (
-              'Draft · not saved yet'
-            )}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={saved ? saved.name : 'New campaign'}
+        badges={saved && <Badge>{MODE_LABELS[saved.mode]}</Badge>}
+        meta={
+          saved ? (
+            <>
+              Version {saved.version} · saved <time dateTime={saved.updatedAt}>{formatWhen(saved.updatedAt)}</time>
+              {changed ? ' · Unsaved changes' : justSaved ? ' · Saved' : ''}
+            </>
+          ) : (
+            'Draft · not saved yet'
+          )
+        }
+      />
 
       <nav aria-label="Campaign steps">
         <ol className="plain-list stepper">

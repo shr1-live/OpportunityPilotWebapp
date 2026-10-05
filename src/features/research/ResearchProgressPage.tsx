@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import { api, ApiError } from '../../lib/api'
 import type { Campaign, ResearchJob } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -137,13 +138,11 @@ function ResearchProgress({ jobId }: { jobId: string }) {
 
   return (
     <div className="page stack-6">
-      <div className="page-head wrap">
-        <div className="grow">
-          <div className="row wrap">
-            <h2 className="page-title">{campaign.data?.name ?? 'Research run'}</h2>
-            <Badge tone={label.tone}>{label.text}</Badge>
-          </div>
-          <p className="muted-small op-numeric">
+      <PageHeader
+        title={campaign.data?.name ?? 'Research run'}
+        badges={<Badge tone={label.tone}>{label.text}</Badge>}
+        meta={
+          <span className="op-numeric">
             Run <span className="mono">{job.id.slice(0, 8)}</span> · queued{' '}
             <time dateTime={job.createdAt}>{formatWhen(job.createdAt)}</time>
             {job.startedAt && (
@@ -159,19 +158,21 @@ function ResearchProgress({ jobId }: { jobId: string }) {
               </>
             )}{' '}
             · {timeZone}
-          </p>
-        </div>
-        <div className="row wrap">
-          {active && (
-            <button type="button" className="btn btn-secondary" disabled={cancelling || cancelRequested} onClick={() => void cancel()}>
-              {cancelling ? 'Cancelling…' : cancelRequested ? 'Cancel requested' : 'Cancel run'}
-            </button>
-          )}
-          <Link className="btn btn-primary" to={resultsPath}>
-            {active ? 'View partial results' : 'View results'}
-          </Link>
-        </div>
-      </div>
+          </span>
+        }
+        actions={
+          <>
+            {active && (
+              <button type="button" className="btn btn-secondary" disabled={cancelling || cancelRequested} onClick={() => void cancel()}>
+                {cancelling ? 'Cancelling…' : cancelRequested ? 'Cancel requested' : 'Cancel run'}
+              </button>
+            )}
+            <Link className="btn btn-primary" to={resultsPath}>
+              {active ? 'View partial results' : 'View results'}
+            </Link>
+          </>
+        }
+      />
 
       <div className={`notice ${job.state === 'Failed' ? 'notice-danger' : job.state === 'CompletedWithGaps' ? 'notice-warning' : 'notice-neutral'}`}>
         <span>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import type { CampaignSummary, ProfileSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
@@ -21,18 +22,15 @@ export function CampaignsPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head">
-        <div className="grow">
-          <h2 className="page-title">Campaigns</h2>
-          <p className="page-sub">
-            A campaign is one search: a profile, a mode, your criteria and the sources to read. Each run ranks what it
-            finds against those criteria.
-          </p>
-        </div>
-        <Link className="btn btn-primary" to="/campaigns/new">
-          New campaign
-        </Link>
-      </div>
+      <PageHeader
+        title="Campaigns"
+        subtitle="A campaign is one search: a profile, a mode, your criteria and the sources to read. Each run ranks what it finds against those criteria."
+        actions={
+          <Link className="btn btn-primary" to="/campaigns/new">
+            New campaign
+          </Link>
+        }
+      />
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
       {campaigns.loading && !campaigns.data && <p className="muted-small">Loading campaigns…</p>}

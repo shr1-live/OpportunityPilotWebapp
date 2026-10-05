@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import { api } from '../../lib/api'
 import type { Evidence, OpportunityDetail, OpportunityStatus } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -99,40 +100,44 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
         <Link to={`/campaigns/${o.campaignId}/opportunities`} className="small">
           ← Back to opportunities
         </Link>
-        <div className="page-head wrap">
-          <div className="grow">
-            <div className="row wrap">
-              <h2 className="page-title">{o.title}</h2>
+        <PageHeader
+          title={o.title}
+          badges={
+            <>
               <Badge>{MODE_LABELS[o.mode] ?? o.mode}</Badge>
               <Badge tone={status.tone}>{status.text}</Badge>
-            </div>
-            <p className="page-sub">
-              {[o.organization, o.location, platform].filter(Boolean).join(' · ')}
-            </p>
-            <p className="muted-small">
+            </>
+          }
+          subtitle={[o.organization, o.location, platform].filter(Boolean).join(' · ')}
+          meta={
+            <>
               Updated <time dateTime={o.updatedAt}>{formatWhen(o.updatedAt)}</time>
-            </p>
-          </div>
-          <div className="row wrap">
-            {showPosting && postingHref && (
-              <a className="btn btn-secondary" href={postingHref} target="_blank" rel="noopener noreferrer">
-                {o.mode === 'Job' ? 'Open posting' : 'Open website'}
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            )}
-            {showApply && applyHref && (
-              <a
-                className={`btn ${userApplies ? 'btn-primary' : 'btn-secondary'}`}
-                href={applyHref}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open application page
-                <span className="sr-only"> (opens in a new tab)</span>
-              </a>
-            )}
-          </div>
-        </div>
+            </>
+          }
+          actions={
+            ((showPosting && postingHref) || (showApply && applyHref)) && (
+              <>
+                {showPosting && postingHref && (
+                  <a className="btn btn-secondary" href={postingHref} target="_blank" rel="noopener noreferrer">
+                    {o.mode === 'Job' ? 'Open posting' : 'Open website'}
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
+                {showApply && applyHref && (
+                  <a
+                    className={`btn ${userApplies ? 'btn-primary' : 'btn-secondary'}`}
+                    href={applyHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open application page
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
+              </>
+            )
+          }
+        />
       </div>
 
       <section className="card stack-3" aria-labelledby="status-heading">

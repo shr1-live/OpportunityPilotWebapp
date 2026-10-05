@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { safeHref } from '../opportunities/opportunityModel'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import { api } from '../../lib/api'
 import type { ApplicationItem, ApplicationPage, ApplicationSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -37,18 +38,15 @@ export function ApplicationsPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head">
-        <div className="grow">
-          <h2 className="page-title">Applications</h2>
-          <p className="page-sub">
-            Jobs the OpportunityPilot agent applied to from your own logged-in browser, plus the ones it skipped or needs
-            you for.
-          </p>
-        </div>
-        <button type="button" className="btn btn-secondary btn-sm" onClick={refresh}>
-          Refresh
-        </button>
-      </div>
+      <PageHeader
+        title="Applications"
+        subtitle="Jobs the OpportunityPilot agent applied to from your own logged-in browser, plus the ones it skipped or needs you for."
+        actions={
+          <button type="button" className="btn btn-secondary btn-sm" onClick={refresh}>
+            Refresh
+          </button>
+        }
+      />
 
       <SummaryStats summary={summary.data} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
 
