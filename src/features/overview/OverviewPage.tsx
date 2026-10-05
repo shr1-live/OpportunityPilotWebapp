@@ -14,6 +14,7 @@ export function OverviewPage() {
   const needsManual = overview.data?.needsManual
   const campaigns = overview.data?.campaigns
   const shortlisted = overview.data?.shortlisted
+  const awaitingApproval = overview.data?.awaitingApproval
   const pending = overview.loading && !overview.data
   const hasProfile = (profiles ?? 0) > 0
 
@@ -89,6 +90,13 @@ export function OverviewPage() {
           <div className="stat-label">Campaigns</div>
           <div className="stat-value op-numeric">{campaigns ?? '—'}</div>
           <div className="muted-small">{pending ? 'Loading…' : <Link to="/campaigns">Research setups you own</Link>}</div>
+        </section>
+        <section className="card stat">
+          <div className="stat-label">Awaiting approval</div>
+          <div className={`stat-value op-numeric ${awaitingApproval ? 'text-warning' : ''}`}>{awaitingApproval ?? '—'}</div>
+          <div className="muted-small">
+            {pending ? 'Loading…' : <Link to="/approvals">Suggested jobs to approve or reject</Link>}
+          </div>
         </section>
         <section className="card stat">
           <div className="stat-label">Shortlisted</div>

@@ -1,5 +1,6 @@
 import { createBrowserRouter, Link, RouterProvider } from 'react-router-dom'
 import { ApplicationsPage } from './features/applications/ApplicationsPage'
+import { ApprovalQueuePage } from './features/approvals/ApprovalQueuePage'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider'
 import { SignInPage } from './features/auth/SignInPage'
 import { CampaignBuilder } from './features/campaigns/CampaignBuilder'
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
       { path: 'research/:jobId', element: <ResearchProgressPage />, handle: { title: 'Research run' } },
       { path: 'opportunities', element: <OpportunitiesPage />, handle: { title: 'Opportunities' } },
       { path: 'opportunities/:id', element: <OpportunityDetailPage />, handle: { title: 'Opportunity' } },
+      { path: 'approvals', element: <ApprovalQueuePage />, handle: { title: 'Approvals' } },
       {
         path: 'outreach',
         handle: { title: 'Outreach' },

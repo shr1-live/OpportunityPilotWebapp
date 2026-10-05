@@ -16,18 +16,18 @@ Last updated: 2026-10-05.
 | `/campaigns` | `src/features/campaigns/CampaignsPage.tsx` | `docs/CANDIDATE_FLOW.md` → Campaigns — List | built |
 | `/campaigns/new`, `/campaigns/:id/edit` (`?step=1`) | `src/features/campaigns/CampaignBuilder.tsx` + `GoalStep.tsx` | `docs/CANDIDATE_FLOW.md` → Step 1; Customer: `docs/SALES_FLOW.md` → Customer specifics | built |
 | `…?step=2` | `CampaignBuilder.tsx` + `FiltersStep.tsx` | `docs/CANDIDATE_FLOW.md` → Step 2; `docs/SALES_FLOW.md` → Customer specifics | built |
-| `/campaigns/:id/edit?step=3` | `CampaignBuilder.tsx` + `SourcesStep.tsx` | `docs/CANDIDATE_FLOW.md` → Step 3; `docs/SALES_FLOW.md` → Customer specifics | built |
+| `/campaigns/:id/edit?step=3` | `CampaignBuilder.tsx` + `SourcesStep.tsx` (+ `JobBoardSources.tsx`) | `docs/CANDIDATE_FLOW.md` → Step 3; `docs/SALES_FLOW.md` → Customer specifics | built |
 | `/campaigns/:id/edit?step=4` | `CampaignBuilder.tsx` + `ReviewStep.tsx` | `docs/CANDIDATE_FLOW.md` → Step 4; `docs/SALES_FLOW.md` → Customer specifics | built |
 | `/research/:jobId` | `src/features/research/ResearchProgressPage.tsx` | `docs/CANDIDATE_FLOW.md` → Research run — Progress | built |
 | `/opportunities`, `/campaigns/:id/opportunities` | `src/features/opportunities/OpportunitiesPage.tsx` | `docs/CANDIDATE_FLOW.md` → Opportunities — List (Job); `docs/SALES_FLOW.md` → Opportunities — List (Customer) | built |
 | `/opportunities/:id` | `src/features/opportunities/OpportunityDetailPage.tsx` | `docs/CANDIDATE_FLOW.md` → Opportunity — Detail (Job); `docs/SALES_FLOW.md` → Opportunity — Detail (Customer) | built |
+| `/approvals` | `src/features/approvals/ApprovalQueuePage.tsx` | `docs/CANDIDATE_FLOW.md` → Approval queue | built — against the phase-1 contract, API not verified (OQ-FE-033) |
 | `/applications` | `src/features/applications/ApplicationsPage.tsx` (+ `AgentSetup.tsx`, `HowItWorks.tsx`) | `docs/CANDIDATE_FLOW.md` → Applications | built |
 | `/outreach` | `src/features/placeholder/NotBuiltPage.tsx` (M5 placeholder) | `docs/SALES_FLOW.md` → Outreach — Inbox and draft editor | not built |
 | `/follow-ups` | `src/features/placeholder/NotBuiltPage.tsx` (M7 placeholder) | `docs/SALES_FLOW.md` → Follow-ups | not built |
-| — (no route) | — | `docs/CANDIDATE_FLOW.md` → Approval queue | not built |
 | — (section of `/opportunities/:id`) | — | `docs/CANDIDATE_FLOW.md` → Cover notes | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Proposal drafts | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Freelancer.com bids | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Batch approval | not built |
 
-Navigation rail order (`NAV` in `src/features/shell/AppShell.tsx`): Overview, Applications, Campaigns, Opportunities, Outreach, Follow-ups, Profiles, Sources & integrations, Settings. Outreach and Follow-ups lead to placeholders (OQ-FE-005, OQ-FE-006).
+Navigation rail order (`NAV` in `src/features/shell/AppShell.tsx`): Overview, Applications, Campaigns, Opportunities, Approvals (count badge from `overview.awaitingApproval`), Outreach, Follow-ups, Profiles, Sources & integrations, Settings. Outreach and Follow-ups lead to placeholders (OQ-FE-005, OQ-FE-006).

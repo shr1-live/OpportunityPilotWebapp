@@ -11,25 +11,33 @@ import {
   CSV_MAX_BYTES,
   fieldError,
   isSupportedMode,
+  type JobSourceKind,
   PASTE_MAX_CHARS,
   SOURCE_KIND_LABELS,
   SOURCE_STATUS_LABELS,
+  sourceKindAllowed,
 } from './campaignModel'
+import { AdzunaForm, BoardForm } from './JobBoardSources'
+
+/** Sources the server reads afresh on every run; they have no items until a run has read them. */
+const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna'])
 
 function sourceContent(s: Source): string {
   if (s.kind === 'Paste') return `${s.textLength.toLocaleString()} characters`
-  // URLs and feeds are fetched on each run, so they have no items until one has read them.
-  if (s.kind === 'Url' || s.kind === 'Feed') return s.itemCount ? `${s.itemCount} items` : 'Read on each run'
+  if (FETCHED_EACH_RUN.has(s.kind)) return s.itemCount ? `${s.itemCount} items` : 'Read on each run'
   return `${s.itemCount} ${s.itemCount === 1 ? 'row' : 'rows'}`
 }
 
-type AddKind = 'Paste' | 'Url' | 'Feed' | 'Csv'
+type AddKind = 'Paste' | 'Url' | 'Feed' | 'Csv' | JobSourceKind
 
 const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'Paste', label: 'Paste text', description: 'Postings or company notes you copied' },
   { kind: 'Url', label: 'Public URL', description: 'A careers page or listing, no login needed' },
   { kind: 'Feed', label: 'RSS / Atom feed', description: 'A feed you are allowed to read' },
   { kind: 'Csv', label: 'CSV file', description: 'A spreadsheet export, previewed first' },
+  { kind: 'Greenhouse', label: 'Company careers board — Greenhouse', description: 'Every open job of one company on Greenhouse' },
+  { kind: 'Lever', label: 'Company careers board — Lever', description: 'Every open job of one company on Lever' },
+  { kind: 'Adzuna', label: 'Adzuna job search (India)', description: 'Searches Adzuna with your job titles' },
 ]
 
 export function SourcesStep({ campaign }: { campaign: Campaign }) {
@@ -59,6 +67,7 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
     }
   }
 
+  const options = ADD_OPTIONS.filter((o) => sourceKindAllowed(o.kind, campaign.mode))
   const list = sources.data ?? []
   const ok = list.filter((s) => s.status === 'Ok').length
   const failed = list.filter((s) => s.status === 'Failed').length
@@ -119,7 +128,7 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
                         </td>
                         <td>
                           {SOURCE_KIND_LABELS[s.kind] ?? s.kind}
-                          {s.platform && <div className="muted-small">{s.platform}</div>}
+                          {s.platform && s.platform !== s.kind && <div className="muted-small">{s.platform}</div>}
                         </td>
                         <td>
                           <Badge tone={status.tone}>{status.text}</Badge>
@@ -153,12 +162,12 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
 
       <section className="stack-3" aria-labelledby="sources-add">
         <h4 id="sources-add" className="section-heading">
-          Add your own material
+          Add a source
         </h4>
         <fieldset className="field">
           <legend>Kind of source</legend>
           <div className="type-grid">
-            {ADD_OPTIONS.map((o) => (
+            {options.map((o) => (
               <label key={o.kind} className={`type-option ${adding === o.kind ? 'type-option-active' : ''}`}>
                 <input
                   type="radio"
@@ -178,6 +187,12 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
           {adding === 'Url' && <UrlForm campaign={campaign} kind="Url" onAdded={() => added('URL')} />}
           {adding === 'Feed' && <UrlForm campaign={campaign} kind="Feed" onAdded={() => added('Feed')} />}
           {adding === 'Csv' && <CsvImport campaign={campaign} onAdded={() => added('CSV import')} />}
+          {(adding === 'Greenhouse' || adding === 'Lever') && campaign.mode === 'Job' && (
+            <BoardForm key={adding} campaign={campaign} kind={adding} onAdded={() => added(`${adding} board`)} />
+          )}
+          {adding === 'Adzuna' && campaign.mode === 'Job' && (
+            <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
+          )}
         </div>
       </section>
 

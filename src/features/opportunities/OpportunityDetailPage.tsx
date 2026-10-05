@@ -7,15 +7,18 @@ import type { Evidence, OpportunityDetail, OpportunityStatus } from '../../lib/t
 import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
 import { MODE_LABELS } from '../campaigns/campaignModel'
+import { useShell } from '../shell/ShellContext'
 import {
   agentApplyPlatform,
   displayUrl,
   factLabel,
   formatPoints,
+  isUserApplyBoard,
   OUTCOME_LABELS,
+  platformLabel,
   safeHref,
+  settableStatuses,
   STATUS_LABELS,
-  STATUSES,
   valueLabel,
 } from './opportunityModel'
 
@@ -49,12 +52,19 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
   const [error, setError] = useState<Error>()
   const [announcement, setAnnouncement] = useState('')
   const [chosen, setChosen] = useState<OpportunityStatus>(o.status)
+  const { refreshOverview } = useShell()
 
   const outcome = OUTCOME_LABELS[o.outcome] ?? { text: o.outcome, tone: 'neutral' }
   const status = STATUS_LABELS[o.status] ?? { text: o.status, tone: 'neutral' }
   const postingHref = safeHref(o.url)
   const applyHref = safeHref(o.applyUrl)
   const agentPlatform = agentApplyPlatform(o)
+  // Greenhouse / Lever / Adzuna: the agent never applies there, so the application page is the way in.
+  const userApplies = o.mode === 'Job' && isUserApplyBoard(o.platform)
+  const showApply = Boolean(applyHref) && (userApplies || applyHref !== postingHref)
+  const showPosting = Boolean(postingHref) && !(userApplies && postingHref === applyHref)
+  const platform = platformLabel(o.platform)
+  const suggested = o.status === 'Suggested'
   const evidenceById = new Map(o.evidence.map((e) => [e.id, e]))
 
   async function setStatus(next: OpportunityStatus) {
@@ -73,6 +83,8 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
       })
       onUpdated(result)
       setChosen(result.status)
+      // The nav's approval count changes when a suggestion is approved or rejected here.
+      if (o.status === 'Suggested' || result.status === 'Suggested') refreshOverview()
       setAnnouncement(`Status changed to ${STATUS_LABELS[result.status]?.text ?? result.status}.`)
     } catch (e) {
       setError(e as Error)
@@ -95,21 +107,26 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
               <Badge tone={status.tone}>{status.text}</Badge>
             </div>
             <p className="page-sub">
-              {[o.organization, o.location, o.platform && o.platform !== 'Other' ? o.platform : null].filter(Boolean).join(' · ')}
+              {[o.organization, o.location, platform].filter(Boolean).join(' · ')}
             </p>
             <p className="muted-small">
               Updated <time dateTime={o.updatedAt}>{formatWhen(o.updatedAt)}</time>
             </p>
           </div>
           <div className="row wrap">
-            {postingHref && (
+            {showPosting && postingHref && (
               <a className="btn btn-secondary" href={postingHref} target="_blank" rel="noopener noreferrer">
                 {o.mode === 'Job' ? 'Open posting' : 'Open website'}
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
             )}
-            {applyHref && applyHref !== postingHref && (
-              <a className="btn btn-secondary" href={applyHref} target="_blank" rel="noopener noreferrer">
+            {showApply && applyHref && (
+              <a
+                className={`btn ${userApplies ? 'btn-primary' : 'btn-secondary'}`}
+                href={applyHref}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 Open application page
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
@@ -124,6 +141,16 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
         </h3>
         <div className="row wrap">
           {/* Quick triage only before acting on it; later stages are changed deliberately with "Set status". */}
+          {suggested && (
+            <>
+              <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void setStatus('Shortlisted')}>
+                Approve
+              </button>
+              <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void setStatus('Dismissed')}>
+                Reject
+              </button>
+            </>
+          )}
           {(o.status === 'New' || o.status === 'Dismissed') && (
             <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void setStatus('Shortlisted')}>
               Shortlist
@@ -156,7 +183,7 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
               Set status
             </label>
             <select id="status-select" value={chosen} onChange={(e) => setChosen(e.target.value as OpportunityStatus)}>
-              {STATUSES.map((s) => (
+              {settableStatuses(o.status).map((s) => (
                 <option key={s} value={s}>
                   {STATUS_LABELS[s].text}
                 </option>
@@ -171,6 +198,15 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
           {announcement}
         </span>
         {error && <ErrorNotice error={error} />}
+        {suggested && (
+          <p className="notice notice-warning">
+            <span>
+              Suggested for approval: research scored this at or above your campaign&rsquo;s threshold. Approve to shortlist
+              it, reject to dismiss it — nothing is applied until you approve. You can also decide in bulk on the{' '}
+              <Link to="/approvals">Approvals page</Link>.
+            </span>
+          </p>
+        )}
         {agentPlatform && (
           <p className="notice notice-neutral">
             <span>
@@ -178,7 +214,20 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
             </span>
           </p>
         )}
-        <p className="hint">Status changes are yours alone — re-running research never resets them.</p>
+        {userApplies && o.status !== 'Applied' && (
+          <p className="notice notice-neutral">
+            <span>
+              You apply to this one yourself: the agent only applies on LinkedIn and Naukri.{' '}
+              {applyHref
+                ? 'Open the application page, apply there, then come back and choose Mark applied.'
+                : 'No usable application link was found, so look the job up on the company’s site, then choose Mark applied.'}
+            </span>
+          </p>
+        )}
+        <p className="hint">
+          Status changes are yours alone. Research only moves a New job to Awaiting approval when the campaign suggests
+          jobs; it never resets a status you set.
+        </p>
       </section>
 
       <div className="detail-grid">

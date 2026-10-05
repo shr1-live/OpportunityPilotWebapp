@@ -30,17 +30,17 @@ There is no user-role concept yet: every signed-in user sees the same navigation
 
 - **Route:** wraps every signed-in route (`AuthGate` → `AppShell` → `<Outlet/>`).
 - **Component:** `src/features/shell/AppShell.tsx`, `src/features/shell/ShellContext.tsx`
-- **What it shows:** Skip link; left rail with nav: Overview, Applications, Campaigns, Opportunities, Outreach, Follow-ups, Profiles, Sources & integrations, Settings; rail footer "API · checking / starting / online / database unavailable" and, when the capability exists, "Gmail · disabled / not connected". Top bar: Menu button (under 860 px), page title from the route `handle.title` (also `document.title`), Gemini pill ("Gemini key set · unverified" or "Rules mode · no AI key", hidden under 860 px), avatar with initials and an account menu (email, Sign out). Banners: "Starting the API service…" while unreachable; "Demo mode." when capabilities report `temporaryStorage` or `guestSignIn`; danger banner when health is degraded.
+- **What it shows:** Skip link; left rail with nav: Overview, Applications, Campaigns, Opportunities, Approvals (with a count badge — "N awaiting approval" for screen readers — when `overview.awaitingApproval` > 0), Outreach, Follow-ups, Profiles, Sources & integrations, Settings; rail footer "API · checking / starting / online / database unavailable" and, when the capability exists, "Gmail · disabled / not connected". Top bar: Menu button (under 860 px), page title from the route `handle.title` (also `document.title`), Gemini pill ("Gemini key set · unverified" or "Rules mode · no AI key", hidden under 860 px), avatar with initials and an account menu (email, Sign out). Banners: "Starting the API service…" while unreachable; "Demo mode." when capabilities report `temporaryStorage` or `guestSignIn`; danger banner when health is degraded.
 - **Actions:**
   - Nav link → its route (active link styled by `NavLink`).
   - Menu → opens/closes the drawer; scrim click, Escape or any route change closes it.
   - Avatar → opens the account menu; Escape or outside click closes it. Sign out → clears the session (see Settings) → sign-in screen.
-- **State (reads):** `GET /health/ready` polled with backoff (4 s doubling to 20 s, 8 retries) → `ApiStatus`; `GET /api/v1/capabilities` via `useApi` once status is ready or degraded, shared through `ShellContext` (`capabilities`); `useAuth()` → `user`; `useMatches()` for the title; local state `drawerOpen`, `menuOpen`.
+- **State (reads):** `GET /health/ready` polled with backoff (4 s doubling to 20 s, 8 retries) → `ApiStatus`; `GET /api/v1/capabilities` via `useApi` once status is ready or degraded, shared through `ShellContext` (`capabilities`); `GET /api/v1/overview` once the API is ready, for the Approvals count, shared as `awaitingApproval` with `refreshOverview()` (called by the approval queue and the opportunity screens after a status change); `useAuth()` → `user`; `useMatches()` for the title; local state `drawerOpen`, `menuOpen`.
 - **State (writes):** `document.title`; sign out (see Settings). No API writes.
 - **Navigation out:** every nav route; sign-in screen after Sign out.
 - **Validation:** none (no forms). Unreachable API → "waking"; any other failure → "degraded".
 - **Status:** built
-- **TODOs:** Outreach and Follow-ups link to not-built placeholders (OQ-FE-005, OQ-FE-006). Gmail/Gemini labels assume today's statuses (OQ-FE-011). Polling stops after ~2 minutes and never re-checks (OQ-FE-019). Same nav for both roles (OQ-FE-003). No nav count badges (OQ-FE-031). `set-state-in-effect` lint warning (OQ-FE-016).
+- **TODOs:** Outreach and Follow-ups link to not-built placeholders (OQ-FE-005, OQ-FE-006). Gmail/Gemini labels assume today's statuses (OQ-FE-011). Polling stops after ~2 minutes and never re-checks (OQ-FE-019). Same nav for both roles (OQ-FE-003). Only Approvals has a nav count badge (OQ-FE-031). The count is fetched once per session and refreshed only after approval/status changes made in this tab, so a run that suggests jobs while the user is on another screen is not reflected until a refresh (OQ-FE-035). `set-state-in-effect` lint warning (OQ-FE-016).
 
 ---
 
@@ -48,11 +48,11 @@ There is no user-role concept yet: every signed-in user sees the same navigation
 
 - **Route:** `/` (index)
 - **Component:** `src/features/overview/OverviewPage.tsx`
-- **What it shows:** Subtitle depending on whether a profile exists. Three setup steps: 1 Add a profile (Done badge when profiles > 0), 2 Set up the apply agent (Beta badge), 3 Start a campaign (Done badge when campaigns > 0). Five stats from the API: Profiles, Campaigns, Shortlisted, Applications sent, Need your input (warning colour when > 0); "—" while unknown. "What this deployment can do": capability status for database, auth, linkedin, naukri.
-- **Actions:** Add profile / Review profiles → `/profiles`; Set up agent → `/applications`; New campaign → `/campaigns/new`; stat links → `/campaigns`, `/opportunities`, `/applications`; "All sources and integrations" → `/integrations`; Try again on an error → reload.
-- **State (reads):** `GET /api/v1/overview` (`Overview`: profiles, applied, needsManual, campaigns, shortlisted) via `useApi`; `useShell().capabilities`.
+- **What it shows:** Subtitle depending on whether a profile exists. Three setup steps: 1 Add a profile (Done badge when profiles > 0), 2 Set up the apply agent (Beta badge), 3 Start a campaign (Done badge when campaigns > 0). Six stats from the API: Profiles, Campaigns, Awaiting approval (link to `/approvals`, warning colour when > 0), Shortlisted, Applications sent, Need your input (warning colour when > 0); "—" while unknown. "What this deployment can do": capability status for database, auth, linkedin, naukri.
+- **Actions:** Add profile / Review profiles → `/profiles`; Set up agent → `/applications`; New campaign → `/campaigns/new`; stat links → `/campaigns`, `/approvals`, `/opportunities`, `/applications`; "All sources and integrations" → `/integrations`; Try again on an error → reload.
+- **State (reads):** `GET /api/v1/overview` (`Overview`: profiles, applied, needsManual, campaigns, shortlisted, awaitingApproval) via `useApi`; `useShell().capabilities`.
 - **State (writes):** none.
-- **Navigation out:** `/profiles`, `/applications`, `/campaigns/new`, `/campaigns`, `/opportunities`, `/integrations`.
+- **Navigation out:** `/profiles`, `/applications`, `/campaigns/new`, `/campaigns`, `/approvals`, `/opportunities`, `/integrations`.
 - **Validation:** none. Primary/secondary button emphasis only (step 1 primary until a profile exists; step 3 primary when a profile exists and no campaign does).
 - **Status:** built
 - **TODOs:** Not role-aware — the apply-agent step is shown to sales users (OQ-FE-003). Design `Main.dc.html` items missing: goal input, active research, recent opportunities, review queue, follow-ups (OQ-FE-031). M5 will add `draftsAwaitingReview` and `followUpsDue` (OQ-FE-028).

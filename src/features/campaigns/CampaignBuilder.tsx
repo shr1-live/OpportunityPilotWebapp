@@ -66,7 +66,7 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
   // changed: edits that would be lost. needsSave: also true for a new campaign that has never been saved.
   const changed = JSON.stringify(campaignPayload(draft, mode)) !== baseline
   const needsSave = !saved || changed
-  const problems = draftProblems(draft, profileId)
+  const problems = draftProblems(draft, profileId, mode)
 
   const requested = Number(params.get('step')) || 1
   const step = Math.min(Math.max(requested, 1), saved ? 4 : 2)

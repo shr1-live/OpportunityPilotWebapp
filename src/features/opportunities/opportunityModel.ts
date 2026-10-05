@@ -1,6 +1,8 @@
 import type {
+  AppliesVia,
   CriterionValue,
   FilterOutcome,
+  JobPlatform,
   OpportunityFact,
   OpportunityStatus,
   OpportunitySummary,
@@ -16,6 +18,7 @@ export const OUTCOME_LABELS: Record<FilterOutcome, { text: string; tone: string 
 
 export const STATUS_LABELS: Record<OpportunityStatus, { text: string; tone: string }> = {
   New: { text: 'New', tone: 'neutral' },
+  Suggested: { text: 'Awaiting approval', tone: 'warning' },
   Shortlisted: { text: 'Shortlisted', tone: 'primary' },
   Dismissed: { text: 'Dismissed', tone: 'neutral' },
   Applied: { text: 'Applied', tone: 'success' },
@@ -26,6 +29,45 @@ export const STATUS_LABELS: Record<OpportunityStatus, { text: string; tone: stri
 }
 
 export const STATUSES = Object.keys(STATUS_LABELS) as OpportunityStatus[]
+
+/** Statuses a user may pick by hand. Suggested is set by research only (it can be shown, not chosen). */
+export function settableStatuses(current: OpportunityStatus): OpportunityStatus[] {
+  return STATUSES.filter((s) => s !== 'Suggested' || s === current)
+}
+
+export const PLATFORM_LABELS: Record<JobPlatform, string> = {
+  LinkedIn: 'LinkedIn',
+  Naukri: 'Naukri',
+  Greenhouse: 'Greenhouse',
+  Lever: 'Lever',
+  Adzuna: 'Adzuna',
+  Other: 'Other',
+}
+
+/** Platform words for a row; "Other" and unknown are left out rather than shown as a platform. */
+export function platformLabel(platform: JobPlatform | null | undefined): string | null {
+  if (!platform || platform === 'Other') return null
+  return PLATFORM_LABELS[platform] ?? platform
+}
+
+/** The local agent applies only on LinkedIn and Naukri; everywhere else the user applies via the application page. */
+export function appliesViaForPlatform(platform: JobPlatform | null | undefined): AppliesVia {
+  return platform === 'LinkedIn' || platform === 'Naukri' ? 'Agent' : 'You'
+}
+
+/** "Applies via: …" wording for the approval queue and detail page. */
+export function appliesViaLabel(via: AppliesVia, platform: JobPlatform | null | undefined): string {
+  if (via === 'Agent') {
+    const where = platform === 'LinkedIn' || platform === 'Naukri' ? platform : 'LinkedIn/Naukri'
+    return `your agent (${where})`
+  }
+  return 'you (opens the application page)'
+}
+
+/** Open job boards found by research: the agent never applies there, the user opens applyUrl and marks it applied. */
+export function isUserApplyBoard(platform: JobPlatform | null | undefined): boolean {
+  return platform === 'Greenhouse' || platform === 'Lever' || platform === 'Adzuna'
+}
 
 /** Unknown is its own answer, never folded into "not met": it scores 0 but lowers coverage instead. */
 export function valueLabel(value: CriterionValue): { text: string; tone: string } {
@@ -87,6 +129,11 @@ export function appendUnique<T extends { id: string }>(existing: T[], next: T[])
 /** Row actions offered from the list; anything further along the pipeline is changed on the detail page. */
 export function quickActions(status: OpportunityStatus): { label: string; to: OpportunityStatus }[] {
   switch (status) {
+    case 'Suggested':
+      return [
+        { label: 'Approve', to: 'Shortlisted' },
+        { label: 'Reject', to: 'Dismissed' },
+      ]
     case 'New':
       return [
         { label: 'Shortlist', to: 'Shortlisted' },

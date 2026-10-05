@@ -116,6 +116,21 @@ export function ReviewStep({ campaign, draft, mode, profile, dirty, onEdit }: Pr
             </button>
           </dd>
         </div>
+        {mode === 'Job' && (
+          <div>
+            <dt>Suggest for approval</dt>
+            <dd className="op-numeric">
+              {draft.autoSuggestMinScore === null
+                ? 'Off — new matches stay in Opportunities'
+                : `Qualified jobs scoring at least ${draft.autoSuggestMinScore} wait in Approvals`}
+            </dd>
+            <dd className="review-edit">
+              <button type="button" className="btn-link small" onClick={() => onEdit(2)}>
+                Edit<span className="sr-only"> approval suggestions</span>
+              </button>
+            </dd>
+          </div>
+        )}
         <div>
           <dt>Scoring weights</dt>
           <dd>

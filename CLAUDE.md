@@ -46,8 +46,8 @@ Rules for any AI agent working in this repository. Project rules here win over g
 | `src/App.tsx` | Route table (data router), `AuthGate`, `NotFound` | Every new route is added here **and** to `docs/SCREEN_MAP.md` |
 | `src/lib/` | `api.ts` (fetch wrapper, `ApiError`, `ApiUnreachableError`), `config.ts` (public env), `useApi.ts`, `supabase.ts` (auth client only), `types.ts` (DTOs), `download.ts` | Framework-free helpers shared by several features |
 | `src/components/` | Shared UI: `ErrorNotice`, `StatusBadge`/`Badge`, `TagInput` | Only components used by two or more features |
-| `src/features/<area>/` | One folder per area: `auth`, `shell`, `overview`, `profiles`, `campaigns`, `research`, `opportunities`, `applications`, `integrations`, `settings`, `placeholder` | Screen components are `<Name>Page.tsx` (or a step/section component next to its page) |
-| `src/features/<area>/<area>Model.ts` | Pure logic: labels, validation (`draftProblems`), path builders, normalisers, formatters | No React, no fetch, no DOM — so it can be unit-tested in Node. Existing: `campaignModel`, `researchModel`, `opportunityModel`, `applicationStatus`, `profileFields` |
+| `src/features/<area>/` | One folder per area: `auth`, `shell`, `overview`, `profiles`, `campaigns`, `research`, `opportunities`, `approvals`, `applications`, `integrations`, `settings`, `placeholder` | Screen components are `<Name>Page.tsx` (or a step/section component next to its page) |
+| `src/features/<area>/<area>Model.ts` | Pure logic: labels, validation (`draftProblems`), path builders, normalisers, formatters | No React, no fetch, no DOM — so it can be unit-tested in Node. Existing: `campaignModel`, `researchModel`, `opportunityModel`, `approvalModel`, `applicationStatus`, `profileFields` |
 | `src/features/<area>/*.test.ts` | Vitest tests, co-located with the model they test | Every new model function gets a test |
 | `src/styles/tokens.css` | Design tokens (`--op-*`) | Copied from `../opportunitypilot-ui/tokens.css`; change the design source first, then copy |
 | `src/styles/app.css` | All component classes, grouped by screen, responsive rules at the end | Uses tokens only |
@@ -148,6 +148,7 @@ The AI does not discover docs on its own; this table is the bridge. Read the row
 | Open gaps, mocks, hard-codes, undecided items | `docs/open-questions.md` | Before inventing anything; after every feature |
 | Vague requests | `skills/prompt-master.SKILL.md` | Two or more context dimensions missing |
 | API contract — campaigns, sources, research, opportunities, agent | `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md` | Any built research/opportunity screen |
+| API contract — job boards (Greenhouse, Lever, Adzuna), approval queue | `../OpportunityPilotWebApi/docs/CANDIDATE_PHASE1_CONTRACT.md` | Sources step, Filters step, Approvals |
 | API contract — Gemini, drafts, suppression, activities, follow-ups (not built) | `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` | Outreach, follow-ups, AI features |
 | Product status and decisions | `../HANDOFF.md`, `../OpportunityPilotWebApi/docs/DECISIONS.md` | Scope or priority questions |
 | Designs | `../opportunitypilot-ui/` (`*.dc.html`, `README.md`) | Visual reference for a screen |

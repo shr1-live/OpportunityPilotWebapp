@@ -38,6 +38,7 @@ Endpoints the web app calls today:
 | Sources | `GET/POST /api/v1/campaigns/:id/sources`, `DELETE /api/v1/campaigns/:id/sources/:sourceId`, `POST /api/v1/imports/preview`, `POST /api/v1/imports/:importId/commit` |
 | Research | `POST /api/v1/campaigns/:id/research`, `GET /api/v1/campaigns/:id/research-jobs`, `GET /api/v1/research-jobs/:id`, `POST /api/v1/research-jobs/:id/cancel` |
 | Opportunities | `GET /api/v1/campaigns/:id/opportunities`, `GET /api/v1/opportunities/:id`, `PATCH /api/v1/opportunities/:id/status`, `GET /api/v1/campaigns/:id/export` |
+| Approvals | `GET /api/v1/approvals?campaignId&take&skip`, `POST /api/v1/approvals/decide` (phase-1 contract; also `POST …/sources` kinds `Greenhouse`, `Lever`, `Adzuna` and `autoSuggestMinScore` on campaign bodies) |
 | Applications / agent | `GET /api/v1/applications`, `GET /api/v1/applications/summary`, `GET/POST /api/v1/agent-keys`, `DELETE /api/v1/agent-keys/:id` |
 
 ## Deploy targets
@@ -68,6 +69,7 @@ Chosen at build time in `src/features/auth/AuthProvider.tsx`:
 | Design tokens | `../opportunitypilot-ui/tokens.css` → copied verbatim to `src/styles/tokens.css` (identical on 2026-10-05) |
 | API contract — research, campaigns, sources, opportunities, agent | `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md` (built) |
 | API contract — Gemini, drafts, suppression, activities, follow-ups | `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` (not built) |
+| API contract — candidate phase 1: Greenhouse / Lever / Adzuna sources, `Suggested` status, approval queue | `../OpportunityPilotWebApi/docs/CANDIDATE_PHASE1_CONTRACT.md` (web built 2026-10-05; API built in parallel) |
 | API implementation status and decisions | `../OpportunityPilotWebApi/docs/IMPLEMENTATION_STATUS.md`, `../OpportunityPilotWebApi/docs/DECISIONS.md` |
 | Product status, decisions, next steps | `../HANDOFF.md` |
 | Local apply agent (CLI the web copy refers to) | `../OpportunityPilotWebApi/agent/README.md` |
