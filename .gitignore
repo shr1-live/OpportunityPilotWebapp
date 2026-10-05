@@ -28,3 +28,7 @@ dist-ssr
 .env.*
 !.env.example
 !.env.production
+
+# Claude Code: hook write log and personal settings (project settings.json is committed)
+.claude/hooks/write.log
+.claude/settings.local.json

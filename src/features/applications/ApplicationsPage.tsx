@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { safeHref } from '../opportunities/opportunityModel'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { api } from '../../lib/api'
@@ -217,10 +218,15 @@ function ApplicationsTable({ filters }: { filters: ApplicationFilters }) {
                 return (
                   <tr key={a.id}>
                     <td className="table-role">
-                      <a href={a.jobUrl} target="_blank" rel="noopener noreferrer">
-                        {a.title}
-                        <span className="sr-only"> (opens in a new tab)</span>
-                      </a>
+                      {/* The URL comes from the agent; only http(s) links are rendered as links. */}
+                      {safeHref(a.jobUrl) ? (
+                        <a href={safeHref(a.jobUrl)!} target="_blank" rel="noopener noreferrer">
+                          {a.title}
+                          <span className="sr-only"> (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <span>{a.title}</span>
+                      )}
                       <div className="muted-small">{[a.company, a.location].filter(Boolean).join(' · ')}</div>
                     </td>
                     <td>{a.platform}</td>

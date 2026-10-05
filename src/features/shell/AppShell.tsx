@@ -34,7 +34,8 @@ function useApiStatus(): ApiStatus {
       } catch (e) {
         if (cancelled) return
         setStatus(e instanceof ApiUnreachableError ? 'waking' : 'degraded')
-        if (attempt++ < 8) timer = setTimeout(check, Math.min(2000 * 2 ** attempt, 20000))
+        // Back off quickly at first, then keep checking every 30 s so the banner clears once the host wakes.
+        timer = setTimeout(check, attempt++ < 8 ? Math.min(2000 * 2 ** attempt, 20000) : 30000)
       }
     }
     void check()
@@ -129,8 +130,11 @@ export function AppShell() {
             </div>
             {gmail && (
               <div className="rail-status">
-                <span className={`dot ${gmail.status === 'Disabled' ? 'dot-neutral' : 'dot-warning'}`} aria-hidden="true" />
-                Gmail · {gmail.status === 'Disabled' ? 'disabled' : 'not connected'}
+                <span
+                  className={`dot ${gmail.status === 'Ready' ? 'dot-success' : gmail.status === 'Disabled' ? 'dot-neutral' : 'dot-warning'}`}
+                  aria-hidden="true"
+                />
+                Gmail · {gmail.status === 'Ready' ? 'connected' : gmail.status === 'Disabled' ? 'disabled' : 'not connected'}
               </div>
             )}
           </div>
@@ -151,9 +155,13 @@ export function AppShell() {
             <h1 className="topbar-title">{title}</h1>
             <div className="grow" />
             {gemini && (
-              <span className={`pill ${gemini.status === 'Configured' ? 'pill-primary' : 'pill-neutral'}`}>
+              <span className={`pill ${gemini.status === 'Ready' || gemini.status === 'Configured' ? 'pill-primary' : 'pill-neutral'}`}>
                 <span className="dot" aria-hidden="true" />
-                {gemini.status === 'Configured' ? 'Gemini key set · unverified' : 'Rules mode · no AI key'}
+                {gemini.status === 'Ready'
+                  ? 'Gemini active'
+                  : gemini.status === 'Configured'
+                    ? 'Gemini key set · unverified'
+                    : 'Rules mode · no AI key'}
               </span>
             )}
             <div className="account" ref={menuRef}>
