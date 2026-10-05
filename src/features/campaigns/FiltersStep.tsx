@@ -27,7 +27,7 @@ interface Props {
   fieldErrors?: Record<string, string[]>
 }
 
-type ListKey = Exclude<keyof CampaignCriteria, 'candidateYears' | 'workModes'>
+type ListKey = Exclude<keyof CampaignCriteria, 'candidateYears' | 'workModes' | 'excludeStaffingAgencies' | 'maxPostingAgeDays'>
 
 const HARD = <Badge tone="warning">Hard filter</Badge>
 const SOFT = <Badge>Scored</Badge>
@@ -120,6 +120,42 @@ export function FiltersStep({ draft, setDraft, mode, fieldErrors }: Props) {
           )}
           {list('excludeKeywords', 'Exclude keywords', 'e.g. internship', 'Any match in the title or text excludes it.', HARD)}
           {list('excludeOrganizations', 'Exclude organisations', 'e.g. Acme', 'Organisation names containing this are excluded.', HARD)}
+          {mode === 'Job' && (
+            <>
+              <div className="field">
+                <label className="confirm">
+                  <input
+                    type="checkbox"
+                    checked={c.excludeStaffingAgencies}
+                    onChange={(e) => setDraft((d) => ({ ...d, criteria: { ...d.criteria, excludeStaffingAgencies: e.target.checked } }))}
+                  />
+                  Exclude staffing agencies {HARD}
+                </label>
+                <p className="hint">Postings that read like an agency (“our client…”) are excluded with the sentence shown. No agency wording never counts against a job.</p>
+              </div>
+              <div className="field">
+                <div className="row wrap">
+                  <label htmlFor="criteria-age">Only postings from the last N days</label>
+                  {HARD}
+                </div>
+                <input
+                  id="criteria-age"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={365}
+                  step={1}
+                  value={c.maxPostingAgeDays ?? ''}
+                  aria-describedby="criteria-age-hint"
+                  onChange={(e) => {
+                    const raw = e.target.value
+                    setDraft((d) => ({ ...d, criteria: { ...d.criteria, maxPostingAgeDays: raw === '' ? null : Number(raw) } }))
+                  }}
+                />
+                <p id="criteria-age-hint" className="hint">Leave empty for any age. Postings without a date are kept.</p>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

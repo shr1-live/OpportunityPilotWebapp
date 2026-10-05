@@ -737,3 +737,6 @@ p { margin: 0; }
 @media (max-width: 860px) and (prefers-reduced-motion: reduce) {
   .rail, .rail-open { transition: none; }
 }
+
+/* The exact sentence behind a fit verdict — evidence, not generated text. */
+.fit-excerpt { display: block; margin-top: var(--op-space-1); color: var(--op-muted); font-size: var(--op-text-meta); font-style: italic; }
