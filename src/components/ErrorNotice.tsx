@@ -1,9 +1,10 @@
 import { ApiError, ApiUnreachableError } from '../lib/api'
 
 export function ErrorNotice({ error, onRetry }: { error: Error; onRetry?: () => void }) {
+  // Data screens already retried for about two minutes before showing this (see useApi), so say so.
   const text =
     error instanceof ApiUnreachableError
-      ? 'The API is not responding. On free hosting it sleeps when idle and can take up to a minute to start.'
+      ? 'The API is still not responding after retrying for about two minutes. The free host may be restarting — try again in a moment.'
       : error.message
   const correlationId = error instanceof ApiError ? error.correlationId : undefined
   return (
