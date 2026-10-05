@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api } from './api'
+import { api, ApiStillUnreachableError, ApiUnreachableError } from './api'
 import { isWakingError, wakeRetryDelay } from './wakeRetry'
 
 export interface ApiState<T> {
@@ -40,7 +40,8 @@ export function useApi<T>(path: string | null): ApiState<T> {
             timer = setTimeout(() => attempt(n + 1), delay)
             return
           }
-          setError(e)
+          // Say that retries happened only when they did.
+          setError(e instanceof ApiUnreachableError && n > 0 ? new ApiStillUnreachableError(e.message) : e)
           setLoading(false)
         })
     }
