@@ -186,3 +186,8 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 - **Validation:** (planned) Approve disabled when the body is empty or the version is stale (409); every disabled control states its blocker (`sendBlockers`).
 - **Status:** not built
 - **TODOs:** API M5 not built (OQ-FE-008). Approval model open (OQ-FE-001). Agent cover-letter filling unspecified.
+
+### Update 2026-10-05 — MVP research rules
+- **Builder step 2 (Job)**: hard filters gain "Exclude staffing agencies" (checkbox → `criteria.excludeStaffingAgencies`) and "Only postings from the last N days" (1–365, empty = off → `criteria.maxPostingAgeDays`). Both shown in the step-4 review.
+- **Opportunity detail**: each fit-contribution row shows the exact sentence that justified the verdict (`breakdown[].excerpt`), styled as quoted evidence; nothing shown when the verdict is Unknown.
+

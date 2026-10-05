@@ -67,12 +67,14 @@ export function emptyCriteria(): CampaignCriteria {
     signals: [],
     excludeKeywords: [],
     excludeOrganizations: [],
+    excludeStaffingAgencies: false,
+    maxPostingAgeDays: null,
   }
 }
 
 /** Which criteria each mode uses. The rest are cleared on save so they cannot silently affect a run. */
 const MODE_FIELDS: Record<SupportedMode, (keyof CampaignCriteria)[]> = {
-  Job: ['keywords', 'requiredSkills', 'preferredSkills', 'candidateYears', 'locations', 'workModes', 'excludeKeywords', 'excludeOrganizations'],
+  Job: ['keywords', 'requiredSkills', 'preferredSkills', 'candidateYears', 'locations', 'workModes', 'excludeKeywords', 'excludeOrganizations', 'excludeStaffingAgencies', 'maxPostingAgeDays'],
   Customer: ['keywords', 'industries', 'problems', 'locations', 'signals', 'excludeKeywords', 'excludeOrganizations'],
 }
 
@@ -85,6 +87,10 @@ export function criteriaForMode(mode: SupportedMode, criteria: Partial<CampaignC
     const value = criteria?.[key]
     if (key === 'candidateYears') {
       base.candidateYears = typeof value === 'number' && Number.isFinite(value) ? value : null
+    } else if (key === 'maxPostingAgeDays') {
+      base.maxPostingAgeDays = typeof value === 'number' && Number.isFinite(value) ? value : null
+    } else if (key === 'excludeStaffingAgencies') {
+      base.excludeStaffingAgencies = value === true
     } else if (Array.isArray(value)) {
       // workModes is narrowed below; every other list is free text.
       ;(base as unknown as Record<string, string[]>)[key] = normaliseTags(value as string[])
@@ -265,6 +271,8 @@ export function criteriaSummary(mode: SupportedMode, c: CampaignCriteria): Crite
   }
   push('Excluded keywords', join(c.excludeKeywords), 'hard')
   push('Excluded organisations', join(c.excludeOrganizations), 'hard')
+  push('Staffing agencies', c.excludeStaffingAgencies ? 'Excluded' : '', 'hard')
+  push('Posting age', c.maxPostingAgeDays === null ? '' : `Last ${c.maxPostingAgeDays} days`, 'hard')
   return lines
 }
 

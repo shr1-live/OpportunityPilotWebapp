@@ -294,6 +294,7 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
                             </td>
                             <td>
                               {b.reason}
+                              {b.excerpt && <q className="fit-excerpt">{b.excerpt}</q>}
                               <EvidenceRefs ids={b.evidenceIds} evidence={evidenceById} />
                             </td>
                           </tr>

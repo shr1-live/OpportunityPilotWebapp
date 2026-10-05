@@ -152,6 +152,10 @@ export interface CampaignCriteria {
   signals: string[]
   excludeKeywords: string[]
   excludeOrganizations: string[]
+  /** Job only: exclude postings that read like a staffing agency. No agency signal never counts against a job. */
+  excludeStaffingAgencies: boolean
+  /** Job only: exclude postings older than this many days (1–365); null = off. Unknown dates are kept. */
+  maxPostingAgeDays: number | null
 }
 
 export interface ResearchJobRef {
@@ -283,6 +287,8 @@ export interface FitContribution {
   points: number
   reason: string
   evidenceIds: string[]
+  /** The sentence (or structured-field note) that justified the verdict; null when Unknown. */
+  excerpt?: string | null
 }
 
 export interface OpportunityFact {
