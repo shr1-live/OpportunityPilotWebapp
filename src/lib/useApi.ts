@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from './api'
+import { isWakingError, wakeRetryDelay } from './wakeRetry'
 
 export interface ApiState<T> {
   data: T | undefined
@@ -8,7 +9,10 @@ export interface ApiState<T> {
   reload: () => void
 }
 
-/** Minimal GET hook. Enough for M0–M1; revisit if caching needs grow. */
+/**
+ * Minimal GET hook. While the free host is waking up it retries on its own (staying in `loading`), so a page
+ * fills in once the API answers instead of sticking on an error; only a failure that outlasts the retries is shown.
+ */
 export function useApi<T>(path: string | null): ApiState<T> {
   const [data, setData] = useState<T>()
   const [error, setError] = useState<Error>()
@@ -18,18 +22,33 @@ export function useApi<T>(path: string | null): ApiState<T> {
   useEffect(() => {
     if (path === null) return
     let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
     setLoading(true)
-    api<T>(path)
-      .then((d) => {
-        if (!cancelled) {
+
+    const attempt = (n: number) => {
+      api<T>(path)
+        .then((d) => {
+          if (cancelled) return
           setData(d)
           setError(undefined)
-        }
-      })
-      .catch((e: Error) => !cancelled && setError(e))
-      .finally(() => !cancelled && setLoading(false))
+          setLoading(false)
+        })
+        .catch((e: Error) => {
+          if (cancelled) return
+          const delay = isWakingError(e) ? wakeRetryDelay(n) : null
+          if (delay !== null) {
+            timer = setTimeout(() => attempt(n + 1), delay)
+            return
+          }
+          setError(e)
+          setLoading(false)
+        })
+    }
+    attempt(0)
+
     return () => {
       cancelled = true
+      clearTimeout(timer)
     }
   }, [path, nonce])
 
