@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { ErrorNotice } from '../../components/ErrorNotice'
-import { ApiError } from '../../lib/api'
+import { ApiError, ApiStillUnreachableError, ApiUnreachableError } from '../../lib/api'
+import { isWakingError, wakeRetryDelay } from '../../lib/wakeRetry'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 
@@ -13,12 +14,24 @@ export function SignInPage() {
   const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
 
   const [guestError, setGuestError] = useState<Error>()
+  const [waking, setWaking] = useState(false)
 
   async function continueAsGuest() {
     setBusy(true)
     setGuestError(undefined)
     try {
-      await guestSignIn()
+      // The free host may be asleep: keep trying while it wakes instead of failing on the first attempt.
+      for (let attempt = 0; ; attempt++) {
+        try {
+          await guestSignIn()
+          break
+        } catch (e) {
+          const delay = isWakingError(e) ? wakeRetryDelay(attempt) : null
+          if (delay === null) throw e instanceof ApiUnreachableError && attempt > 0 ? new ApiStillUnreachableError(e.message) : e
+          setWaking(true)
+          await new Promise((r) => setTimeout(r, delay))
+        }
+      }
     } catch (e) {
       setGuestError(
         e instanceof ApiError && e.status === 404
@@ -27,6 +40,7 @@ export function SignInPage() {
       )
     } finally {
       setBusy(false)
+      setWaking(false)
     }
   }
 
@@ -71,7 +85,7 @@ export function SignInPage() {
             </p>
             {guestError && <ErrorNotice error={guestError} />}
             <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void continueAsGuest()}>
-              {busy ? 'Starting…' : 'Continue as guest'}
+              {busy ? (waking ? 'Waking the server… this can take a minute' : 'Starting…') : 'Continue as guest'}
             </button>
             <p className="hint">The first visit can take up to a minute while the server wakes up.</p>
           </div>

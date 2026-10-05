@@ -16,6 +16,9 @@ export class ApiError extends Error {
 /** Thrown when the API cannot be reached at all, e.g. while the free Render host is waking up. */
 export class ApiUnreachableError extends Error {}
 
+/** The API stayed unreachable through the automatic wake-up retries (see lib/wakeRetry.ts). */
+export class ApiStillUnreachableError extends ApiUnreachableError {}
+
 type AuthHeaders = () => Promise<Record<string, string>>
 let authHeaders: AuthHeaders = async () => ({})
 let onUnauthorized: () => void = () => {}
