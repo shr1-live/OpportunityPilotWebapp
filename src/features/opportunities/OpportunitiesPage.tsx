@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import { api, apiDownload } from '../../lib/api'
 import { exportFilename, saveBlob } from '../../lib/download'
 import type {
@@ -48,18 +49,15 @@ export function OpportunitiesPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head wrap">
-        <div className="grow">
-          <h2 className="page-title">Opportunities</h2>
-          <p className="page-sub">
-            Ranked by fit against your criteria. A fit score ranks a shortlist; it does not predict that anyone will hire
-            you, buy or reply.
-          </p>
-        </div>
-        <Link className="btn btn-secondary" to="/campaigns/new">
-          New campaign
-        </Link>
-      </div>
+      <PageHeader
+        title="Opportunities"
+        subtitle="Ranked by fit against your criteria. A fit score ranks a shortlist; it does not predict that anyone will hire you, buy or reply."
+        actions={
+          <Link className="btn btn-secondary" to="/campaigns/new">
+            New campaign
+          </Link>
+        }
+      />
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
       {campaigns.loading && !campaigns.data && <p className="muted-small">Loading campaigns…</p>}

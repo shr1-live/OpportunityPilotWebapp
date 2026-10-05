@@ -1,95 +1,190 @@
-/* OpportunityPilot — design tokens
- * Drop this in as the single source of truth for the React/Vite frontend.
- * Contrast ratios noted below are measured against the surface each token
- * is used on, not assumed.
+/* OpportunityPilot — design tokens (redesign, Oct 2026)
+ * Replaces src/styles/tokens.css. Contrast ratios below are measured against
+ * the surface each token is used on, not assumed. The chart palette was
+ * checked with a six-check validator (see --op-c1..c4 below), not eyeballed.
  */
 
 :root {
-  /* Surfaces */
-  --op-background: #f6f8fa;   /* app canvas */
-  --op-surface: #ffffff;      /* cards, tables, panels */
-  --op-surface-muted: #fafbfc;/* table headers, inert strips */
-  --op-navigation: #142235;   /* left rail only */
-  --op-navigation-active: #1d3049;
-  --op-navigation-text: #9fb0c4;   /* 7.26:1 on --op-navigation */
-  --op-navigation-divider: #23374f;
+  /* ---- surfaces ------------------------------------------------------- */
+  --op-bg: #f4f6f9;            /* app canvas */
+  --op-surface: #ffffff;       /* panels, tables */
+  --op-panel-head: #fbfcfd;    /* panel header strip, table head, footers */
+  --op-nav: #101e30;           /* left rail */
+  --op-nav-active: #1b2f49;    /* rail active item */
+  --op-nav-border: #22364f;
 
-  /* Text */
-  --op-text: #172b42;
-  --op-muted: #536579;        /* 5.99:1 on white */
-  --op-text-inverse: #ffffff;
+  /* ---- ink ------------------------------------------------------------ */
+  --op-ink: #16253a;           /* body + headings */
+  --op-muted: #5a6b80;         /* labels, secondary — 5.6:1 on white */
+  --op-faint: #8395a8;         /* eyebrows, axis ticks — 3.3:1, NEVER body text */
+  --op-nav-ink: #a2b4c8;       /* rail inactive — 7.3:1 on --op-nav */
+  --op-nav-label: #6b8099;     /* rail group labels */
 
-  /* Lines */
-  --op-border: #dce4ec;
-  --op-border-strong: #c8d4e0;  /* form controls */
-  --op-border-subtle: #f0f4f7;  /* row dividers */
+  /* ---- lines ---------------------------------------------------------- */
+  --op-line: #dfe5ec;          /* panel border */
+  --op-hair: #eef2f6;          /* row divider, panel head divider */
+  --op-field-border: #c9d4e0;  /* inputs, secondary buttons */
 
-  /* Action */
-  --op-primary: #087f72;        /* 4.90:1 on white, and white text on it */
+  /* ---- action --------------------------------------------------------- */
+  --op-primary: #087f72;       /* 4.9:1 on white; white text on it passes */
   --op-primary-hover: #06685e;
-  --op-primary-tint: #eaf5f3;
-  --op-primary-tint-strong: #f2faf8;
-  --op-on-primary-tint: #0a5d54;
+  --op-primary-tint: #e9f4f2;
+  --op-primary-tint-strong: #f3fbf9;
+  --op-on-primary-tint: #065f55;
 
-  /* Status — every one of these is always paired with words, never used alone */
-  --op-success: #187344;        /* 5.89:1 on white */
-  --op-success-tint: #e7f3ec;
-  --op-on-success-tint: #146237;
+  /* ---- status: always paired with words, never colour alone ----------- */
+  --op-success: #13603a;  --op-success-tint: #e6f3ea;
+  --op-warning: #7a4f00;  --op-warning-tint: #fbf1dc;
+  --op-warning-banner: #fdf7e8; --op-warning-banner-border: #f0dfb4;
+  --op-danger:  #8f2129;  --op-danger-tint:  #fbeaec;
+  --op-neutral-tint: #edf1f6; --op-on-neutral-tint: #3b4d63;
+  --op-indigo-tint: #e8eefa;  --op-on-indigo-tint: #27478a;
 
-  --op-warning: #916000;        /* 5.42:1 on white */
-  --op-warning-tint: #fdf8ec;
-  --op-warning-border: #f0d9a8;
-  --op-on-warning-tint: #7a5200;
-
-  --op-danger: #b32c35;         /* 6.31:1 on white */
-  --op-danger-tint: #fbeced;
-  --op-on-danger-tint: #98252d;
-
-  --op-neutral-tint: #eef2f6;
-  --op-on-neutral-tint: #3d4f63;
-
-  /* AI-generated text is visually distinct from verified evidence.
-     Never reuse these for anything sourced. */
-  --op-ai-surface: #f4f2fb;
-  --op-ai-border: #d8d2ee;
-  --op-ai-text: #2f2a4d;
+  /* ---- generated text: must never share styling with evidence --------- */
+  --op-ai-surface: #f5f3fa;
+  --op-ai-border: #ddd6ee;
+  --op-ai-ink: #2f2a4d;
   --op-ai-badge: #4b3f86;
 
-  /* Shape */
-  --op-radius: 10px;        /* cards, panels */
-  --op-radius-control: 9px; /* buttons, inputs */
-  --op-radius-chip: 6px;
+  /* ---- workspace accents ---------------------------------------------- */
+  --op-ws-candidate: #00897c;
+  --op-ws-sales: #3159a8;
 
-  /* Type */
+  /* ---- chart palette --------------------------------------------------
+   * Categorical, fixed order, never cycled. Validated against #ffffff:
+   *   lightness band PASS · chroma floor PASS
+   *   CVD separation PASS (worst adjacent pair ΔE 10.4, protan)
+   *   normal-vision floor PASS (19.3) · contrast ≥3:1 PASS
+   * A 5th series folds into "Other" or becomes small multiples. */
+  --op-c1: #00897c;   /* teal   — primary series, candidate */
+  --op-c2: #a66400;   /* amber  */
+  --op-c3: #3159a8;   /* indigo — sales */
+  --op-c4: #9b3a6a;   /* plum   */
+
+  /* Sequential: one hue, light → dark. Never a rainbow. */
+  --op-seq-1: #d9ece9;
+  --op-seq-2: #aedad4;
+  --op-seq-3: #7fc5bc;
+  --op-seq-4: #1c9589;
+  --op-seq-5: #04776c;
+
+  --op-chart-grid: #eef2f6;
+  --op-chart-track: #f1f4f8;   /* the unfilled part of a bar */
+
+  /* ---- shape ---------------------------------------------------------- */
+  --op-radius: 8px;            /* panels */
+  --op-radius-control: 7px;    /* buttons, inputs */
+  --op-radius-chip: 5px;
+
+  /* ---- type ----------------------------------------------------------- */
   --op-font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --op-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --op-text-page: 24px;     /* 600, -0.02em */
-  --op-text-screen: 16.5px; /* 600 */
-  --op-text-section: 13.5px;/* 600 */
-  --op-text-body: 13.5px;
-  --op-text-table: 12.5px;
-  --op-text-meta: 12px;
-  --op-text-micro: 11.5px;
+  --op-text-page: 19px;        /* 600 / -0.02em  — page heading in content */
+  --op-text-screen: 15.5px;    /* 600            — top bar title */
+  --op-text-metric: 25px;      /* 600 / -0.025em / tabular */
+  --op-text-body: 12.5px;
+  --op-text-meta: 11.5px;
+  --op-text-micro: 10.5px;
+  --op-text-label: 10.5px;     /* 700 / 0.09em / uppercase — panel labels */
 
-  /* Spacing — 4 / 8 scale */
-  --op-space-1: 4px;
-  --op-space-2: 8px;
-  --op-space-3: 12px;
-  --op-space-4: 16px;
-  --op-space-5: 20px;
-  --op-space-6: 24px;
-  --op-space-8: 32px;
+  /* ---- spacing, 4 / 8 ------------------------------------------------- */
+  --op-space-1: 4px;  --op-space-2: 8px;  --op-space-3: 12px;
+  --op-space-4: 16px; --op-space-5: 20px; --op-space-6: 24px;
 
-  /* Layout */
-  --op-nav-width: 232px;
-  --op-header-height: 60px;
-  --op-touch-target: 44px;  /* minimum on touch surfaces */
+  /* ---- layout --------------------------------------------------------- */
+  --op-nav-width: 236px;
+  --op-nav-width-collapsed: 60px;
+  --op-nav-drawer-breakpoint: 860px;
+  --op-header-height: 56px;
+  --op-touch-target: 44px;
+  --op-row-height: 36px;
 }
 
-/* Numbers that are compared down a column are tabular. */
-.op-numeric { font-variant-numeric: tabular-nums; }
+/* Numbers compared down a column are always tabular. */
+.op-numeric,
+.op-metric,
+td.op-num { font-variant-numeric: tabular-nums; }
+
+/* A bar's data end is rounded, its baseline end is square. */
+.op-bar-fill { border-radius: 0 4px 4px 0; }
+
+/* Any horizontal scroll container must be position: relative — a lesson
+ * already paid for in this codebase. */
+.table-scroll { position: relative; overflow-x: auto; }
+
+/* Single-column mobile grids need minmax(0, 1fr) or wide cells overflow. */
+@media (max-width: 860px) {
+  .stat-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* =====================================================================
+ * Everything above this line is ../opportunitypilot-ui_1/opportunitypilot-ui/tokens.css
+ * (design v2), copied verbatim. Do not edit it here; change the design
+ * source first, then copy.
+ * ===================================================================== */
+
+/* ---- App additions: values the v2 artboards use that its tokens.css
+ * does not name yet. Measured on the surface they are used on. --------- */
+:root {
+  --op-text-inverse: #ffffff;
+
+  /* Rail (ShellStates.dc.html, Main.dc.html) */
+  --op-nav-ink-strong: #cbd8e6;     /* rail hamburger — 11.6:1 on --op-nav */
+  --op-nav-ink-soft: #93a6bc;       /* rail footer status text — 6.7:1 on --op-nav */
+  --op-nav-ink-muted: #7d92aa;      /* counts, group labels, "Soon" — 5.2:1 on --op-nav, 4.2:1 on
+                                       --op-nav-active (lifted to --op-nav-ink there). Used instead of
+                                       --op-nav-label (#6b8099, 4.1:1) for text: OQ-FE-040 */
+  --op-nav-raised: #16263c;         /* workspace switch button */
+  --op-nav-raised-border: #2b4263;
+  --op-nav-badge: #e4a93c;          /* "waiting on you" count badge */
+  --op-on-nav-badge: #2a1d00;       /* 7.9:1 on --op-nav-badge */
+  --op-nav-focus: #7fc5bc;          /* focus ring on the rail — 8.5:1 on --op-nav */
+  --op-dot-success: #3fbfa9;
+  --op-dot-warning: #e4a93c;
+  --op-dot-danger: #e5646c;
+  --op-dot-neutral: #8395a8;
+
+  /* Banners and danger lines */
+  --op-warning-icon: #8a5a00;
+  --op-danger-border: #e0b6b9;
+
+  /* Elevation */
+  --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.15);       /* skip link, tooltips */
+  --op-shadow-popover: 0 8px 24px rgb(22 37 58 / 0.12);  /* menus */
+  --op-shadow-sticky: 0 -4px 12px rgb(22 37 58 / 0.06);  /* sticky footers */
+  --op-shadow-drawer: 0 0 32px rgb(16 30 48 / 0.35);     /* open navigation drawer */
+  --op-scrim: rgb(16 30 48 / 0.46);                      /* behind the drawer */
+  --op-primary-wash: rgb(8 127 114 / 0.14);              /* hover behind small icon buttons on a primary tint */
+
+  --op-header-height-mobile: 50px;  /* top bar under 860 px */
+  --op-space-8: 32px;
+}
+
+/* ---- Legacy aliases — TEMPORARY. Old token names (design v1) mapped to
+ * v2 values so pages not yet restyled keep working. R2–R4 replace these
+ * names in app.css as each page is restyled; delete this block when no
+ * rule uses them. Tracked in OQ-FE-041. ------------------------------- */
+:root {
+  --op-background: var(--op-bg);
+  --op-surface-muted: var(--op-panel-head);
+  --op-navigation: var(--op-nav);
+  --op-navigation-active: var(--op-nav-active);
+  --op-navigation-text: var(--op-nav-ink);
+  --op-navigation-divider: var(--op-nav-border);
+  --op-text: var(--op-ink);
+  --op-border: var(--op-line);
+  --op-border-strong: var(--op-field-border);
+  --op-border-subtle: var(--op-hair);
+  --op-on-success-tint: var(--op-success);
+  --op-warning-border: var(--op-warning-banner-border);
+  --op-on-warning-tint: var(--op-warning);
+  --op-on-danger-tint: var(--op-danger);
+  --op-ai-text: var(--op-ai-ink);
+  --op-text-section: 13px;
+  --op-text-table: var(--op-text-body);
 }

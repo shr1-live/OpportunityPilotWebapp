@@ -1,3 +1,4 @@
+import { PageHeader } from '../../components/PageHeader'
 import { config } from '../../lib/config'
 import { useAuth } from '../auth/AuthProvider'
 import { useShell } from '../shell/ShellContext'
@@ -12,12 +13,10 @@ export function SettingsPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head">
-        <div>
-          <h2 className="page-title">Settings</h2>
-          <p className="page-sub">Account and deployment facts. Editable research defaults arrive with campaigns (M2).</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Settings"
+        subtitle="Account and deployment facts. Editable research defaults arrive with campaigns (M2)."
+      />
 
       <section className="card stack-3">
         <h3 className="section-heading">Account</h3>

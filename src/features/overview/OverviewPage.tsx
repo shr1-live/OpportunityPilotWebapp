@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { StatusBadge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import type { Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useShell } from '../shell/ShellContext'
@@ -20,16 +21,14 @@ export function OverviewPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head">
-        <div>
-          <h2 className="page-title">Your opportunity workspace</h2>
-          <p className="page-sub">
-            {hasProfile
-              ? 'Your profiles are ready for campaigns. Nothing is researched until you queue a run.'
-              : 'Nothing has been researched yet. Start by describing what you offer — you can stop after any step.'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Your opportunity workspace"
+        subtitle={
+          hasProfile
+            ? 'Your profiles are ready for campaigns. Nothing is researched until you queue a run.'
+            : 'Nothing has been researched yet. Start by describing what you offer — you can stop after any step.'
+        }
+      />
 
       {overview.error && <ErrorNotice error={overview.error} onRetry={overview.reload} />}
 

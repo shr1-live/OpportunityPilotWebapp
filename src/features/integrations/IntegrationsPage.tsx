@@ -1,5 +1,6 @@
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { StatusBadge } from '../../components/StatusBadge'
+import { PageHeader } from '../../components/PageHeader'
 import type { Capabilities, Capability } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 
@@ -19,15 +20,10 @@ export function IntegrationsPage() {
 
   return (
     <div className="page stack-6">
-      <div className="page-head">
-        <div>
-          <h2 className="page-title">Sources & integrations</h2>
-          <p className="page-sub">
-            Each row states what the integration can actually do in this build. “Ready” is reserved for something that
-            works today; keys and secrets live in server configuration and are never shown here.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Sources & integrations"
+        subtitle="Each row states what the integration can actually do in this build. “Ready” is reserved for something that works today; keys and secrets live in server configuration and are never shown here."
+      />
 
       {caps.error && <ErrorNotice error={caps.error} onRetry={caps.reload} />}
       {caps.loading && !caps.data && <p className="muted-small">Loading capabilities…</p>}
