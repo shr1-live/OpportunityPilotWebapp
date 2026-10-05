@@ -119,6 +119,10 @@ None. There is no `paths`/`baseUrl` in `tsconfig.app.json` and no `resolve.alias
 - Moving between steps moves focus to the new step heading; destructive actions confirm first.
 - Text contrast at least 4.5:1 — use the measured token pairs.
 
+### Git workflow
+
+- Every feature or change goes on a **new branch** (`feature/`, `fix/`, `docs/`, `chore/` + name); never commit to `main`. Run this repo's checks, commit, then from the workspace root run `bash tools/pr.sh <repo> "<title>" <body-file>`: it pushes, raises a PR to `main` and **squash-merges** it (auto-merge authorised by the user *for now*; if withdrawn, pass `--no-merge` and wait), deletes the branch and pulls `main`. `main` deploys automatically, so a merge is a release.
+
 ### Do not
 
 - Do not invent endpoints, DTO fields, enum values or sample data.
