@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router-dom'
 import { api, ApiUnreachableError } from '../../lib/api'
-import type { Capabilities } from '../../lib/types'
+import type { Capabilities, Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useAuth } from '../auth/AuthProvider'
 import { ShellContext } from './ShellContext'
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/applications', label: 'Applications' },
   { to: '/campaigns', label: 'Campaigns' },
   { to: '/opportunities', label: 'Opportunities' },
+  { to: '/approvals', label: 'Approvals', count: 'awaitingApproval' as const },
   { to: '/outreach', label: 'Outreach' },
   { to: '/follow-ups', label: 'Follow-ups' },
   { to: '/profiles', label: 'Profiles' },
@@ -58,6 +59,9 @@ export function AppShell() {
   const apiStatus = useApiStatus()
   // Capabilities need no database, so they also explain a degraded API (e.g. missing setup).
   const capabilities = useApi<Capabilities>(apiStatus === 'ready' || apiStatus === 'degraded' ? '/api/v1/capabilities' : null)
+  // Only for the nav count; screens that show the figures fetch their own copy.
+  const overview = useApi<Overview>(apiStatus === 'ready' ? '/api/v1/overview' : null)
+  const awaitingApproval = overview.data?.awaitingApproval
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -107,7 +111,7 @@ export function AppShell() {
   }
 
   return (
-    <ShellContext.Provider value={{ capabilities: caps }}>
+    <ShellContext.Provider value={{ capabilities: caps, awaitingApproval, refreshOverview: overview.reload }}>
       <div className="shell">
         <a href="#main" className="skip-link">
           Skip to content
@@ -119,6 +123,12 @@ export function AppShell() {
               <li key={n.to}>
                 <NavLink to={n.to} end={n.end} className="rail-link">
                   {n.label}
+                  {n.count === 'awaitingApproval' && typeof awaitingApproval === 'number' && awaitingApproval > 0 && (
+                    <span className="nav-count op-numeric">
+                      {awaitingApproval}
+                      <span className="sr-only"> awaiting approval</span>
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}

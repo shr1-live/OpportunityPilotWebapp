@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   addTags,
+  adzunaSearch,
   applicableCriteria,
+  AUTO_SUGGEST,
+  autoSuggestProblem,
+  BOARD_TOKEN_PATTERN,
   campaignPayload,
   criteriaForMode,
   criteriaSummary,
@@ -13,7 +17,9 @@ import {
   newDraft,
   normaliseTags,
   normaliseWeights,
+  parseBoardInput,
   parseTagInput,
+  sourceKindAllowed,
   weightsForMode,
 } from './campaignModel'
 
@@ -137,5 +143,98 @@ describe('campaign draft', () => {
     const problems = draftProblems({ ...newDraft(), resultLimit: 0, criteria: { ...emptyCriteria(), candidateYears: -1 } }, '')
     expect(problems).toHaveLength(4)
     expect(draftProblems({ ...newDraft(), name: 'Ok' }, 'p')).toEqual([])
+  })
+})
+
+describe('auto-suggest threshold', () => {
+  it('is off by default and off is always valid', () => {
+    expect(newDraft().autoSuggestMinScore).toBeNull()
+    expect(autoSuggestProblem(null)).toBeNull()
+  })
+
+  it('accepts whole numbers from 1 to 100 and defaults to 80 when turned on', () => {
+    expect(AUTO_SUGGEST.default).toBe(80)
+    for (const ok of [1, 80, 100]) expect(autoSuggestProblem(ok)).toBeNull()
+  })
+
+  it('rejects 0, over 100, fractions and a blank input', () => {
+    for (const bad of [0, 101, 80.5, Number.NaN, -3]) expect(autoSuggestProblem(bad)).toMatch(/1 to 100/)
+  })
+
+  it('blocks saving a Job draft with a bad threshold but ignores it for Customer drafts', () => {
+    const draft = { ...newDraft(), name: 'Ok', autoSuggestMinScore: 0 }
+    expect(draftProblems(draft, 'p', 'Job')).toHaveLength(1)
+    expect(draftProblems(draft, 'p', 'Customer')).toEqual([])
+  })
+
+  it('sends the threshold (or null to turn it off) for Job campaigns and omits it for Customer ones', () => {
+    expect(campaignPayload({ ...newDraft(), autoSuggestMinScore: 75 }, 'Job')).toMatchObject({ autoSuggestMinScore: 75 })
+    expect(campaignPayload(newDraft(), 'Job')).toHaveProperty('autoSuggestMinScore', null)
+    expect(campaignPayload({ ...newDraft(), autoSuggestMinScore: 75 }, 'Customer')).not.toHaveProperty('autoSuggestMinScore')
+  })
+
+  it('reads the saved threshold and treats a missing field (older API) as off', () => {
+    const base = { profileId: 'p', mode: 'Job' as const, name: 'n', goal: '', criteria: {}, weights: DEFAULT_WEIGHTS.Job, resultLimit: 25 }
+    expect(draftFromCampaign({ ...base, autoSuggestMinScore: 90 }).autoSuggestMinScore).toBe(90)
+    expect(draftFromCampaign(base).autoSuggestMinScore).toBeNull()
+  })
+})
+
+describe('board tokens', () => {
+  it('accepts a bare token or slug and lower-cases it', () => {
+    expect(parseBoardInput('Greenhouse', ' stripe ')).toEqual({ token: 'stripe' })
+    expect(parseBoardInput('Lever', 'LeverDemo')).toEqual({ token: 'leverdemo' })
+    expect(parseBoardInput('Greenhouse', 'acme-labs-2')).toEqual({ token: 'acme-labs-2' })
+  })
+
+  it('derives the Greenhouse token from board URLs, with or without the scheme', () => {
+    expect(parseBoardInput('Greenhouse', 'https://boards.greenhouse.io/stripe')).toEqual({ token: 'stripe' })
+    expect(parseBoardInput('Greenhouse', 'boards.greenhouse.io/stripe/jobs/123456')).toEqual({ token: 'stripe' })
+    expect(parseBoardInput('Greenhouse', 'https://job-boards.greenhouse.io/Stripe?gh_src=x')).toEqual({ token: 'stripe' })
+    expect(parseBoardInput('Greenhouse', 'https://boards.greenhouse.io/embed/job_board?for=stripe')).toEqual({ token: 'stripe' })
+  })
+
+  it('derives the Lever slug from jobs.lever.co URLs', () => {
+    expect(parseBoardInput('Lever', 'https://jobs.lever.co/leverdemo')).toEqual({ token: 'leverdemo' })
+    expect(parseBoardInput('Lever', 'jobs.lever.co/leverdemo/5ac21346-8e0c-4494-8e7a-3eb92ff77902')).toEqual({ token: 'leverdemo' })
+  })
+
+  it('rejects other hosts, including the other board provider', () => {
+    expect(parseBoardInput('Greenhouse', 'https://jobs.lever.co/leverdemo').error).toMatch(/greenhouse\.io/)
+    expect(parseBoardInput('Lever', 'https://boards.greenhouse.io/stripe').error).toMatch(/jobs\.lever\.co/)
+    expect(parseBoardInput('Greenhouse', 'https://evil.example/boards.greenhouse.io/stripe').error).toBeDefined()
+  })
+
+  it('rejects blanks, links without a token and characters outside the contract pattern', () => {
+    expect(parseBoardInput('Greenhouse', '   ').error).toBeDefined()
+    expect(parseBoardInput('Greenhouse', 'https://boards.greenhouse.io/').error).toMatch(/does not include/)
+    expect(parseBoardInput('Lever', 'acme_corp').error).toMatch(/letters, digits and hyphens/)
+    expect(parseBoardInput('Lever', 'a'.repeat(101)).error).toBeDefined()
+    expect(parseBoardInput('Lever', 'a'.repeat(100))).toEqual({ token: 'a'.repeat(100) })
+  })
+
+  it('only ever returns tokens that match the API pattern', () => {
+    for (const raw of ['stripe', 'https://boards.greenhouse.io/stripe', 'ACME', 'x y', 'https://boards.greenhouse.io/a%20b']) {
+      const r = parseBoardInput('Greenhouse', raw)
+      if (r.token !== undefined) expect(BOARD_TOKEN_PATTERN.test(r.token)).toBe(true)
+    }
+  })
+})
+
+describe('job sources', () => {
+  it('offers Greenhouse, Lever and Adzuna to Job campaigns only', () => {
+    for (const kind of ['Greenhouse', 'Lever', 'Adzuna'] as const) {
+      expect(sourceKindAllowed(kind, 'Job')).toBe(true)
+      expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
+    }
+    expect(sourceKindAllowed('Url', 'Customer')).toBe(true)
+  })
+
+  it('shows Adzuna searching up to 3 keywords in the first non-Remote location', () => {
+    expect(adzunaSearch({ keywords: ['a', 'b', 'c', 'd'], locations: ['Remote', ' Pune ', 'Delhi'] })).toEqual({
+      keywords: ['a', 'b', 'c'],
+      location: 'Pune',
+    })
+    expect(adzunaSearch({ keywords: [], locations: ['remote'] })).toEqual({ keywords: [], location: null })
   })
 })

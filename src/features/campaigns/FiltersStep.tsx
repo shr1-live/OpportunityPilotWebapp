@@ -1,9 +1,12 @@
 import type { Dispatch, SetStateAction } from 'react'
+import { Link } from 'react-router-dom'
 import { Badge } from '../../components/StatusBadge'
 import { TagInput } from '../../components/TagInput'
 import type { CampaignCriteria, WorkMode } from '../../lib/types'
 import {
   applicableCriteria,
+  AUTO_SUGGEST,
+  autoSuggestProblem,
   type CampaignDraft,
   clampWeight,
   DEFAULT_WEIGHTS,
@@ -195,6 +198,8 @@ export function FiltersStep({ draft, setDraft, mode, fieldErrors }: Props) {
         </div>
       </section>
 
+      {mode === 'Job' && <AutoSuggest draft={draft} setDraft={setDraft} fieldErrors={fieldErrors} />}
+
       <WeightsEditor draft={draft} setDraft={setDraft} mode={mode} />
     </div>
   )
@@ -287,6 +292,73 @@ function WeightsEditor({ draft, setDraft, mode }: Omit<Props, 'fieldErrors'>) {
         {anyActive
           ? 'Preview of the server’s normalisation to 100. Criteria with nothing configured are left out and their weight is shared among the rest.'
           : 'Every applied criterion has weight 0, so every result would score 0. Give at least one a weight.'}
+      </p>
+    </section>
+  )
+}
+
+/** "Suggest jobs for approval": research moves qualified jobs at or above the threshold into the approval queue. */
+function AutoSuggest({ draft, setDraft, fieldErrors }: Omit<Props, 'mode'>) {
+  const value = draft.autoSuggestMinScore
+  const on = value !== null
+  const problem = on ? autoSuggestProblem(value) : null
+  const serverError = fieldError(fieldErrors, 'autoSuggestMinScore')
+  const error = problem ?? serverError
+  const shown = on && Number.isFinite(value) ? value : 'N'
+
+  return (
+    <section className="stack-3" aria-labelledby="filters-suggest">
+      <h4 id="filters-suggest" className="section-heading">
+        Approval queue
+      </h4>
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={on}
+          aria-describedby="auto-suggest-explain"
+          onChange={(e) =>
+            setDraft((d) => ({ ...d, autoSuggestMinScore: e.target.checked ? AUTO_SUGGEST.default : null }))
+          }
+        />
+        Suggest jobs for approval
+      </label>
+      {on && (
+        <div className="field limit-field">
+          <label htmlFor="auto-suggest-min">Minimum fit score</label>
+          <input
+            id="auto-suggest-min"
+            type="number"
+            inputMode="numeric"
+            min={AUTO_SUGGEST.min}
+            max={AUTO_SUGGEST.max}
+            step={1}
+            value={Number.isFinite(value) ? (value as number) : ''}
+            aria-describedby={`auto-suggest-hint${error ? ' auto-suggest-error' : ''}`}
+            aria-invalid={error ? true : undefined}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, autoSuggestMinScore: e.target.value === '' ? Number.NaN : Number(e.target.value) }))
+            }
+          />
+          <p id="auto-suggest-hint" className="hint">
+            {AUTO_SUGGEST.min}–{AUTO_SUGGEST.max}. Fit {AUTO_SUGGEST.default}/100 is a reasonable start; lower it to see
+            more suggestions.
+          </p>
+          {error && (
+            <p id="auto-suggest-error" className="field-error">
+              {error}
+            </p>
+          )}
+        </div>
+      )}
+      <p id="auto-suggest-explain" className="muted-small">
+        {on ? (
+          <>
+            After each research run, qualified jobs scoring at least {shown} wait in{' '}
+            <Link to="/approvals">Approvals</Link>; nothing is applied until you approve.
+          </>
+        ) : (
+          'Off: new matches stay in Opportunities for you to shortlist one by one. Turn this on to have qualified jobs above a fit score collected for approval in one batch; nothing is applied until you approve.'
+        )}
       </p>
     </section>
   )

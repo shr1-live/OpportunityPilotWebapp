@@ -2,14 +2,20 @@ import { describe, expect, it } from 'vitest'
 import {
   agentApplyPlatform,
   appendUnique,
+  appliesViaForPlatform,
+  appliesViaLabel,
   DEFAULT_FILTERS,
   factLabel,
   formatCoverage,
   formatPoints,
   formatScore,
+  isUserApplyBoard,
   opportunitiesPath,
+  platformLabel,
   quickActions,
   safeHref,
+  settableStatuses,
+  STATUS_LABELS,
   valueLabel,
 } from './opportunityModel'
 
@@ -88,5 +94,52 @@ describe('safeHref', () => {
     expect(safeHref('javascript:alert(1)')).toBeNull()
     expect(safeHref('not a url')).toBeNull()
     expect(safeHref(null)).toBeNull()
+  })
+})
+
+describe('suggested status', () => {
+  it('reads as awaiting approval, paired with a tone', () => {
+    expect(STATUS_LABELS.Suggested).toEqual({ text: 'Awaiting approval', tone: 'warning' })
+  })
+
+  it('offers Approve (→ Shortlisted) and Reject (→ Dismissed) as quick actions', () => {
+    expect(quickActions('Suggested')).toEqual([
+      { label: 'Approve', to: 'Shortlisted' },
+      { label: 'Reject', to: 'Dismissed' },
+    ])
+  })
+
+  it('cannot be chosen by hand, but stays visible while it is the current status', () => {
+    expect(settableStatuses('New')).not.toContain('Suggested')
+    expect(settableStatuses('Suggested')).toContain('Suggested')
+    expect(settableStatuses('New')).toContain('Shortlisted')
+  })
+})
+
+describe('platforms and who applies', () => {
+  it('labels the open job boards and hides Other / unknown', () => {
+    expect(platformLabel('Greenhouse')).toBe('Greenhouse')
+    expect(platformLabel('Lever')).toBe('Lever')
+    expect(platformLabel('Adzuna')).toBe('Adzuna')
+    expect(platformLabel('Other')).toBeNull()
+    expect(platformLabel(null)).toBeNull()
+  })
+
+  it('maps LinkedIn and Naukri to the agent and everything else to you', () => {
+    expect(appliesViaForPlatform('LinkedIn')).toBe('Agent')
+    expect(appliesViaForPlatform('Naukri')).toBe('Agent')
+    for (const p of ['Greenhouse', 'Lever', 'Adzuna', 'Other', null] as const) expect(appliesViaForPlatform(p)).toBe('You')
+  })
+
+  it('words the applies-via line for the approval queue', () => {
+    expect(appliesViaLabel('Agent', 'Naukri')).toBe('your agent (Naukri)')
+    expect(appliesViaLabel('Agent', null)).toBe('your agent (LinkedIn/Naukri)')
+    expect(appliesViaLabel('You', 'Greenhouse')).toBe('you (opens the application page)')
+  })
+
+  it('marks only Greenhouse, Lever and Adzuna as boards the user applies to directly', () => {
+    expect(isUserApplyBoard('Lever')).toBe(true)
+    expect(isUserApplyBoard('LinkedIn')).toBe(false)
+    expect(isUserApplyBoard('Other')).toBe(false)
   })
 })

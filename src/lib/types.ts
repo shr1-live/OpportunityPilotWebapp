@@ -40,6 +40,9 @@ export interface Capability {
   cannot: string[]
 }
 
+/** Capability keys for the open job sources (CANDIDATE_PHASE1_CONTRACT.md §1), category "Sources". */
+export type SourceCapabilityKey = 'greenhouse' | 'lever' | 'adzuna'
+
 export interface Capabilities {
   environment: string
   databaseProvider: string
@@ -59,6 +62,8 @@ export interface Overview {
   needsManual: number
   campaigns: number
   shortlisted: number
+  /** Opportunities in status Suggested, waiting in the approval queue. */
+  awaitingApproval: number
 }
 
 export type ApplicationPlatform = 'LinkedIn' | 'Naukri' | 'Instahyre'
@@ -113,13 +118,16 @@ export interface CreatedAgentKey extends AgentKey {
 
 /** Only Job and Customer are accepted by the API until M7. */
 export type OpportunityMode = 'Customer' | 'Partner' | 'Investor' | 'Job' | 'Freelance'
-export type SourceKind = 'Paste' | 'Csv' | 'Url' | 'Feed' | 'Agent'
+/** Greenhouse, Lever and Adzuna are Job-campaign sources (CANDIDATE_PHASE1_CONTRACT.md); Customer campaigns reject them. */
+export type SourceKind = 'Paste' | 'Csv' | 'Url' | 'Feed' | 'Agent' | 'Greenhouse' | 'Lever' | 'Adzuna'
 export type SourceStatus = 'Pending' | 'Ok' | 'Failed' | 'Skipped'
 export type ResearchJobState = 'Queued' | 'Running' | 'Completed' | 'CompletedWithGaps' | 'Failed' | 'Cancelled'
 export type ResearchStage = 'Prepare' | 'Gather' | 'Extract' | 'Filter' | 'Score' | 'Complete'
 export type FilterOutcome = 'Qualified' | 'NeedsVerification' | 'Excluded'
+/** Suggested: research put it in the approval queue (score ≥ the campaign's autoSuggestMinScore). */
 export type OpportunityStatus =
   | 'New'
+  | 'Suggested'
   | 'Shortlisted'
   | 'Dismissed'
   | 'Applied'
@@ -127,7 +135,7 @@ export type OpportunityStatus =
   | 'Responded'
   | 'Interested'
   | 'Closed'
-export type JobPlatform = 'LinkedIn' | 'Naukri' | 'Other'
+export type JobPlatform = 'LinkedIn' | 'Naukri' | 'Other' | 'Greenhouse' | 'Lever' | 'Adzuna'
 export type EventLevel = 'Info' | 'Warning' | 'Error'
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite'
 
@@ -160,6 +168,8 @@ export interface CampaignSummary {
   name: string
   goal: string
   resultLimit: number
+  /** 1–100: qualified Job opportunities scoring at least this become Suggested after a run. null = off. */
+  autoSuggestMinScore: number | null
   version: number
   createdAt: string
   updatedAt: string
@@ -307,4 +317,43 @@ export interface OpportunityDetail extends OpportunitySummary {
   gaps: string[]
   evidence: Evidence[]
   activities: OpportunityActivity[]
+}
+
+// ---------- Approval queue (docs/CANDIDATE_PHASE1_CONTRACT.md §2 in OpportunityPilotWebApi) ----------
+
+/** Agent: the local agent applies (LinkedIn / Naukri). You: the user opens applyUrl and applies. */
+export type AppliesVia = 'Agent' | 'You'
+
+export interface ApprovalItem {
+  opportunityId: string
+  campaignId: string
+  campaignName: string
+  title: string
+  organization: string
+  location: string | null
+  platform: JobPlatform | null
+  applyUrl: string | null
+  score: number
+  coverage: number
+  outcomeReason: string | null
+  appliesVia: AppliesVia
+}
+
+/** GET /api/v1/approvals — Suggested opportunities, highest score first. */
+export interface ApprovalPage {
+  total: number
+  items: ApprovalItem[]
+}
+
+/** POST /api/v1/approvals/decide — at most 200 ids in total, no id in both lists. */
+export interface DecideRequest {
+  approve: string[]
+  reject: string[]
+}
+
+/** Ids not owned or no longer Suggested are counted as skipped, not errors. */
+export interface DecideResult {
+  approved: number
+  rejected: number
+  skipped: number
 }

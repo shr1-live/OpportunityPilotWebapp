@@ -15,6 +15,7 @@ import type {
 import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
 import { MODE_LABELS } from '../campaigns/campaignModel'
+import { useShell } from '../shell/ShellContext'
 import {
   appendUnique,
   DEFAULT_FILTERS,
@@ -23,6 +24,7 @@ import {
   opportunitiesPath,
   type OpportunityFilters,
   OUTCOME_LABELS,
+  platformLabel,
   quickActions,
   STATUS_LABELS,
   STATUSES,
@@ -203,6 +205,7 @@ function OpportunityTable({ campaignId, filters }: { campaignId: string; filters
   const [busy, setBusy] = useState<string | null>(null)
   const [actionError, setActionError] = useState<Error>()
   const [announcement, setAnnouncement] = useState('')
+  const { refreshOverview } = useShell()
 
   if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} />
   if (!first.data) return <p className="muted-small">Loading opportunities…</p>
@@ -235,6 +238,8 @@ function OpportunityTable({ campaignId, filters }: { campaignId: string; filters
         body: JSON.stringify({ status }),
       })
       setPatched((p) => ({ ...p, [o.id]: { ...o, status: updated.status, updatedAt: updated.updatedAt } }))
+      // The nav's approval count changes when a suggestion is approved or rejected here.
+      if (o.status === 'Suggested' || updated.status === 'Suggested') refreshOverview()
       setAnnouncement(`${o.title} is now ${STATUS_LABELS[updated.status]?.text ?? updated.status}.`)
     } catch (e) {
       setActionError(e as Error)
@@ -303,7 +308,7 @@ function OpportunityTable({ campaignId, filters }: { campaignId: string; filters
                     </td>
                     <td>
                       {MODE_LABELS[o.mode] ?? o.mode}
-                      {o.platform && o.platform !== 'Other' && <div className="muted-small">{o.platform}</div>}
+                      {platformLabel(o.platform) && <div className="muted-small">{platformLabel(o.platform)}</div>}
                     </td>
                     <td className="op-numeric nowrap">
                       <strong>Fit {formatScore(o.score)}</strong>

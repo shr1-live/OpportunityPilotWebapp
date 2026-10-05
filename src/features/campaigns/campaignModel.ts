@@ -2,6 +2,7 @@ import type {
   CampaignCriteria,
   OpportunityMode,
   ProfileType,
+  SourceCapabilityKey,
   SourceKind,
   SourceStatus,
   WorkMode,
@@ -41,6 +42,17 @@ export const WORK_MODES: { value: WorkMode; label: string }[] = [
 ]
 
 export const RESULT_LIMIT = { min: 1, max: 100, default: 25 }
+
+/** "Suggest jobs for approval": off (null) by default; when on, the minimum fit score (contract: 1–100). */
+export const AUTO_SUGGEST = { min: 1, max: 100, default: 80 }
+
+/** Why the threshold cannot be saved, or null when it can (null threshold = off, always valid). */
+export function autoSuggestProblem(value: number | null): string | null {
+  if (value === null) return null
+  if (!Number.isInteger(value) || value < AUTO_SUGGEST.min || value > AUTO_SUGGEST.max)
+    return `Set the minimum fit score for suggestions to a whole number from ${AUTO_SUGGEST.min} to ${AUTO_SUGGEST.max}, or turn suggestions off.`
+  return null
+}
 
 export function emptyCriteria(): CampaignCriteria {
   return {
@@ -262,6 +274,87 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   Url: 'Public URL',
   Feed: 'RSS / Atom feed',
   Agent: 'Local agent',
+  Greenhouse: 'Greenhouse careers board',
+  Lever: 'Lever careers board',
+  Adzuna: 'Adzuna job search',
+}
+
+/** Open job sources the server fetches from documented public APIs. Job campaigns only. */
+export type JobSourceKind = Extract<SourceKind, 'Greenhouse' | 'Lever' | 'Adzuna'>
+export type BoardKind = Extract<SourceKind, 'Greenhouse' | 'Lever'>
+
+export const JOB_SOURCE_CAPABILITY: Record<JobSourceKind, SourceCapabilityKey> = {
+  Greenhouse: 'greenhouse',
+  Lever: 'lever',
+  Adzuna: 'adzuna',
+}
+
+/** The source kinds a campaign of this mode may add; the API rejects the job sources for Customer campaigns. */
+export function sourceKindAllowed(kind: SourceKind, mode: OpportunityMode): boolean {
+  if (kind === 'Greenhouse' || kind === 'Lever' || kind === 'Adzuna') return mode === 'Job'
+  return true
+}
+
+/** Same pattern the API validates a board token / company slug with. */
+export const BOARD_TOKEN_PATTERN = /^[a-z0-9-]{1,100}$/
+
+const BOARD_HOSTS: Record<BoardKind, string[]> = {
+  Greenhouse: ['boards.greenhouse.io', 'job-boards.greenhouse.io'],
+  Lever: ['jobs.lever.co'],
+}
+
+export const BOARD_EXAMPLES: Record<BoardKind, { token: string; url: string }> = {
+  Greenhouse: { token: 'stripe', url: 'https://boards.greenhouse.io/stripe' },
+  Lever: { token: 'leverdemo', url: 'https://jobs.lever.co/leverdemo' },
+}
+
+export type BoardInput = { token: string; error?: undefined } | { token?: undefined; error: string }
+
+/**
+ * Turns what the user typed — a bare token/slug or a board URL — into the token the API expects.
+ * URLs must be on the board's own host; the token is the first path segment (Greenhouse embed links: ?for=).
+ */
+export function parseBoardInput(kind: BoardKind, raw: string): BoardInput {
+  const what = kind === 'Greenhouse' ? 'board token' : 'company slug'
+  const input = raw.trim()
+  if (!input) return { error: `Enter the ${what} or paste the board's URL.` }
+
+  let candidate = input
+  if (/[/.:]/.test(input)) {
+    let url: URL
+    try {
+      url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(input) ? input : `https://${input}`)
+    } catch {
+      return { error: `That is neither a ${what} nor a link we can read.` }
+    }
+    const host = url.hostname.toLowerCase().replace(/^www\./, '')
+    if (!BOARD_HOSTS[kind].includes(host))
+      return { error: `Use a link on ${BOARD_HOSTS[kind].join(' or ')}, or type the ${what} alone.` }
+    const segments = url.pathname.split('/').filter(Boolean)
+    candidate = kind === 'Greenhouse' && segments[0] === 'embed' ? (url.searchParams.get('for') ?? '') : (segments[0] ?? '')
+    try {
+      candidate = decodeURIComponent(candidate)
+    } catch {
+      /* keep it encoded; the pattern check below rejects it */
+    }
+    if (!candidate) return { error: `That link does not include a ${what}. Example: ${BOARD_EXAMPLES[kind].url}` }
+  }
+
+  const token = candidate.toLowerCase()
+  if (!BOARD_TOKEN_PATTERN.test(token))
+    return { error: `A ${what} uses only letters, digits and hyphens (up to 100), e.g. ${BOARD_EXAMPLES[kind].token}.` }
+  return { token }
+}
+
+/** What an Adzuna source will search for: up to 3 keywords and the first location that is not "Remote". */
+export function adzunaSearch(criteria: Pick<CampaignCriteria, 'keywords' | 'locations'>): {
+  keywords: string[]
+  location: string | null
+} {
+  return {
+    keywords: criteria.keywords.slice(0, 3),
+    location: criteria.locations.find((l) => l.trim() && l.trim().toLowerCase() !== 'remote')?.trim() ?? null,
+  }
 }
 
 export const SOURCE_STATUS_LABELS: Record<SourceStatus, { text: string; tone: string }> = {
@@ -300,6 +393,8 @@ export interface CampaignDraft {
   /** Keys for both modes, so switching mode on a new campaign keeps what was typed for the other. */
   weights: Record<string, number>
   resultLimit: number
+  /** Job only. null = suggestions off; NaN while the input is blank. */
+  autoSuggestMinScore: number | null
 }
 
 export const NAME_MAX = 200
@@ -315,6 +410,7 @@ export function newDraft(): CampaignDraft {
     criteria: emptyCriteria(),
     weights: { ...DEFAULT_WEIGHTS.Job, ...DEFAULT_WEIGHTS.Customer },
     resultLimit: RESULT_LIMIT.default,
+    autoSuggestMinScore: null,
   }
 }
 
@@ -326,6 +422,7 @@ export function draftFromCampaign(c: {
   criteria: Partial<CampaignCriteria>
   weights: Record<string, number>
   resultLimit: number
+  autoSuggestMinScore?: number | null
 }): CampaignDraft {
   const mode: SupportedMode = isSupportedMode(c.mode) ? c.mode : 'Job'
   return {
@@ -336,22 +433,28 @@ export function draftFromCampaign(c: {
     criteria: { ...emptyCriteria(), ...criteriaForMode(mode, c.criteria) },
     weights: { ...DEFAULT_WEIGHTS.Job, ...DEFAULT_WEIGHTS.Customer, ...weightsForMode(mode, c.weights) },
     resultLimit: c.resultLimit,
+    // Older API builds do not send the field yet; treat that as "off".
+    autoSuggestMinScore: typeof c.autoSuggestMinScore === 'number' ? c.autoSuggestMinScore : null,
   }
 }
 
-/** The body the API receives: trimmed text, only this mode's criteria and weights. */
+/**
+ * The body the API receives: trimmed text, only this mode's criteria and weights.
+ * Job campaigns always send autoSuggestMinScore (null turns suggestions off); Customer campaigns omit it.
+ */
 export function campaignPayload(draft: CampaignDraft, mode: SupportedMode) {
-  return {
+  const body = {
     name: draft.name.trim(),
     goal: draft.goal.trim(),
     criteria: criteriaForMode(mode, draft.criteria),
     weights: weightsForMode(mode, draft.weights),
     resultLimit: draft.resultLimit,
   }
+  return mode === 'Job' ? { ...body, autoSuggestMinScore: draft.autoSuggestMinScore } : body
 }
 
 /** Why the draft cannot be saved yet, in words the disabled Save button can show. Empty when it can. */
-export function draftProblems(draft: CampaignDraft, profileId: string): string[] {
+export function draftProblems(draft: CampaignDraft, profileId: string, mode?: SupportedMode): string[] {
   const problems: string[] = []
   if (!profileId) problems.push('Choose a profile.')
   if (!draft.name.trim()) problems.push('Give the campaign a name.')
@@ -362,5 +465,7 @@ export function draftProblems(draft: CampaignDraft, profileId: string): string[]
   const years = draft.criteria.candidateYears
   if (years !== null && (!Number.isFinite(years) || years < 0 || years > YEARS_MAX))
     problems.push(`Set your years of experience between 0 and ${YEARS_MAX}, or leave it empty.`)
+  const suggest = mode === 'Customer' ? null : autoSuggestProblem(draft.autoSuggestMinScore)
+  if (suggest) problems.push(suggest)
   return problems
 }
