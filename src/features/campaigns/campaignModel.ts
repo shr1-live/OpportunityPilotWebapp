@@ -285,21 +285,45 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   Greenhouse: 'Greenhouse careers board',
   Lever: 'Lever careers board',
   Adzuna: 'Adzuna job search',
+  Ashby: 'Ashby careers board',
+  SmartRecruiters: 'SmartRecruiters careers board',
+  Recruitee: 'Recruitee careers board',
+  Workable: 'Workable careers board',
+  Remotive: 'Remotive remote jobs',
+  RemoteOk: 'Remote OK jobs',
 }
 
 /** Open job sources the server fetches from documented public APIs. Job campaigns only. */
-export type JobSourceKind = Extract<SourceKind, 'Greenhouse' | 'Lever' | 'Adzuna'>
-export type BoardKind = Extract<SourceKind, 'Greenhouse' | 'Lever'>
+export type JobSourceKind = Extract<
+  SourceKind,
+  | 'Greenhouse'
+  | 'Lever'
+  | 'Adzuna'
+  | 'Ashby'
+  | 'SmartRecruiters'
+  | 'Recruitee'
+  | 'Workable'
+  | 'Remotive'
+  | 'RemoteOk'
+>
+export type BoardKind = Extract<SourceKind, 'Greenhouse' | 'Lever' | 'Ashby' | 'SmartRecruiters' | 'Recruitee' | 'Workable'>
+export type AggregateBoardKind = Extract<SourceKind, 'Remotive' | 'RemoteOk'>
 
 export const JOB_SOURCE_CAPABILITY: Record<JobSourceKind, SourceCapabilityKey> = {
   Greenhouse: 'greenhouse',
   Lever: 'lever',
   Adzuna: 'adzuna',
+  Ashby: 'ashby',
+  SmartRecruiters: 'smartrecruiters',
+  Recruitee: 'recruitee',
+  Workable: 'workable',
+  Remotive: 'remotive',
+  RemoteOk: 'remoteok',
 }
 
 /** The source kinds a campaign of this mode may add; the API rejects the job sources for Customer campaigns. */
 export function sourceKindAllowed(kind: SourceKind, mode: OpportunityMode): boolean {
-  if (kind === 'Greenhouse' || kind === 'Lever' || kind === 'Adzuna') return mode === 'Job'
+  if (kind in JOB_SOURCE_CAPABILITY) return mode === 'Job'
   return true
 }
 
@@ -309,11 +333,19 @@ export const BOARD_TOKEN_PATTERN = /^[a-z0-9-]{1,100}$/
 const BOARD_HOSTS: Record<BoardKind, string[]> = {
   Greenhouse: ['boards.greenhouse.io', 'job-boards.greenhouse.io'],
   Lever: ['jobs.lever.co'],
+  Ashby: ['jobs.ashbyhq.com'],
+  SmartRecruiters: ['careers.smartrecruiters.com', 'jobs.smartrecruiters.com'],
+  Recruitee: [],
+  Workable: ['apply.workable.com'],
 }
 
 export const BOARD_EXAMPLES: Record<BoardKind, { token: string; url: string }> = {
   Greenhouse: { token: 'stripe', url: 'https://boards.greenhouse.io/stripe' },
   Lever: { token: 'leverdemo', url: 'https://jobs.lever.co/leverdemo' },
+  Ashby: { token: 'ashby', url: 'https://jobs.ashbyhq.com/ashby' },
+  SmartRecruiters: { token: 'smartrecruiters', url: 'https://careers.smartrecruiters.com/smartrecruiters' },
+  Recruitee: { token: 'recruiteedemo', url: 'https://recruiteedemo.recruitee.com' },
+  Workable: { token: 'workable', url: 'https://apply.workable.com/workable' },
 }
 
 export type BoardInput = { token: string; error?: undefined } | { token?: undefined; error: string }
@@ -336,10 +368,14 @@ export function parseBoardInput(kind: BoardKind, raw: string): BoardInput {
       return { error: `That is neither a ${what} nor a link we can read.` }
     }
     const host = url.hostname.toLowerCase().replace(/^www\./, '')
-    if (!BOARD_HOSTS[kind].includes(host))
-      return { error: `Use a link on ${BOARD_HOSTS[kind].join(' or ')}, or type the ${what} alone.` }
+    const subdomain = kind === 'Recruitee' && host.endsWith('.recruitee.com') ? host.slice(0, -'.recruitee.com'.length) :
+      kind === 'Workable' && host.endsWith('.workable.com') && host !== 'apply.workable.com' ? host.slice(0, -'.workable.com'.length) : null
+    if (!BOARD_HOSTS[kind].includes(host) && !subdomain) {
+      const expected = BOARD_HOSTS[kind].length ? BOARD_HOSTS[kind].join(' or ') : "the provider's careers host"
+      return { error: `Use a link on ${expected}, or type the ${what} alone.` }
+    }
     const segments = url.pathname.split('/').filter(Boolean)
-    candidate = kind === 'Greenhouse' && segments[0] === 'embed' ? (url.searchParams.get('for') ?? '') : (segments[0] ?? '')
+    candidate = subdomain ?? (kind === 'Greenhouse' && segments[0] === 'embed' ? (url.searchParams.get('for') ?? '') : (segments[0] ?? ''))
     try {
       candidate = decodeURIComponent(candidate)
     } catch {

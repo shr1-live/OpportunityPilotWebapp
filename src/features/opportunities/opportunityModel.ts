@@ -41,6 +41,12 @@ export const PLATFORM_LABELS: Record<JobPlatform, string> = {
   Greenhouse: 'Greenhouse',
   Lever: 'Lever',
   Adzuna: 'Adzuna',
+  Ashby: 'Ashby',
+  SmartRecruiters: 'SmartRecruiters',
+  Recruitee: 'Recruitee',
+  Workable: 'Workable',
+  Remotive: 'Remotive',
+  RemoteOk: 'Remote OK',
   Other: 'Other',
 }
 
@@ -66,7 +72,7 @@ export function appliesViaLabel(via: AppliesVia, platform: JobPlatform | null | 
 
 /** Open job boards found by research: the agent never applies there, the user opens applyUrl and marks it applied. */
 export function isUserApplyBoard(platform: JobPlatform | null | undefined): boolean {
-  return platform === 'Greenhouse' || platform === 'Lever' || platform === 'Adzuna'
+  return platform !== null && platform !== undefined && platform !== 'LinkedIn' && platform !== 'Naukri' && platform !== 'Other'
 }
 
 /** Unknown is its own answer, never folded into "not met": it scores 0 but lowers coverage instead. */

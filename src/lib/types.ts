@@ -41,7 +41,16 @@ export interface Capability {
 }
 
 /** Capability keys for the open job sources (CANDIDATE_PHASE1_CONTRACT.md §1), category "Sources". */
-export type SourceCapabilityKey = 'greenhouse' | 'lever' | 'adzuna'
+export type SourceCapabilityKey =
+  | 'greenhouse'
+  | 'lever'
+  | 'adzuna'
+  | 'ashby'
+  | 'smartrecruiters'
+  | 'recruitee'
+  | 'workable'
+  | 'remotive'
+  | 'remoteok'
 
 export interface Capabilities {
   environment: string
@@ -119,7 +128,21 @@ export interface CreatedAgentKey extends AgentKey {
 /** Only Job and Customer are accepted by the API until M7. */
 export type OpportunityMode = 'Customer' | 'Partner' | 'Investor' | 'Job' | 'Freelance'
 /** Greenhouse, Lever and Adzuna are Job-campaign sources (CANDIDATE_PHASE1_CONTRACT.md); Customer campaigns reject them. */
-export type SourceKind = 'Paste' | 'Csv' | 'Url' | 'Feed' | 'Agent' | 'Greenhouse' | 'Lever' | 'Adzuna'
+export type SourceKind =
+  | 'Paste'
+  | 'Csv'
+  | 'Url'
+  | 'Feed'
+  | 'Agent'
+  | 'Greenhouse'
+  | 'Lever'
+  | 'Adzuna'
+  | 'Ashby'
+  | 'SmartRecruiters'
+  | 'Recruitee'
+  | 'Workable'
+  | 'Remotive'
+  | 'RemoteOk'
 export type SourceStatus = 'Pending' | 'Ok' | 'Failed' | 'Skipped'
 export type ResearchJobState = 'Queued' | 'Running' | 'Completed' | 'CompletedWithGaps' | 'Failed' | 'Cancelled'
 export type ResearchStage = 'Prepare' | 'Gather' | 'Extract' | 'Filter' | 'Score' | 'Complete'
@@ -135,7 +158,19 @@ export type OpportunityStatus =
   | 'Responded'
   | 'Interested'
   | 'Closed'
-export type JobPlatform = 'LinkedIn' | 'Naukri' | 'Other' | 'Greenhouse' | 'Lever' | 'Adzuna'
+export type JobPlatform =
+  | 'LinkedIn'
+  | 'Naukri'
+  | 'Other'
+  | 'Greenhouse'
+  | 'Lever'
+  | 'Adzuna'
+  | 'Ashby'
+  | 'SmartRecruiters'
+  | 'Recruitee'
+  | 'Workable'
+  | 'Remotive'
+  | 'RemoteOk'
 export type EventLevel = 'Info' | 'Warning' | 'Error'
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite'
 

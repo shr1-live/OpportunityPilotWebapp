@@ -202,6 +202,13 @@ describe('board tokens', () => {
     expect(parseBoardInput('Lever', 'jobs.lever.co/leverdemo/5ac21346-8e0c-4494-8e7a-3eb92ff77902')).toEqual({ token: 'leverdemo' })
   })
 
+  it('derives slugs for Ashby, SmartRecruiters, Recruitee and Workable', () => {
+    expect(parseBoardInput('Ashby', 'https://jobs.ashbyhq.com/Ashby')).toEqual({ token: 'ashby' })
+    expect(parseBoardInput('SmartRecruiters', 'https://careers.smartrecruiters.com/SmartRecruiters')).toEqual({ token: 'smartrecruiters' })
+    expect(parseBoardInput('Recruitee', 'https://transperfect.recruitee.com/o/developer')).toEqual({ token: 'transperfect' })
+    expect(parseBoardInput('Workable', 'https://apply.workable.com/mindex/j/ABC')).toEqual({ token: 'mindex' })
+  })
+
   it('rejects other hosts, including the other board provider', () => {
     expect(parseBoardInput('Greenhouse', 'https://jobs.lever.co/leverdemo').error).toMatch(/greenhouse\.io/)
     expect(parseBoardInput('Lever', 'https://boards.greenhouse.io/stripe').error).toMatch(/jobs\.lever\.co/)
@@ -225,8 +232,8 @@ describe('board tokens', () => {
 })
 
 describe('job sources', () => {
-  it('offers Greenhouse, Lever and Adzuna to Job campaigns only', () => {
-    for (const kind of ['Greenhouse', 'Lever', 'Adzuna'] as const) {
+  it('offers every public job source to Job campaigns only', () => {
+    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Remotive', 'RemoteOk'] as const) {
       expect(sourceKindAllowed(kind, 'Job')).toBe(true)
       expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
     }
