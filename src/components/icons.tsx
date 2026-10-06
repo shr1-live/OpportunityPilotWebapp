@@ -1,5 +1,5 @@
 /**
- * Inline SVG line icons from design v2 (`../opportunitypilot-ui_1/opportunitypilot-ui/ShellStates.dc.html`).
+ * Inline SVG line icons from design v2 (`../opportunitypilot-ui/ShellStates.dc.html`).
  * Decorative only: always next to a visible or `.sr-only` text label (or inside a control with an
  * `aria-label`), so they are `aria-hidden`. They draw with `currentColor`, following their container.
  */
