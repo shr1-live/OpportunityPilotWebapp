@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import type { OpportunitySummary } from '../../lib/types'
 import {
   agentApplyPlatform,
+  canMoveTo,
+  primaryAction,
+  searchLoaded,
+  selectionCsv,
   appendUnique,
   appliesViaForPlatform,
   appliesViaLabel,
@@ -141,5 +146,31 @@ describe('platforms and who applies', () => {
     expect(isUserApplyBoard('Lever')).toBe(true)
     expect(isUserApplyBoard('LinkedIn')).toBe(false)
     expect(isUserApplyBoard('Other')).toBe(false)
+  })
+})
+
+describe('opportunity list helpers', () => {
+  const o = (over: Partial<OpportunitySummary>): OpportunitySummary => ({
+    id: '1', campaignId: 'c', mode: 'Job', title: 'Backend Engineer', organization: 'Stripe', location: 'Dublin', url: 'https://x',
+    applyUrl: null, platform: null, score: 83, coverage: 100, outcome: 'Qualified', outcomeReason: null, status: 'New', gapsCount: 0,
+    updatedAt: '2026-10-06T00:00:00Z', ...over,
+  })
+  it('searches title, organisation and location of loaded rows', () => {
+    const rows = [o({ id: 'a' }), o({ id: 'b', title: 'Sales Engineer', organization: 'Leverdemo', location: 'New York' })]
+    expect(searchLoaded(rows, 'york').map((r) => r.id)).toEqual(['b'])
+    expect(searchLoaded(rows, '  ')).toHaveLength(2)
+  })
+  it('allows bulk moves only where the row itself allows them', () => {
+    expect(canMoveTo('Suggested', 'Shortlisted')).toBe(true)
+    expect(canMoveTo('Applied', 'Dismissed')).toBe(false)
+  })
+  it('exports the selection as CSV with quoting', () => {
+    const csv = selectionCsv([o({ title: 'Engineer, "Platform"' })])
+    expect(csv.split('\n')[1]).toBe('"Engineer, ""Platform""",Stripe,Dublin,83,100,Qualified,New,https://x')
+  })
+  it('offers one next step per row', () => {
+    expect(primaryAction(o({ status: 'Suggested' })).label).toBe('Approve')
+    expect(primaryAction(o({ status: 'New', outcome: 'NeedsVerification' })).label).toBe('Review')
+    expect(primaryAction(o({ status: 'Shortlisted' })).label).toBe('Open posting')
   })
 })
