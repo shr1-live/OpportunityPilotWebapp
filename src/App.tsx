@@ -21,6 +21,7 @@ import { ResearchProgressPage } from './features/research/ResearchProgressPage'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { AppShell } from './features/shell/AppShell'
 import { EmptyState } from './components/States'
+import { HowItWorksPage } from './features/guide/HowItWorksPage'
 
 const SIGNED_OUT_SCREENS = {
   signin: SignInPage,
@@ -187,6 +188,7 @@ const router = createBrowserRouter([
           />
         ),
       },
+      { path: 'how-it-works', element: <HowItWorksPage />, handle: { title: 'How it works' } },
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'integrations', element: <IntegrationsPage />, handle: { title: 'Sources & integrations' } },

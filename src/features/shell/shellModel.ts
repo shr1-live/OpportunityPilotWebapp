@@ -69,6 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/profiles', label: 'Profiles', icon: 'profiles' },
       { to: '/integrations', label: 'Sources & integrations', icon: 'integrations' },
       { to: '/settings', label: 'Settings', icon: 'settings' },
+      { to: '/how-it-works', label: 'How it works', icon: 'help' },
     ],
   },
 ]

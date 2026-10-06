@@ -1201,3 +1201,11 @@ p { margin: 0; }
 .kpi-small { font-size: 18px; }
 .text-danger { color: var(--op-on-danger-tint); }
 @media (max-width: 1100px) { .apps-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- How it works ---- */
+.guide-steps { display: flex; flex-direction: column; }
+.guide-steps li { display: grid; grid-template-columns: 30px minmax(0, 1fr) 190px; gap: 12px; align-items: start; padding: 12px 16px; border-bottom: 1px solid var(--op-hair); }
+.guide-steps li:last-child { border-bottom: 0; }
+.guide-step-body, .guide-step-where { display: flex; flex-direction: column; gap: 3px; }
+.guide-log { font-size: 12px; white-space: normal; color: var(--op-ink); background: var(--op-panel-head); padding: 2px 6px; border-radius: 4px; }
+@media (max-width: 860px) { .guide-steps li { grid-template-columns: 30px minmax(0, 1fr); } .guide-step-where { grid-column: 2; } }
