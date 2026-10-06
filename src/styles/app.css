@@ -1179,3 +1179,25 @@ p { margin: 0; }
   .opp-table td.table-role { min-width: 0; overflow-wrap: anywhere; white-space: normal; }
   .opp-table td { white-space: normal; }
 }
+
+/* ---- Integrations + Settings, round 3 ---- */
+.cap-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.cap-grid > li { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.cap-list-v { flex-direction: column; gap: 4px; }
+.cap-action { align-self: flex-start; margin-top: auto; }
+.settings-rows { margin: 0; display: flex; flex-direction: column; gap: 0; }
+.settings-rows > div { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(0, 1.4fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--op-hair); }
+.settings-rows > div:last-child { border-bottom: 0; }
+.settings-rows dt { font-weight: 600; font-size: var(--op-text-meta); }
+.settings-rows dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.settings-rows select { max-width: 100%; }
+.settings-rules { display: flex; flex-direction: column; }
+.settings-rules li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--op-hair); }
+.settings-rules li:last-child { border-bottom: 0; }
+.settings-rules .grow { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 860px) { .settings-rows > div { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+.apps-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); gap: 14px; align-items: start; }
+.apps-grid > .card, .apps-grid > section { margin: 0; }
+.kpi-small { font-size: 18px; }
+.text-danger { color: var(--op-on-danger-tint); }
+@media (max-width: 1100px) { .apps-grid { grid-template-columns: minmax(0, 1fr); } }

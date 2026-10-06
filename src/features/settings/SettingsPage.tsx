@@ -2,85 +2,161 @@ import { PageHeader } from '../../components/PageHeader'
 import { config } from '../../lib/config'
 import { useAuth } from '../auth/AuthProvider'
 import { useShell } from '../shell/ShellContext'
+import { WORKSPACES, type Workspace } from '../shell/shellModel'
 import { ThemeChoiceGroup } from '../shell/ThemeToggle'
 
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-const AUTH_LABEL = { supabase: 'Supabase', dev: 'Development sign-in (local only)', guest: 'Guest (demo mode)' }
+const AUTH_LABEL = { supabase: 'Email & password / Google', dev: 'Development sign-in (local only)', guest: 'Guest (demo mode)' }
 
-/** Read-only in this build: nothing here is saved server-side yet, so no control pretends to be. */
+/** Rules that are product guarantees, not preferences — shown so nobody looks for a switch. */
+const FIXED_RULES = [
+  ['Nothing is sent or applied without your approval', 'Approval binds one version. Editing anything clears it.'],
+  ['No bulk send, no auto-apply', 'Approve-all affects a loaded batch; each job is still applied to individually.'],
+  ['Unknown never counts as a pass', 'A fact no source supplies stays Unknown and scores zero.'],
+  ['Generated text is labelled', 'AI or template text never shares styling with source evidence.'],
+  ['Secrets are never shown', 'Agent keys appear once at creation. API keys live in server configuration.'],
+]
+
+/**
+ * Design round 3 `Settings`: account and display on the left, fixed rules and deployment facts on the right.
+ * Only preferences this build can really keep are editable (theme and default workspace, both per browser).
+ */
 export function SettingsPage() {
   const { user, mode, signOut } = useAuth()
-  const { capabilities } = useShell()
+  const { capabilities, workspace, setWorkspace } = useShell()
 
   return (
-    <div className="page stack-6">
-      <PageHeader
-        title="Settings"
-        subtitle="Account and deployment facts. Editable research defaults arrive with campaigns (M2)."
-      />
+    <div className="page page-wide stack-4">
+      <PageHeader title="Settings" subtitle="Your account, how things are shown, and the rules that cannot be switched off." />
 
-      <section className="card stack-3">
-        <h3 className="section-heading">Appearance</h3>
-        <p className="muted-small">Saved in this browser. System follows your device's light or dark setting.</p>
-        <ThemeChoiceGroup />
-      </section>
+      <div className="panel-grid-2">
+        <div className="stack-4">
+          <section className="panel" aria-labelledby="set-account">
+            <header className="panel-head">
+              <h3 id="set-account" className="eyebrow">
+                Account
+              </h3>
+            </header>
+            <dl className="settings-rows panel-body">
+              <div>
+                <dt>Signed in as</dt>
+                <dd>
+                  <strong>{user?.email}</strong>
+                  {user?.guest && <div className="muted-small">Guest — your data is tied to this browser.</div>}
+                </dd>
+              </div>
+              <div>
+                <dt>Sign-in method</dt>
+                <dd>
+                  <span className="badge">{AUTH_LABEL[mode]}</span>
+                  {mode === 'guest' && <div className="muted-small">Accounts appear once the Supabase sign-in keys are set.</div>}
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  <label htmlFor="set-workspace">Workspace</label>
+                  <div className="muted-small">What the rail and Overview show. You can switch any time from the rail.</div>
+                </dt>
+                <dd>
+                  <select id="set-workspace" value={workspace} onChange={(e) => setWorkspace(e.target.value as Workspace)}>
+                    {(Object.keys(WORKSPACES) as Workspace[]).map((w) => (
+                      <option key={w} value={w}>
+                        {WORKSPACES[w].label} — {WORKSPACES[w].status.toLowerCase()}
+                      </option>
+                    ))}
+                  </select>
+                </dd>
+              </div>
+              <div>
+                <dt>Time zone</dt>
+                <dd>
+                  {timeZone} <span className="muted-small">· from this browser; every date is shown in it</span>
+                </dd>
+              </div>
+            </dl>
+          </section>
 
-      <section className="card stack-3">
-        <h3 className="section-heading">Account</h3>
-        <dl className="facts">
-          <div>
-            <dt>Signed in as</dt>
-            <dd>{user?.email}</dd>
-          </div>
-          <div>
-            <dt>Sign-in method</dt>
-            <dd>{AUTH_LABEL[mode]}</dd>
-          </div>
-          <div>
-            <dt>Time zone</dt>
-            <dd>
-              {timeZone} <span className="muted-small">· from this browser</span>
-            </dd>
-          </div>
-        </dl>
-        <div>
-          <button type="button" className="btn btn-secondary" onClick={() => void signOut()}>
-            Sign out
-          </button>
+          <section className="panel" aria-labelledby="set-display">
+            <header className="panel-head">
+              <h3 id="set-display" className="eyebrow">
+                Display
+              </h3>
+            </header>
+            <div className="panel-body">
+              <p className="muted-small">Saved in this browser. System follows your device's light or dark setting.</p>
+              <ThemeChoiceGroup />
+              <p className="muted-small">The navigation rail collapses from its own button; below 860 px it is always a drawer.</p>
+            </div>
+          </section>
         </div>
-      </section>
 
-      <section className="card stack-3">
-        <h3 className="section-heading">Deployment</h3>
-        <dl className="facts">
-          <div>
-            <dt>API</dt>
-            <dd className="mono">{config.apiBaseUrl}</dd>
-          </div>
-          <div>
-            <dt>Environment</dt>
-            <dd>{capabilities?.environment ?? '—'}</dd>
-          </div>
-          <div>
-            <dt>Database</dt>
-            <dd>{capabilities?.databaseProvider ?? '—'}</dd>
-          </div>
-          <div>
-            <dt>AI mode</dt>
-            <dd>{capabilities?.aiMode ?? '—'}</dd>
-          </div>
-        </dl>
-      </section>
+        <div className="stack-4">
+          <section className="panel" aria-labelledby="set-rules">
+            <header className="panel-head">
+              <h3 id="set-rules" className="eyebrow">
+                Rules that cannot be switched off
+              </h3>
+            </header>
+            <ul className="plain-list settings-rules panel-body">
+              {FIXED_RULES.map(([t, d]) => (
+                <li key={t}>
+                  <span aria-hidden="true">🔒︎</span>
+                  <span className="grow">
+                    <strong>{t}</strong>
+                    <span className="muted-small">{d}</span>
+                  </span>
+                  <span className="badge">Always on</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-      <section className="card stack-3">
-        <h3 className="section-heading">Outreach safety</h3>
-        <p className="muted-small">These rules are fixed, not preferences, and apply once outreach exists (M5).</p>
-        <ul className="small stack-2">
-          <li>Every draft version needs your explicit approval. Editing the recipient or body clears it.</li>
-          <li>Sending is blocked for recipients whose address no source supplied.</li>
-          <li>Demo data, when offered, is labelled everywhere and never mixes with researched results.</li>
-        </ul>
-      </section>
+          <section className="panel" aria-labelledby="set-deploy">
+            <header className="panel-head">
+              <h3 id="set-deploy" className="eyebrow">
+                This deployment
+              </h3>
+            </header>
+            <dl className="settings-rows panel-body">
+              <div>
+                <dt>Web</dt>
+                <dd className="mono">{typeof window === 'undefined' ? '' : window.location.host}</dd>
+              </div>
+              <div>
+                <dt>API</dt>
+                <dd className="mono">{config.apiBaseUrl}</dd>
+              </div>
+              <div>
+                <dt>Environment</dt>
+                <dd>{capabilities?.environment ?? '—'}</dd>
+              </div>
+              <div>
+                <dt>Database</dt>
+                <dd>
+                  {capabilities?.databaseProvider ?? '—'}
+                  {capabilities?.temporaryStorage && <span className="badge badge-warning"> temporary</span>}
+                </dd>
+              </div>
+              <div>
+                <dt>AI mode</dt>
+                <dd>{capabilities?.aiMode ?? '—'}</dd>
+              </div>
+              <div>
+                <dt>Idle behaviour</dt>
+                <dd className="muted-small">
+                  The API sleeps on free hosting. A first request after a quiet spell can take up to a minute — shown as a wait,
+                  never as a failure.
+                </dd>
+              </div>
+            </dl>
+            <div className="panel-body">
+              <button type="button" className="btn btn-secondary btn-sm cap-action" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   )
 }
