@@ -7,7 +7,7 @@ import { EmptyState, LoadingState } from '../../components/States'
 import { api } from '../../lib/api'
 import type { ApprovalItem, ApprovalPage, CampaignSummary, DecideRequest, DecideResult } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
-import { appliesViaLabel, formatCoverage, formatScore, platformLabel } from '../opportunities/opportunityModel'
+import { appliesViaLabel, platformLabel } from '../opportunities/opportunityModel'
 import { useShell } from '../shell/ShellContext'
 import {
   addResults,
@@ -53,7 +53,7 @@ export function ApprovalQueuePage() {
   }
 
   return (
-    <div className="page stack-6">
+    <div className="page page-wide stack-4">
       <PageHeader
         title="Approvals"
         subtitle={
@@ -68,9 +68,9 @@ export function ApprovalQueuePage() {
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
 
-      <div className="filters">
-        <div className="field field-wide">
-          <label htmlFor="approvals-campaign">Campaign</label>
+      <div className="toolbar">
+        <label className="pill-select pill-select-wide" htmlFor="approvals-campaign">
+          <span>Campaign</span>
           <select id="approvals-campaign" value={campaignId} onChange={(e) => choose(e.target.value)}>
             <option value="">All campaigns</option>
             {campaignId && campaigns.data && !campaign && <option value={campaignId}>Unknown campaign</option>}
@@ -80,7 +80,7 @@ export function ApprovalQueuePage() {
               </option>
             ))}
           </select>
-        </div>
+        </label>
       </div>
 
       <div role="status" aria-live="polite" className="stack-2">
@@ -195,7 +195,7 @@ function Queue({
       <h3 id="approvals-heading" className="sr-only">
         Suggested jobs
       </h3>
-      <div className="card bulk-bar">
+      <div className="selection-bar bulk-bar">
         <label className="check bulk-check">
           <input
             ref={allRef}
@@ -218,7 +218,7 @@ function Queue({
             aria-describedby={count === 0 ? 'bulk-why' : undefined}
             onClick={() => void decide(decidePayload(visibleSelection, []))}
           >
-            {busy ? 'Working…' : 'Approve selected'}
+            {busy ? 'Working…' : `✓ Approve selected${count ? ` · ${count}` : ''}`}
           </button>
           <button
             type="button"
@@ -240,33 +240,51 @@ function Queue({
         )}
       </div>
 
-      {groupByCampaign(items).map((g) => (
-        <section key={g.campaignId} className="stack-2" aria-labelledby={`group-${g.campaignId}`}>
-          <div className="row wrap">
-            <h4 id={`group-${g.campaignId}`} className="section-heading">
-              {g.campaignName}
-            </h4>
-            <span className="muted-small op-numeric">
-              {g.items.length} {g.items.length === 1 ? 'job' : 'jobs'}
-            </span>
-            <div className="grow" />
-            <Link to={`/campaigns/${g.campaignId}/edit?step=2`} className="small">
-              Suggestion settings<span className="sr-only"> for {g.campaignName}</span>
-            </Link>
-          </div>
-          <ul className="plain-list approval-list">
-            {g.items.map((item) => (
-              <ApprovalRow
-                key={item.opportunityId}
-                item={item}
-                checked={visibleSelection.has(item.opportunityId)}
-                disabled={busy}
-                onToggle={(on) => setSelected((s) => toggleSelected(s, item.opportunityId, on))}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {groupByCampaign(items).map((g) => {
+        const threshold = jobCampaigns?.find((c) => c.id === g.campaignId)?.autoSuggestMinScore
+        return (
+          <section key={g.campaignId} className="panel" aria-labelledby={`group-${g.campaignId}`}>
+            <header className="panel-head">
+              <h4 id={`group-${g.campaignId}`} className="eyebrow">
+                {g.campaignName} · {g.items.length} suggested
+              </h4>
+              <div className="grow" />
+              {typeof threshold === 'number' && <span className="muted-small">Threshold {threshold}</span>}
+              <Link to={`/campaigns/${g.campaignId}/edit?step=2`} className="small">
+                Suggestion settings<span className="sr-only"> for {g.campaignName}</span>
+              </Link>
+            </header>
+            <div className="table-scroll" role="region" aria-labelledby={`group-${g.campaignId}`} tabIndex={0}>
+              <table className="table opp-table">
+                <thead>
+                  <tr>
+                    <th scope="col" className="col-check">
+                      <span className="sr-only">Select</span>
+                    </th>
+                    <th scope="col">Job</th>
+                    <th scope="col">Platform</th>
+                    <th scope="col">Fit</th>
+                    <th scope="col">Evidence</th>
+                    <th scope="col">Why it was suggested</th>
+                    <th scope="col">Applies via</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {g.items.map((item) => (
+                    <ApprovalRow
+                      key={item.opportunityId}
+                      item={item}
+                      checked={visibleSelection.has(item.opportunityId)}
+                      disabled={busy}
+                      onToggle={(on) => setSelected((s) => toggleSelected(s, item.opportunityId, on))}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )
+      })}
 
       {moreError && <ErrorNotice error={moreError} onRetry={() => void loadMore()} />}
       <div className="row wrap">
@@ -296,34 +314,40 @@ function ApprovalRow({
   onToggle: (on: boolean) => void
 }) {
   const platform = platformLabel(item.platform)
+  const agent = item.appliesVia === 'Agent'
   return (
-    <li className={`card approval-item ${checked ? 'approval-item-selected' : ''}`}>
-      <label className="approval-check">
-        <input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onToggle(e.target.checked)} />
-        <span className="sr-only">Select {item.title}</span>
-      </label>
-      <div className="approval-body stack-1">
-        <div className="row wrap approval-head">
-          <Link to={`/opportunities/${item.opportunityId}`} className="approval-title">
-            {item.title}
-          </Link>
-          <div className="grow" />
-          <span className="op-numeric nowrap">
-            <strong>Fit {formatScore(item.score)}</strong> <span className="muted-small">· {formatCoverage(item.coverage)}</span>
+    <tr className={checked ? 'is-selected' : ''}>
+      <td className="col-check">
+        <input type="checkbox" checked={checked} disabled={disabled} aria-label={`Select ${item.title}`} onChange={(e) => onToggle(e.target.checked)} />
+      </td>
+      <td className="table-role">
+        <Link to={`/opportunities/${item.opportunityId}`}>{item.title}</Link>
+        <div className="muted-small break">{[item.organization, item.location].filter(Boolean).join(' · ') || 'Organisation not stated'}</div>
+      </td>
+      <td>{platform ? <Badge>{platform}</Badge> : <span className="muted-small">—</span>}</td>
+      <td className="nowrap">
+        <span className="meter">
+          <strong className="op-numeric">{Math.round(item.score)}</strong>
+          <span className="meter-track">
+            <i style={{ width: `${Math.min(100, Math.max(0, item.score))}%` }} />
           </span>
-        </div>
-        <div className="muted-small break">
-          {[item.organization, item.location].filter(Boolean).join(' · ') || 'Organisation not stated'}
-        </div>
-        <div className="row wrap">
-          {platform && <Badge>{platform}</Badge>}
-          <span className="small">
-            Applies via: <strong>{appliesViaLabel(item.appliesVia, item.platform)}</strong>
+        </span>
+      </td>
+      <td className="nowrap">
+        <span className="meter">
+          <span className={`meter-track meter-small ${item.coverage < 70 ? 'meter-amber' : ''}`}>
+            <i style={{ width: `${Math.min(100, Math.max(0, item.coverage))}%` }} />
           </span>
-        </div>
-        {item.outcomeReason && <p className="muted-small break">{item.outcomeReason}</p>}
-      </div>
-    </li>
+          <span className="muted-small op-numeric">{Math.round(item.coverage)}%</span>
+        </span>
+      </td>
+      <td className="muted-small break">{item.outcomeReason ?? 'Qualified and at or above the threshold.'}</td>
+      <td>
+        <span className={`badge ${agent ? 'badge-primary' : ''}`} title={appliesViaLabel(item.appliesVia, item.platform)}>
+          {agent ? 'Your agent' : 'You apply'}
+        </span>
+      </td>
+    </tr>
   )
 }
 

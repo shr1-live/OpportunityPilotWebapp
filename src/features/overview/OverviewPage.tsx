@@ -1,146 +1,471 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
-import { StatusBadge } from '../../components/StatusBadge'
+import { Icon } from '../../components/icons'
 import { PageHeader } from '../../components/PageHeader'
-import type { Overview } from '../../lib/types'
+import { EmptyState, LoadingState } from '../../components/States'
+import type { AnalyticsOverview, Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useShell } from '../shell/ShellContext'
+import type { Workspace } from '../shell/shellModel'
+import {
+  analyticsPath,
+  attentionLink,
+  formatShortDate,
+  funnelRows,
+  hasAnyActivity,
+  histogramHeights,
+  isFirstRun,
+  percent,
+  shareWidths,
+} from './analyticsModel'
 import { SampleRunCard } from './SampleRunCard'
 
-/** Every figure here comes from the API. Entities that do not exist in this build are not counted. */
+/**
+ * Design round 3: OverviewFirstRun (nothing set up), Main (Candidate) and OverviewSales.
+ * Every figure comes from GET /api/v1/overview or /api/v1/analytics/overview — nothing is estimated.
+ */
 export function OverviewPage() {
   const overview = useApi<Overview>('/api/v1/overview')
-  const { capabilities } = useShell()
-  const profiles = overview.data?.profiles
-  const applied = overview.data?.applied
-  const needsManual = overview.data?.needsManual
-  const campaigns = overview.data?.campaigns
-  const shortlisted = overview.data?.shortlisted
-  const awaitingApproval = overview.data?.awaitingApproval
-  const pending = overview.loading && !overview.data
-  const hasProfile = (profiles ?? 0) > 0
+  const { workspace } = useShell()
+  const analytics = useApi<AnalyticsOverview>(overview.data && !isFirstRun(overview.data) ? analyticsPath(workspace) : null)
 
+  if (overview.error) return <div className="page"><ErrorNotice error={overview.error} onRetry={overview.reload} what="your overview" /></div>
+  if (!overview.data) return <div className="page"><LoadingState label="Loading your overview…" waking={overview.waking} stats={5} rows={4} /></div>
+  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} />
+
+  const a = analytics.data
   return (
-    <div className="page stack-6">
+    <div className="page page-wide stack-4">
       <PageHeader
-        title="Your opportunity workspace"
-        subtitle={
-          hasProfile
-            ? 'Your profiles are ready for campaigns. Nothing is researched until you queue a run.'
-            : 'Nothing has been researched yet. Start by describing what you offer — you can stop after any step.'
+        title={workspace === 'sales' ? 'Sales overview' : 'Your opportunity workspace'}
+        subtitle={a ? `${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'} in this workspace · last ${a.days} days` : 'Loading figures…'}
+        actions={
+          <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+            + New campaign
+          </Link>
         }
       />
+      {analytics.error && <ErrorNotice error={analytics.error} onRetry={analytics.reload} what="the analytics" />}
+      {!a && !analytics.error && <LoadingState label="Computing the figures…" waking={analytics.waking} stats={5} rows={5} />}
+      {a && a.activeResearch && (
+        <p className="notice notice-neutral">
+          <strong>Research running:</strong> {a.activeResearch.campaignName} — {a.activeResearch.stage.toLowerCase()},{' '}
+          {a.activeResearch.counts.sourcesDone} of {a.activeResearch.counts.sources} sources done.{' '}
+          <Link to={`/research/${a.activeResearch.jobId}`}>Watch it</Link>
+        </p>
+      )}
+      {a && !hasAnyActivity(a) && workspace === 'candidate' && <SampleRunCard />}
+      {a && (workspace === 'sales' ? <SalesOverview a={a} /> : <CandidateOverview a={a} overview={overview.data} />)}
+    </div>
+  )
+}
 
-      {overview.error && <ErrorNotice error={overview.error} onRetry={overview.reload} />}
+function Kpi({ label, value, sub, tone }: { label: string; value: string | number; sub: string; tone?: 'warning' | 'muted' }) {
+  return (
+    <div className="kpi">
+      <div className="eyebrow">{label}</div>
+      <div className={`kpi-value op-numeric ${tone === 'warning' ? 'text-warning' : tone === 'muted' ? 'muted' : ''}`}>{value}</div>
+      <div className="muted-small">{sub}</div>
+    </div>
+  )
+}
 
-      <SampleRunCard />
+function Panel({ title, aside, children, className = '' }: { title: string; aside?: React.ReactNode; children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`panel ${className}`}>
+      <header className="panel-head">
+        <h3 className="eyebrow">{title}</h3>
+        <div className="grow" />
+        {aside && <span className="muted-small">{aside}</span>}
+      </header>
+      <div className="panel-body">{children}</div>
+    </section>
+  )
+}
 
-      <ol className="steps plain-list">
-        <li className={`card step ${hasProfile ? 'step-done' : ''}`}>
-          <span className="step-num" aria-hidden="true">1</span>
-          <div className="stack-2">
+function Funnel({ a, title, tone }: { a: AnalyticsOverview; title: string; tone: 'teal' | 'blue' }) {
+  const rows = funnelRows(a.funnel)
+  return (
+    <Panel title={title} aside={`${a.sources.length} ${a.sources.length === 1 ? 'source' : 'sources'} · last ${a.days} days`}>
+      <ul className="funnel plain-list">
+        {rows.map((r) => (
+          <li key={r.key} className={r.count === null ? 'funnel-off' : ''} title={r.note}>
+            <span className="funnel-label">{r.label}</span>
+            <span className="funnel-count op-numeric">{r.count ?? '—'}</span>
+            <span className={`funnel-track funnel-${tone}`}>
+              <i style={{ width: `${r.width}%` }} />
+            </span>
+            <span className="muted-small funnel-prev">{r.count === null ? 'not tracked yet' : (r.ofPrevious ?? '')}</span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  )
+}
+
+function Histogram({ a }: { a: AnalyticsOverview }) {
+  const { bands, threshold, aboveThreshold } = a.fitHistogram
+  const heights = histogramHeights(bands)
+  const total = bands.reduce((n, b) => n + b.count, 0)
+  return (
+    <Panel title="Fit score distribution">
+      {total === 0 ? (
+        <p className="muted-small">No qualified opportunities in this window yet, so there is nothing to plot.</p>
+      ) : (
+        <>
+          <div className="histogram" role="img" aria-label={`Qualified opportunities by fit band: ${bands.map((b) => `${b.from}–${b.to}: ${b.count}`).join(', ')}`}>
+            {bands.map((b, i) => (
+              <div key={b.from} className={`histogram-col ${threshold !== null && b.from >= threshold ? 'is-above' : ''}`}>
+                <span className="histogram-n">{b.count || ''}</span>
+                <i style={{ height: `${Math.max(heights[i], b.count ? 4 : 1)}%` }} />
+                <span className="histogram-x">{i % 2 === 0 ? b.from : ''}</span>
+              </div>
+            ))}
+          </div>
+          <p className="muted-small">
+            Qualified opportunities by score band.
+            {threshold !== null && (
+              <>
+                {' '}
+                Your suggest threshold is <strong>{threshold}</strong> — {aboveThreshold ?? 0} sit at or above it.
+              </>
+            )}
+          </p>
+        </>
+      )}
+    </Panel>
+  )
+}
+
+function RankedBars({ title, rows, total, tone, empty, footer }: { title: string; rows: { label: string; count: number }[]; total?: number; tone: string; empty: string; footer?: React.ReactNode }) {
+  const widths = shareWidths(rows.map((r) => r.count))
+  return (
+    <Panel title={title}>
+      {rows.length === 0 ? (
+        <p className="muted-small">{empty}</p>
+      ) : (
+        <ul className="ranked plain-list">
+          {rows.map((r, i) => (
+            <li key={r.label}>
+              <span className="ranked-label">{r.label}</span>
+              <span className={`ranked-track ranked-${tone}`}>
+                <i style={{ width: `${widths[i]}%` }} />
+              </span>
+              <span className="muted-small op-numeric ranked-n">{total ? `${r.count} of ${total}` : r.count}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {footer && <p className="muted-small">{footer}</p>}
+    </Panel>
+  )
+}
+
+function Sources({ a }: { a: AnalyticsOverview }) {
+  return (
+    <Panel title="Source performance">
+      {a.sources.length === 0 ? (
+        <p className="muted-small">No source has been read in this window.</p>
+      ) : (
+        <div className="table-scroll">
+          <table className="mini-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th className="op-num">Read</th>
+                <th className="op-num">Qualified</th>
+                <th className="op-num">Rate</th>
+                <th>Last run</th>
+              </tr>
+            </thead>
+            <tbody>
+              {a.sources.map((s) => (
+                <tr key={s.sourceId}>
+                  <td className={s.failing ? 'text-warning' : ''}>{s.label}</td>
+                  <td className="op-num">{s.read}</td>
+                  <td className="op-num">{s.qualified}</td>
+                  <td className={`op-num ${s.failing ? 'text-warning' : ''}`}>{s.failing ? 'failing' : percent(s.rate)}</td>
+                  <td>{formatShortDate(s.lastFetchedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  )
+}
+
+function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Overview }) {
+  const k = a.kpis
+  const perDay = a.applicationsPerDay ?? []
+  const dayMax = Math.max(1, ...perDay.map((d) => d.applied))
+  const replies = perDay.reduce((n, d) => n + d.replies, 0)
+  const appliedTotal = perDay.reduce((n, d) => n + d.applied, 0)
+  return (
+    <>
+      <div className="kpi-strip">
+        <Kpi label="Waiting on you" value={k.awaitingApproval} sub="jobs to approve" tone={k.awaitingApproval ? 'warning' : undefined} />
+        <Kpi label="Shortlisted" value={k.shortlisted} sub={`${k.shortlistedNotApplied} not yet applied`} />
+        <Kpi label={`Applied · ${a.days} days`} value={k.applied ?? '—'} sub={`${k.appliedByAgent ?? 0} agent · ${k.appliedByYou ?? 0} by you`} />
+        <Kpi label="Responded" value={k.responded ?? '—'} sub={k.respondedRate === null ? 'no applications yet' : `${percent(k.respondedRate)} of applications`} />
+        <Kpi label="Qualify rate" value={`${k.qualified} / ${k.found}`} sub={`${percent(k.qualifyRate)} of what was found`} />
+        <Kpi label="Agent needs you" value={k.agentNeedsYou || overview.needsManual} sub="captcha or an extra question" tone={k.agentNeedsYou ? 'warning' : undefined} />
+      </div>
+
+      <Funnel a={a} title="Pipeline — what happened to everything we read" tone="teal" />
+
+      <div className="panel-grid-3">
+        <Histogram a={a} />
+        <RankedBars
+          title="Why qualified jobs stall"
+          tone="amber"
+          rows={a.unknownCriteria.map((u) => ({ label: u.label, count: u.unknownCount }))}
+          empty="No criterion was left unknown in this window."
+          footer={
+            <>
+              Criteria most often <strong>Unknown</strong>. Unknown never counts as a pass — adding a source that supplies these
+              lifts scores honestly.
+            </>
+          }
+        />
+        <Sources a={a} />
+      </div>
+
+      <div className="panel-grid-2">
+        <Panel
+          title="Needs your attention"
+          aside={
+            <Link className="btn btn-secondary btn-sm" to="/campaigns">
+              Queue a run
+            </Link>
+          }
+        >
+          {a.attention.length === 0 ? (
+            <p className="muted-small">Nothing is waiting on you.</p>
+          ) : (
+            <ul className="attention plain-list">
+              {a.attention.map((x) => {
+                const link = attentionLink(x.kind)
+                return (
+                  <li key={x.kind}>
+                    <span className={`dot dot-${link.tone}`} aria-hidden="true" />
+                    <span className="grow">{x.detail}</span>
+                    <Link to={link.to}>{link.action}</Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </Panel>
+        <Panel title="Applications sent — last 14 days">
+          {appliedTotal === 0 ? (
+            <p className="muted-small">No applications in the last 14 days — approve jobs, then apply from their page or let the agent do it.</p>
+          ) : (
+            <div className="days" role="img" aria-label={`${appliedTotal} applications in the last 14 days`}>
+              {perDay.map((d) => (
+                <div key={d.date} className="days-col" title={`${formatShortDate(d.date)}: ${d.applied} applied, ${d.replies} replies`}>
+                  <span className="histogram-n">{d.applied || ''}</span>
+                  <i style={{ height: `${d.applied ? Math.max(8, (d.applied / dayMax) * 100) : 2}%` }} />
+                </div>
+              ))}
+            </div>
+          )}
+          <p>
+            <strong className="kpi-inline op-numeric">{appliedTotal}</strong> applications · {replies} replies
+          </p>
+          <p className="muted-small">Counted from agent results and the jobs you marked applied. Nothing is inferred.</p>
+        </Panel>
+      </div>
+    </>
+  )
+}
+
+function SalesOverview({ a }: { a: AnalyticsOverview }) {
+  const k = a.kpis
+  if (a.campaignCount === 0)
+    return (
+      <EmptyState
+        icon="▦"
+        title="No Customers campaign yet"
+        actions={
+          <>
+            <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+              Build a Customers campaign
+            </Link>
+            <Link className="btn btn-secondary btn-sm" to="/profiles/new">
+              Write a Product or Services profile
+            </Link>
+          </>
+        }
+      >
+        The Sales overview counts companies found by Customers campaigns: from a CSV, public pages, feeds or a pasted list. Your
+        Job campaigns stay in the Candidate workspace.
+      </EmptyState>
+    )
+  const industryTotal = (a.qualifiedByIndustry ?? []).reduce((n, x) => n + x.count, 0)
+  return (
+    <>
+      <div className="kpi-strip kpi-strip-5">
+        <Kpi label="Companies found" value={k.found} sub={`across ${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'}`} />
+        <Kpi label="Qualified" value={k.qualified} sub={`${percent(k.qualifyRate)} of what was found`} />
+        <Kpi label="Shortlisted" value={k.shortlisted} sub="ready to contact" />
+        <Kpi label="Contacted" value="—" sub="Outreach not built" tone="muted" />
+        <Kpi label="Responded" value="—" sub="Outreach not built" tone="muted" />
+      </div>
+
+      <div className="panel-grid-2 panel-grid-wide-left">
+        <Funnel a={a} title="Pipeline — Sales" tone="blue" />
+        <Panel title="What is missing to finish the job">
+          <div className="missing">
             <div className="row">
-              <h3 className="section-heading">Add a profile</h3>
-              {hasProfile && <span className="badge badge-success">Done</span>}
+              <span className="badge">Not built yet</span>
+              <strong>Proposal, bid and email</strong>
             </div>
             <p className="muted-small">
-              Describe what you sell, build or offer. Campaigns judge fit against it — nothing is invented for you.
+              A shortlisted company today ends with evidence and a contact route. These steps have no API yet, so nothing in the
+              UI pretends to do them.
             </p>
-            <Link className={`btn ${hasProfile ? 'btn-secondary' : 'btn-primary'} btn-sm`} to="/profiles">
-              {hasProfile ? 'Review profiles' : 'Add profile'}
+            <ul className="state-list">
+              <li>Draft a proposal from the profile and the evidence</li>
+              <li>Place a bid on Freelancer.com or a tender portal</li>
+              <li>Send an approved email and track the reply</li>
+            </ul>
+          </div>
+          <div className="row">
+            <Link className="btn btn-secondary btn-sm" to="/opportunities">
+              Export shortlist CSV
+            </Link>
+            <Link to="/proposals">See what is built</Link>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="panel-grid-3">
+        <RankedBars
+          title="Qualified by industry"
+          tone="blue"
+          total={industryTotal}
+          rows={(a.qualifiedByIndustry ?? []).map((x) => ({ label: x.industry, count: x.count }))}
+          empty="No qualified company has a matched industry yet. Add industries to a Customers campaign's criteria."
+        />
+        <RankedBars
+          title="Buying signals found"
+          tone="plum"
+          rows={(a.signalsFound ?? []).map((x) => ({ label: x.signal, count: x.count }))}
+          empty="No buying signal matched yet. Add signals (e.g. “hiring for the problem area”) to a campaign's criteria."
+        />
+        <Sources a={a} />
+      </div>
+    </>
+  )
+}
+
+const CHOICES: { key: Workspace; title: string; sub: string; status: string; points: string[] }[] = [
+  {
+    key: 'candidate',
+    title: 'Candidate',
+    sub: 'I am looking for work',
+    status: 'Built',
+    points: ['Apply to every role that fits your skills', 'Jobs from Greenhouse, Lever, Adzuna, or your own browser agent', 'Approve a batch, then the agent applies or you open the link'],
+  },
+  {
+    key: 'sales',
+    title: 'Sales',
+    sub: 'I am looking for customers',
+    status: 'Partly built',
+    points: ['Find businesses that need what your company sells', 'Companies from CSVs, public pages, feeds or pasted lists', 'Shortlist with evidence — proposals and email come later'],
+  },
+]
+
+/** Design OverviewFirstRun: pick a workspace, then three steps in order. Tiles stay at zero rather than sample data. */
+function FirstRun({ overview }: { overview: Overview }) {
+  const { workspace, setWorkspace } = useShell()
+  const navigate = useNavigate()
+  return (
+    <div className="page page-wide stack-4">
+      <PageHeader
+        title="Which job are you here to do?"
+        subtitle="Both run on the same pipeline. The workspace you pick decides what the app shows. You can switch any time from the rail."
+      />
+      <div className="choice-grid">
+        {CHOICES.map((c) => (
+          <section key={c.key} className={`choice choice-${c.key} ${workspace === c.key ? 'is-on' : ''}`}>
+            <div className="row">
+              <span className="onboarding-icon" aria-hidden="true">
+                <Icon name={c.key} size={18} />
+              </span>
+              <span className="stack-0">
+                <strong>{c.title}</strong>
+                <span className="muted-small">{c.sub}</span>
+              </span>
+              <div className="grow" />
+              <span className={`badge ${c.key === 'candidate' ? 'badge-success' : 'badge-warning'}`}>{c.status}</span>
+            </div>
+            <ul className="onboarding-points">
+              {c.points.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              className={`btn ${workspace === c.key ? 'btn-primary' : 'btn-secondary'} auth-wide`}
+              aria-pressed={workspace === c.key}
+              onClick={() => setWorkspace(c.key)}
+            >
+              {workspace === c.key ? `Using the ${c.title} workspace` : `Use the ${c.title} workspace`}
+            </button>
+          </section>
+        ))}
+      </div>
+
+      <div className="eyebrow">Then, three steps — in this order</div>
+      <ol className="first-steps plain-list">
+        <li className="card is-next">
+          <span className="step-num">1</span>
+          <div className="stack-2">
+            <strong>Create a profile</strong>
+            <span className="muted-small">What you offer, in your own words. You confirm every claim.</span>
+            <button type="button" className="btn btn-primary btn-sm" onClick={() => navigate('/profiles/new')}>
+              Start
+            </button>
+          </div>
+        </li>
+        <li className="card">
+          <span className="step-num">2</span>
+          <div className="stack-2">
+            <strong>Add sources</strong>
+            <span className="muted-small">Greenhouse or Lever boards, a CSV, a feed, or pasted text.</span>
+            <Link className="btn btn-secondary btn-sm" to="/integrations">
+              See sources
             </Link>
           </div>
         </li>
-        <li className="card step">
-          <span className="step-num" aria-hidden="true">2</span>
+        <li className="card">
+          <span className="step-num">3</span>
           <div className="stack-2">
-            <div className="row">
-              <h3 className="section-heading">Set up the apply agent</h3>
-              <span className="badge badge-primary">Beta</span>
-            </div>
-            <p className="muted-small">
-              Apply to LinkedIn and Naukri jobs from your own logged-in browser, using only your saved answers. It starts
-              in dry-run mode and submits nothing until you say so.
-            </p>
-            <Link className="btn btn-secondary btn-sm" to="/applications">
-              Set up agent
-            </Link>
-          </div>
-        </li>
-        <li className={`card step ${campaigns ? 'step-done' : ''}`}>
-          <span className="step-num" aria-hidden="true">3</span>
-          <div className="stack-2">
-            <div className="row">
-              <h3 className="section-heading">Start a campaign</h3>
-              {(campaigns ?? 0) > 0 && <span className="badge badge-success">Done</span>}
-            </div>
-            <p className="muted-small">Describe a goal, enter your criteria and sources, then queue the run.</p>
-            <Link className={`btn ${hasProfile && !campaigns ? 'btn-primary' : 'btn-secondary'} btn-sm`} to="/campaigns/new">
-              New campaign
+            <strong>Run a campaign</strong>
+            <span className="muted-small">Set criteria, queue a run, then approve what it suggests.</span>
+            <Link className="btn btn-secondary btn-sm" to="/campaigns/new">
+              Build
             </Link>
           </div>
         </li>
       </ol>
 
-      <div className="stat-grid">
-        <section className="card stat">
-          <div className="stat-label">Profiles</div>
-          <div className="stat-value op-numeric">{profiles ?? '—'}</div>
-          <div className="muted-small">{pending ? 'Loading…' : 'Owned by your account'}</div>
-        </section>
-        <section className="card stat">
-          <div className="stat-label">Campaigns</div>
-          <div className="stat-value op-numeric">{campaigns ?? '—'}</div>
-          <div className="muted-small">{pending ? 'Loading…' : <Link to="/campaigns">Research setups you own</Link>}</div>
-        </section>
-        <section className="card stat">
-          <div className="stat-label">Awaiting approval</div>
-          <div className={`stat-value op-numeric ${awaitingApproval ? 'text-warning' : ''}`}>{awaitingApproval ?? '—'}</div>
-          <div className="muted-small">
-            {pending ? 'Loading…' : <Link to="/approvals">Suggested jobs to approve or reject</Link>}
-          </div>
-        </section>
-        <section className="card stat">
-          <div className="stat-label">Shortlisted</div>
-          <div className="stat-value op-numeric">{shortlisted ?? '—'}</div>
-          <div className="muted-small">{pending ? 'Loading…' : <Link to="/opportunities">Opportunities you picked</Link>}</div>
-        </section>
-        <section className="card stat">
-          <div className="stat-label">Applications sent</div>
-          <div className="stat-value op-numeric">{applied ?? '—'}</div>
-          <div className="muted-small">
-            {pending ? 'Loading…' : <Link to="/applications">Via the local agent</Link>}
-          </div>
-        </section>
-        <section className="card stat">
-          <div className="stat-label">Need your input</div>
-          <div className={`stat-value op-numeric ${needsManual ? 'text-warning' : ''}`}>{needsManual ?? '—'}</div>
-          <div className="muted-small">{pending ? 'Loading…' : 'Questions your saved answers don’t cover'}</div>
-        </section>
-      </div>
+      {workspace === 'candidate' && <SampleRunCard />}
 
-      {capabilities && (
-        <section className="card stack-3">
-          <div className="row">
-            <h3 className="section-heading">What this deployment can do</h3>
-            <div className="grow" />
-            <Link to="/integrations" className="small">
-              All sources and integrations
-            </Link>
-          </div>
-          <ul className="plain-list cap-mini">
-            {capabilities.items
-              .filter((c) => ['database', 'auth', 'linkedin', 'naukri'].includes(c.key))
-              .map((c) => (
-                <li key={c.key} className="row">
-                  <span>{c.name}</span>
-                  <div className="grow" />
-                  <StatusBadge status={c.status} />
-                </li>
-              ))}
-          </ul>
-        </section>
-      )}
+      <div className="kpi-strip kpi-strip-5">
+        <Kpi label="Profiles" value={overview.profiles} sub="none yet" />
+        <Kpi label="Campaigns" value={overview.campaigns} sub="none yet" />
+        <Kpi label="Shortlisted" value={overview.shortlisted} sub="no run has finished" />
+        <Kpi label="Waiting on you" value={overview.awaitingApproval} sub="nothing to approve" />
+        <Kpi label="Applied" value={overview.applied} sub="nothing sent" />
+      </div>
+      <p className="notice notice-neutral">
+        Every number in this app comes from the API. Until a run finishes there is nothing to show, so these tiles stay at zero
+        rather than filling with sample data.
+      </p>
     </div>
   )
 }

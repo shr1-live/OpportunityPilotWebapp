@@ -180,3 +180,38 @@ export function displayUrl(url: string): string {
     return url.slice(0, 80)
   }
 }
+
+/* ---- List, round 3: search within loaded rows, bulk shortlist/dismiss, export selection ---- */
+
+/** Case-insensitive match on title, organisation and location of the rows already loaded (the API has no search). */
+export function searchLoaded<T extends Pick<OpportunitySummary, 'title' | 'organization' | 'location'>>(items: T[], q: string): T[] {
+  const needle = q.trim().toLowerCase()
+  if (!needle) return items
+  return items.filter((o) => [o.title, o.organization, o.location ?? ''].some((v) => v.toLowerCase().includes(needle)))
+}
+
+/** Whether one row can move to `to` with the same rules as its own quick actions. */
+export function canMoveTo(status: OpportunityStatus, to: OpportunityStatus): boolean {
+  return quickActions(status).some((a) => a.to === to)
+}
+
+function csvCell(v: string | number | null): string {
+  const s = v === null ? '' : String(v)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+/** CSV of the selected rows, built from what is on screen. */
+export function selectionCsv(items: OpportunitySummary[]): string {
+  const head = ['Title', 'Organisation', 'Location', 'Fit', 'Coverage %', 'Outcome', 'Status', 'URL']
+  const rows = items.map((o) => [o.title, o.organization, o.location, clampPercent(o.score), clampPercent(o.coverage), o.outcome, o.status, o.url])
+  return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
+}
+
+/** One clear next step per row (design): approve, review, open the posting, or restore. */
+export function primaryAction(o: Pick<OpportunitySummary, 'status' | 'outcome'>): { label: string; to?: OpportunityStatus } {
+  if (o.status === 'Suggested') return { label: 'Approve', to: 'Shortlisted' }
+  if (o.status === 'Dismissed') return { label: 'Restore', to: 'New' }
+  if (o.status === 'Shortlisted') return { label: 'Open posting' }
+  if (o.status === 'New' && o.outcome === 'Qualified') return { label: 'Shortlist', to: 'Shortlisted' }
+  return { label: 'Review' }
+}

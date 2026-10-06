@@ -20,14 +20,16 @@ import { MODE_LABELS } from '../campaigns/campaignModel'
 import { useShell } from '../shell/ShellContext'
 import {
   appendUnique,
+  canMoveTo,
   DEFAULT_FILTERS,
   formatCoverage,
-  formatScore,
   opportunitiesPath,
   type OpportunityFilters,
   OUTCOME_LABELS,
   platformLabel,
-  quickActions,
+  primaryAction,
+  searchLoaded,
+  selectionCsv,
   STATUS_LABELS,
   STATUSES,
 } from './opportunityModel'
@@ -44,19 +46,31 @@ export function OpportunitiesPage() {
   const list = campaigns.data ?? []
   const campaignId = routeId ?? params.get('campaign') ?? list[0]?.id
   const campaign = list.find((c) => c.id === campaignId)
+  const awaiting = useShell().awaitingApproval ?? 0
 
   const choose = (id: string) =>
     routeId ? navigate(`/campaigns/${id}/opportunities`) : setParams({ campaign: id }, { replace: true })
 
   return (
-    <div className="page stack-6">
+    <div className="page page-wide stack-4">
       <PageHeader
         title="Opportunities"
-        subtitle="Ranked by fit against your criteria. A fit score ranks a shortlist; it does not predict that anyone will hire you, buy or reply."
+        subtitle={
+          <>
+            Everything your campaigns found. <strong>Fit is a ranking out of 100</strong>, not a chance of success. Coverage says how
+            much of the score rests on verified facts.
+          </>
+        }
         actions={
-          <Link className="btn btn-secondary" to="/campaigns/new">
-            New campaign
-          </Link>
+          awaiting > 0 ? (
+            <Link className="btn btn-primary btn-sm" to="/approvals">
+              Go to approvals · {awaiting}
+            </Link>
+          ) : (
+            <Link className="btn btn-secondary btn-sm" to="/campaigns/new">
+              New campaign
+            </Link>
+          )
         }
       />
 
@@ -84,9 +98,9 @@ export function OpportunitiesPage() {
 
       {campaigns.data && list.length > 0 && (
         <>
-          <div className="filters">
-            <div className="field field-wide">
-              <label htmlFor="opp-campaign">Campaign</label>
+          <div className="toolbar">
+            <label className="pill-select pill-select-wide" htmlFor="opp-campaign">
+              <span>Campaign</span>
               <select id="opp-campaign" value={campaignId ?? ''} onChange={(e) => choose(e.target.value)}>
                 {!campaign && campaignId && <option value={campaignId}>Unknown campaign</option>}
                 {list.map((c) => (
@@ -95,7 +109,12 @@ export function OpportunitiesPage() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
+            {campaign?.lastJob && (
+              <Link to={`/research/${campaign.lastJob.id}`} className="small">
+                Latest run
+              </Link>
+            )}
           </div>
           {campaignId && <CampaignOpportunities key={campaignId} campaignId={campaignId} campaign={campaign} />}
         </>
@@ -109,6 +128,7 @@ function CampaignOpportunities({ campaignId, campaign }: { campaignId: string; c
   const [refreshes, setRefreshes] = useState(0)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<Error>()
+  const [search, setSearch] = useState('')
 
   async function exportCsv() {
     setExporting(true)
@@ -125,48 +145,24 @@ function CampaignOpportunities({ campaignId, campaign }: { campaignId: string; c
 
   return (
     <section className="stack-3" aria-labelledby="opp-heading">
-      <div className="row wrap">
-        <h3 id="opp-heading" className="section-heading">
+      <div className="toolbar">
+        <h3 id="opp-heading" className="sr-only">
           {campaign ? campaign.name : 'Campaign'}
         </h3>
-        {campaign?.lastJob && (
-          <Link to={`/research/${campaign.lastJob.id}`} className="small">
-            Latest run
-          </Link>
-        )}
-        <div className="grow" />
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRefreshes((n) => n + 1)}>
-          Refresh
-        </button>
-        <button type="button" className="btn btn-secondary btn-sm" disabled={exporting} onClick={() => void exportCsv()}>
-          {exporting ? 'Exporting…' : 'Export CSV'}
-        </button>
-      </div>
-      {exportError && <ErrorNotice error={exportError} />}
-
-      <div className="filters">
-        <div className="field">
-          <label htmlFor="opp-outcome">Outcome</label>
-          <select
-            id="opp-outcome"
-            value={filters.outcome}
-            onChange={(e) => setFilters((f) => ({ ...f, outcome: e.target.value as FilterOutcome | '' }))}
-          >
-            <option value="">All</option>
+        <label className="pill-select">
+          <span>Outcome</span>
+          <select value={filters.outcome} onChange={(e) => setFilters((f) => ({ ...f, outcome: e.target.value as FilterOutcome | '' }))}>
+            <option value="">Any</option>
             {(Object.keys(OUTCOME_LABELS) as FilterOutcome[]).map((o) => (
               <option key={o} value={o}>
                 {OUTCOME_LABELS[o].text}
               </option>
             ))}
           </select>
-        </div>
-        <div className="field">
-          <label htmlFor="opp-status">Status</label>
-          <select
-            id="opp-status"
-            value={filters.status}
-            onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value as OpportunityStatus | '' }))}
-          >
+        </label>
+        <label className="pill-select">
+          <span>Status</span>
+          <select value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value as OpportunityStatus | '' }))}>
             <option value="">Any</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -174,33 +170,58 @@ function CampaignOpportunities({ campaignId, campaign }: { campaignId: string; c
               </option>
             ))}
           </select>
-        </div>
-        <div className="field">
-          <label htmlFor="opp-sort">Sort by</label>
-          <select
-            id="opp-sort"
-            value={filters.sort}
-            onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as OpportunityFilters['sort'] }))}
-          >
-            <option value="score">Fit score</option>
+        </label>
+        <label className="pill-select">
+          <span>Sort</span>
+          <select value={filters.sort} onChange={(e) => setFilters((f) => ({ ...f, sort: e.target.value as OpportunityFilters['sort'] }))}>
+            <option value="score">Fit, high to low</option>
             <option value="recent">Recently updated</option>
           </select>
-        </div>
+        </label>
+        <div className="grow" />
+        <input
+          className="toolbar-search"
+          type="search"
+          value={search}
+          placeholder="Search title, company or place"
+          aria-label="Search the loaded opportunities by title, company or place"
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setRefreshes((n) => n + 1)}>
+          Refresh
+        </button>
+        <button type="button" className="btn btn-secondary btn-sm" disabled={exporting} onClick={() => void exportCsv()}>
+          {exporting ? 'Exporting…' : '⇩ Export CSV'}
+        </button>
       </div>
+      {exportError && <ErrorNotice error={exportError} />}
 
       {/* Keyed so a filter change or refresh starts again from the first page. */}
       <OpportunityTable
         key={`${filters.outcome}|${filters.status}|${filters.sort}|${refreshes}`}
         campaignId={campaignId}
+        campaignName={campaign?.name ?? 'campaign'}
         filters={filters}
+        search={search}
         onClearFilters={() => setFilters((f) => ({ ...f, outcome: '', status: '' }))}
       />
-      <p className="hint">Bulk sending is not offered: every message is approved individually once outreach arrives.</p>
     </section>
   )
 }
 
-function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId: string; filters: OpportunityFilters; onClearFilters: () => void }) {
+function OpportunityTable({
+  campaignId,
+  campaignName,
+  filters,
+  search,
+  onClearFilters,
+}: {
+  campaignId: string
+  campaignName: string
+  filters: OpportunityFilters
+  search: string
+  onClearFilters: () => void
+}) {
   const first = useApi<OpportunityPage>(opportunitiesPath(campaignId, filters, 0))
   const [more, setMore] = useState<OpportunitySummary[]>([])
   const [fetchedMore, setFetchedMore] = useState(0)
@@ -211,15 +232,24 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
   const [busy, setBusy] = useState<string | null>(null)
   const [actionError, setActionError] = useState<Error>()
   const [announcement, setAnnouncement] = useState('')
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const { refreshOverview } = useShell()
 
-  if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} />
+  if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} what="the opportunities" />
   if (!first.data) return <LoadingState label="Loading opportunities…" waking={first.waking} rows={6} />
 
-  const items = appendUnique(first.data.items, more).map((o) => patched[o.id] ?? o)
+  const loaded = appendUnique(first.data.items, more).map((o) => patched[o.id] ?? o)
+  const items = searchLoaded(loaded, search)
   const total = first.data.total
   const firstCount = first.data.items.length
   const filtered = Boolean(filters.outcome || filters.status)
+  const chosen = loaded.filter((o) => selected.has(o.id))
+  const allShown = items.length > 0 && items.every((o) => selected.has(o.id))
+  const counts = {
+    qualified: loaded.filter((o) => o.outcome === 'Qualified').length,
+    suggested: loaded.filter((o) => o.status === 'Suggested').length,
+    excluded: loaded.filter((o) => o.outcome === 'Excluded').length,
+  }
 
   async function loadMore() {
     setLoadingMore(true)
@@ -235,7 +265,7 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
     }
   }
 
-  async function setStatus(o: OpportunitySummary, status: OpportunityStatus) {
+  async function setStatus(o: OpportunitySummary, status: OpportunityStatus): Promise<boolean> {
     setBusy(o.id)
     setActionError(undefined)
     try {
@@ -247,14 +277,44 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
       // The nav's approval count changes when a suggestion is approved or rejected here.
       if (o.status === 'Suggested' || updated.status === 'Suggested') refreshOverview()
       setAnnouncement(`${o.title} is now ${STATUS_LABELS[updated.status]?.text ?? updated.status}.`)
+      return true
     } catch (e) {
       setActionError(e as Error)
+      return false
     } finally {
       setBusy(null)
     }
   }
 
-  if (items.length === 0) {
+  /** Shortlist or dismiss the selection one row at a time; rows that cannot move are skipped and counted. */
+  async function bulk(to: OpportunityStatus) {
+    let moved = 0
+    let skipped = 0
+    for (const o of chosen) {
+      if (!canMoveTo(o.status, to)) {
+        skipped++
+        continue
+      }
+      if (await setStatus(o, to)) moved++
+    }
+    setSelected(new Set())
+    setAnnouncement(`${moved} moved to ${STATUS_LABELS[to]?.text ?? to}${skipped ? `; ${skipped} skipped because their status does not allow it` : ''}.`)
+  }
+
+  function exportSelection() {
+    saveBlob(new Blob([selectionCsv(chosen)], { type: 'text/csv' }), `${campaignName.replace(/[^\w-]+/g, '-')}-selection.csv`)
+  }
+
+  function toggle(id: string) {
+    setSelected((s) => {
+      const next = new Set(s)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  if (loaded.length === 0) {
     return filtered ? (
       <FilteredEmpty onClear={onClearFilters}>
         {[filters.outcome && `Outcome “${filters.outcome}”`, filters.status && `status “${STATUS_LABELS[filters.status]?.text ?? filters.status}”`].filter(Boolean).join(' and ')}{' '}
@@ -280,26 +340,63 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
         {announcement}
       </span>
       {actionError && <ErrorNotice error={actionError} />}
-      <div className="card table-card">
+      {chosen.length > 0 && (
+        <div className="selection-bar">
+          <strong>{chosen.length} selected</strong>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => void bulk('Shortlisted')}>
+            Shortlist
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" disabled={busy !== null} onClick={() => void bulk('Dismissed')}>
+            Dismiss
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={exportSelection}>
+            Export selection
+          </button>
+          <div className="grow" />
+          <span className="muted-small">There is no bulk send or bulk apply. Approval happens in Approvals, one batch, with the reasons visible.</span>
+        </div>
+      )}
+      <section className="panel">
+        <header className="panel-head">
+          <h4 className="eyebrow">{total} opportunities</h4>
+          <div className="grow" />
+          <span className="muted-small">
+            {counts.qualified} qualified · {counts.suggested} suggested · {counts.excluded} excluded{loaded.length < total ? ' (of those loaded)' : ''}
+          </span>
+        </header>
+        {search && (
+          <p className="muted-small panel-note">
+            Searching the {loaded.length} loaded {loaded.length === 1 ? 'row' : 'rows'}: {items.length} match “{search.trim()}”.
+          </p>
+        )}
         <div className="table-scroll" role="region" aria-labelledby="opp-heading" tabIndex={0}>
-          <table className="table">
+          <table className="table opp-table">
             <caption className="sr-only">
               Opportunities sorted by {filters.sort === 'score' ? 'fit score' : 'most recently updated'}. Showing {items.length} of {total}.
             </caption>
             <thead>
               <tr>
+                <th scope="col" className="col-check">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all shown"
+                    checked={allShown}
+                    onChange={() => setSelected(allShown ? new Set() : new Set(items.map((o) => o.id)))}
+                  />
+                </th>
                 <th scope="col">Opportunity</th>
                 <th scope="col">Mode</th>
                 <th scope="col" aria-sort={filters.sort === 'score' ? 'descending' : undefined}>
-                  Fit score
+                  Fit
                 </th>
+                <th scope="col">Evidence</th>
                 <th scope="col">Outcome</th>
                 <th scope="col">Status</th>
                 <th scope="col" aria-sort={filters.sort === 'recent' ? 'descending' : undefined}>
                   Updated
                 </th>
                 <th scope="col">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">Next step</span>
                 </th>
               </tr>
             </thead>
@@ -307,46 +404,68 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
               {items.map((o) => {
                 const outcome = OUTCOME_LABELS[o.outcome] ?? { text: o.outcome, tone: 'neutral' }
                 const status = STATUS_LABELS[o.status] ?? { text: o.status, tone: 'neutral' }
+                const next = primaryAction(o)
+                const excluded = o.outcome === 'Excluded'
                 return (
-                  <tr key={o.id}>
+                  <tr key={o.id} className={selected.has(o.id) ? 'is-selected' : ''}>
+                    <td className="col-check">
+                      <input type="checkbox" aria-label={`Select ${o.title}`} checked={selected.has(o.id)} onChange={() => toggle(o.id)} />
+                    </td>
                     <td className="table-role">
                       <Link to={`/opportunities/${o.id}`}>{o.title}</Link>
                       <div className="muted-small">{[o.organization, o.location].filter(Boolean).join(' · ')}</div>
+                      {o.outcomeReason && excluded && <div className="muted-small clamp-2">{o.outcomeReason}</div>}
                     </td>
                     <td>
-                      {MODE_LABELS[o.mode] ?? o.mode}
+                      <Badge tone={o.mode === 'Job' ? 'success' : 'primary'}>{MODE_LABELS[o.mode] ?? o.mode}</Badge>
                       {platformLabel(o.platform) && <div className="muted-small">{platformLabel(o.platform)}</div>}
                     </td>
-                    <td className="op-numeric nowrap">
-                      <strong>Fit {formatScore(o.score)}</strong>
-                      <div className="muted-small">{formatCoverage(o.coverage)}</div>
+                    <td className="nowrap">
+                      {excluded ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        <span className="meter">
+                          <strong className="op-numeric">{Math.round(o.score)}</strong>
+                          <span className="meter-track">
+                            <i style={{ width: `${Math.min(100, Math.max(0, o.score))}%` }} />
+                          </span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="nowrap">
+                      <span className="meter" title={formatCoverage(o.coverage)}>
+                        <span className={`meter-track meter-small ${o.coverage < 70 ? 'meter-amber' : ''}`}>
+                          <i style={{ width: `${Math.min(100, Math.max(0, o.coverage))}%` }} />
+                        </span>
+                        <span className="muted-small op-numeric">{Math.round(o.coverage)}%</span>
+                      </span>
+                      {o.gapsCount > 0 && <div className="muted-small">{o.gapsCount} not verified</div>}
                     </td>
                     <td>
                       <Badge tone={outcome.tone}>{outcome.text}</Badge>
-                      {o.outcomeReason && <div className="muted-small clamp-2">{o.outcomeReason}</div>}
-                      {o.gapsCount > 0 && <div className="muted-small">{o.gapsCount} not verified</div>}
                     </td>
                     <td>
                       <Badge tone={status.tone}>{status.text}</Badge>
                     </td>
-                    <td className="table-when op-numeric">
+                    <td className="table-when muted-small">
                       <time dateTime={o.updatedAt}>{formatWhen(o.updatedAt)}</time>
                     </td>
-                    <td>
-                      <div className="row-actions">
-                        {quickActions(o.status).map((a) => (
-                          <button
-                            key={a.to}
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            disabled={busy === o.id}
-                            onClick={() => void setStatus(o, a.to)}
-                          >
-                            {a.label}
-                            <span className="sr-only"> {o.title}</span>
-                          </button>
-                        ))}
-                      </div>
+                    <td className="nowrap">
+                      {next.to ? (
+                        <button type="button" className="btn-link" disabled={busy === o.id} onClick={() => void setStatus(o, next.to!)}>
+                          {next.label}
+                          <span className="sr-only"> {o.title}</span>
+                        </button>
+                      ) : next.label === 'Open posting' && (o.applyUrl || o.url) ? (
+                        <a href={(o.applyUrl ?? o.url)!} target="_blank" rel="noreferrer">
+                          Open posting
+                          <span className="sr-only"> for {o.title} (opens in a new tab)</span>
+                        </a>
+                      ) : (
+                        <Link to={`/opportunities/${o.id}`}>
+                          Review<span className="sr-only"> {o.title}</span>
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 )
@@ -354,20 +473,19 @@ function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId:
             </tbody>
           </table>
         </div>
-      </div>
-
+        <footer className="panel-foot">
+          <span className="muted-small" aria-live="polite">
+            Showing {items.length} of {total} · sorted and paged by the server
+          </span>
+          <div className="grow" />
+          {loaded.length < total && (
+            <button type="button" className="btn btn-secondary btn-sm" disabled={loadingMore} onClick={() => void loadMore()}>
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          )}
+        </footer>
+      </section>
       {moreError && <ErrorNotice error={moreError} onRetry={() => void loadMore()} />}
-      <div className="row wrap">
-        <p className="muted-small" aria-live="polite">
-          Showing {items.length} of {total} · sorted and paged by the server
-        </p>
-        <div className="grow" />
-        {items.length < total && (
-          <button type="button" className="btn btn-secondary btn-sm" disabled={loadingMore} onClick={() => void loadMore()}>
-            {loadingMore ? 'Loading…' : 'Load more'}
-          </button>
-        )}
-      </div>
     </div>
   )
 }

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  campaignFilterCounts,
+  filterCampaigns,
+  isRunning,
   addTags,
   adzunaSearch,
   applicableCriteria,
@@ -236,5 +239,21 @@ describe('job sources', () => {
       location: 'Pune',
     })
     expect(adzunaSearch({ keywords: [], locations: ['remote'] })).toEqual({ keywords: [], location: null })
+  })
+})
+
+describe('campaigns list', () => {
+  const list = [
+    { mode: 'Job' as const, lastJob: { state: 'Running' } },
+    { mode: 'Customer' as const, lastJob: null },
+    { mode: 'Job' as const, lastJob: { state: 'Completed' } },
+  ]
+  it('filters and counts by mode', () => {
+    expect(filterCampaigns(list, 'Job')).toHaveLength(2)
+    expect(filterCampaigns(list, 'all')).toHaveLength(3)
+    expect(campaignFilterCounts(list)).toEqual({ all: 3, Job: 2, Customer: 1 })
+  })
+  it('knows when the latest run is still going', () => {
+    expect(list.map(isRunning)).toEqual([true, false, false])
   })
 })
