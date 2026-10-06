@@ -22,6 +22,8 @@ export type IconName =
   | 'sales'
   | 'chevronDown'
   | 'alert'
+  | 'projects'
+  | 'bids'
 
 const PATHS: Record<IconName, ReactNode> = {
   overview: (
@@ -103,6 +105,18 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  projects: (
+    <>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M8.5 7V5.2A1.7 1.7 0 0 1 10.2 3.5h3.6a1.7 1.7 0 0 1 1.7 1.7V7M3 12.5h18" />
+    </>
+  ),
+  bids: (
+    <>
+      <path d="M21 3 10.5 13.5" />
+      <path d="M21 3 14.5 21l-4-7.5L3 9.5z" />
+    </>
+  ),
   alert: (
     <>
       <path d="M12 3.5 2.8 19.5h18.4z" />

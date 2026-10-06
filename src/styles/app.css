@@ -94,22 +94,31 @@ p { margin: 0; }
 .ws-name { font-size: var(--op-text-body); font-weight: 600; color: var(--op-text-inverse); }
 .ws-chevron { color: var(--op-nav-ink-muted); flex-shrink: 0; }
 .ws-tagline { padding: 0 18px var(--op-space-1); font-size: var(--op-text-micro); color: var(--op-nav-ink-muted); }
+/* Design WorkspaceSwitcher: a light popover over the rail, each option with its build status. */
+.rail:has(.ws-options) { overflow: visible; }
 .ws-options {
-  margin: 0 var(--op-space-2) var(--op-space-2); padding: var(--op-space-1); border-radius: var(--op-radius);
-  border: 1px solid var(--op-nav-raised-border); background: var(--op-nav-raised);
-  display: flex; flex-direction: column; gap: 2px;
+  position: absolute; z-index: 30; top: 0; left: calc(100% - 40px); width: 290px; padding: 12px;
+  border-radius: 10px; border: 1px solid var(--op-line); background: var(--op-surface); color: var(--op-ink);
+  box-shadow: var(--op-shadow-popover); display: flex; flex-direction: column; gap: 8px;
 }
+.ws-options-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--op-muted); padding: 2px 4px; }
 .ws-option {
-  display: flex; align-items: center; gap: 9px; padding: 6px var(--op-space-2); border: 0; border-radius: var(--op-radius-control);
-  background: none; color: var(--op-nav-ink); cursor: pointer; text-align: left;
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--op-line); border-radius: 8px;
+  background: var(--op-surface); color: var(--op-ink); cursor: pointer; text-align: left;
 }
-.ws-option:hover, .ws-option[aria-pressed='true'] { background: var(--op-nav-active); }
-.ws-option .ws-tile { width: 22px; height: 22px; }
+.ws-option:hover { border-color: var(--op-field-border); }
+.ws-option[aria-pressed='true'] { border-color: var(--op-primary); background: var(--op-primary-tint); }
+.ws-option .ws-tile { width: 30px; height: 30px; color: #fff; }
+.ws-option .ws-name { color: var(--op-ink); }
 .ws-option-candidate .ws-tile { background: var(--op-ws-candidate); }
 .ws-option-sales .ws-tile { background: var(--op-ws-sales); }
-.ws-option-tagline { font-size: var(--op-text-micro); color: var(--op-nav-ink-soft); }
-.ws-option[aria-pressed='true'] .ws-name::after { content: ' ✓'; color: var(--op-nav-focus); }
-.ws-note { margin: var(--op-space-1) var(--op-space-2) 2px; font-size: var(--op-text-micro); color: var(--op-nav-ink-soft); }
+.ws-option-tagline { font-size: var(--op-text-micro); color: var(--op-muted); }
+.ws-status { flex-shrink: 0; }
+.ws-check { color: var(--op-primary); font-weight: 700; }
+.ws-note { margin: 4px 4px 0; padding-top: 10px; border-top: 1px solid var(--op-hair); font-size: var(--op-text-micro); color: var(--op-muted); line-height: 1.5; }
+@media (max-width: 860px) {
+  .ws-options { position: static; width: auto; margin: 0 var(--op-space-2) var(--op-space-2); }
+}
 
 .rail-groups { padding-bottom: var(--op-space-5); }
 .rail-section {
