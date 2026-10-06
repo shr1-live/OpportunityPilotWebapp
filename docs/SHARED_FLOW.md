@@ -6,25 +6,23 @@ There is no user-role concept yet: every signed-in user sees the same navigation
 
 ---
 
-### Sign-in — Sign in / Create account / Try it as a guest
+### Accounts — Sign in, Create account, Verify email, Reset password, Onboarding (design round 3)
 
-- **Route:** any URL while signed out (`AuthGate` in `src/App.tsx` renders it in place of the shell, so deep links survive sign-in). While the Supabase session is being read: "Checking your session…".
-- **Component:** `src/features/auth/SignInPage.tsx`; mode and session in `src/features/auth/AuthProvider.tsx`
-- **What it shows:** Brand and a heading per mode. **guest** (no Supabase config, not dev): demo-mode notice (private guest space, data cleared on server restart), "Continue as guest", wake-up hint. **dev** (`VITE_DEV_AUTH=true` in a dev build): "Development sign-in" notice, one text field "Dev user name or email". **supabase**: email + password, toggle between Sign in and Create account. A warning when the previous session was rejected (`sessionExpired`; guest wording explains the demo server restarted).
-- **Actions:**
-  - Continue as guest → `POST /api/v1/auth/guest` → token stored → shell renders at the current URL. A 404 shows "Guest sign-in is switched off on this server because real sign-in is configured…".
-  - Sign in (dev) → stores the name → shell renders.
-  - Sign in (supabase) → `supabase.auth.signInWithPassword` → session → shell renders; error text from Supabase shown inline.
-  - Create account (supabase) → `supabase.auth.signUp`; with no session returned shows "Check your inbox to confirm the address, then sign in."
-  - "Create an account" / "I already have an account" → toggles the form.
-- **State (reads):** `useAuth()` → `mode`, `sessionExpired`; build-time `config` (`src/lib/config.ts`); localStorage `op.devUser` / `op.guestToken` on load; Supabase session (`supabase.auth.getSession`, `onAuthStateChange`).
-- **State (writes):** `POST /api/v1/auth/guest` (response `{ token, expiresAt }`); localStorage `op.guestToken` (guest) or `op.devUser` (dev); Supabase session storage (supabase-js `persistSession`). Every later API call sends `Authorization: Bearer <token>` (guest, supabase) or `X-Dev-User: <name>` (dev); any 401 clears them and sets `sessionExpired`.
-- **Navigation out:** none by URL — on success the same URL re-renders inside `AppShell`.
-- **Validation:** "Continue as guest" disabled while the request runs (label "Starting…"). Form submit disabled while busy ("Working…"). Email `required` (type `email` in supabase mode, `text` in dev mode); password `required`, `minLength` 8 (supabase only); a blank dev name is ignored.
+- **Route:** while signed out, `AuthGate` (`src/App.tsx`) picks the screen from the URL (`authScreenFor` in `authModel.ts`): `/signup`, `/verify?email=`, `/reset`, `/reset/new`; any other URL shows Sign in, so deep links survive sign-in. Signed in on an account-only URL → redirect to `/`. A Supabase password-recovery link (`PASSWORD_RECOVERY`) shows "Choose a new password" first. First signed-in visit in a browser (`op.onboarded` unset) shows Onboarding.
+- **Component:** `src/features/auth/` — `AuthLayout.tsx` (two panels: dark story panel hidden under 860 px, form card; `PasswordField` with Show/Hide and strength meter; `GoogleButton` with a neutral placeholder mark), `SignInPage.tsx`, `SignUpPage.tsx`, `VerifyEmailPage.tsx`, `ResetPasswordPage.tsx` (request + `NewPasswordPage`), `OnboardingPage.tsx`; logic in `authModel.ts`; session in `AuthProvider.tsx`.
+- **What it shows:**
+  - Sign in: **supabase** — Continue with Google, email, password (Forgot? → `/reset`), "Keep me signed in on this device" (default on), Sign in, "No account needed" → Continue as guest, "New here? Create an account". **guest** (no Supabase keys) — notice "Accounts are not switched on for this deployment yet", Continue as guest (primary). **dev** — dev name field. Footnote about the API waking.
+  - Create account: Google, full name, work email (inline "An account already exists for this email. Sign in instead" when Supabase answers with no identities), password with strength (12+ characters), consent stating what is stored (required). Without Supabase keys: notice + "Continue as guest instead".
+  - Verify email: address, "Not arrived?" reasons, Resend with a 60 s countdown, Use a different email.
+  - Reset: email → same confirmation whether or not the account exists. New password: password + confirm, "Sign out of all other devices" (default on).
+  - Onboarding: progress (Your account ✓ · Pick a workspace · Seed a profile), Candidate (Built) / Sales (Partly built) cards, "Next, in 60 seconds", Skip for now / Continue to profile.
+- **Actions:** Google → `signInWithOAuth` (redirect to origin; needs the Google provider enabled in Supabase); Sign in → `signInWithPassword`; Create → `signUp` (→ `/verify` when no session); Resend → `auth.resend`; Send reset link → `resetPasswordForEmail` (redirect `/reset/new`); Set password → `updateUser` (+ `signOut({ scope: 'others' })`); Continue as guest → `POST /api/v1/auth/guest` with wake-up retries (404 → "Guest access is switched off"); Onboarding → writes `op.workspace` + `op.onboarded`, opens `/profiles` or `/`.
+- **State (reads):** `useAuth()`; build-time Supabase keys; localStorage `op.guestToken`, `op.devUser`, `op.keepSignedIn`, `op.onboarded`.
+- **State (writes):** guest token; Supabase session in localStorage, or sessionStorage when "Keep me signed in" is off (`src/lib/supabase.ts`); `op.keepSignedIn`, `op.workspace`, `op.onboarded`.
+- **Navigation out:** on sign-in the same URL renders inside `AppShell`; links between the account screens.
+- **Validation:** email required; password ≥ 12 on create/reset; confirm must match; consent required.
 - **Status:** built
-- **TODOs:** Production has no Supabase values, so the live site is guest-only (OQ-FE-014). No password reset or sign-in with a provider. `useAuth` export triggers an oxlint warning (OQ-FE-017).
-
----
+- **TODOs:** real accounts need U1 (Supabase keys on Render + Vercel) and, for Google, the Google provider in Supabase plus Google's official button asset.
 
 ### Shell — Navigation rail, top bar, API status, banners
 

@@ -1,23 +1,31 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { ApiError, ApiStillUnreachableError, ApiUnreachableError } from '../../lib/api'
 import { isWakingError, wakeRetryDelay } from '../../lib/wakeRetry'
-import { supabase } from '../../lib/supabase'
+import { AuthCardHeader, AuthLayout, Divider, GoogleButton, PasswordField } from './AuthLayout'
+import { AUTH_PATHS, KEEP_SIGNED_IN_KEY, readFlag } from './authModel'
 import { useAuth } from './AuthProvider'
 
+const WAKE_NOTE =
+  'The API sleeps when idle on free hosting. The first request after a quiet spell takes up to a minute — you will see “Starting the API service…”, not an error.'
+
+/** Design AuthSignIn: email + password, Google, keep signed in, forgot link, and "Continue as guest". */
 export function SignInPage() {
-  const { mode, sessionExpired, devSignIn, guestSignIn } = useAuth()
+  const { mode, sessionExpired, devSignIn, guestSignIn, passwordSignIn, googleSignIn } = useAuth()
+  const accounts = mode === 'supabase'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [keep, setKeep] = useState(() => readFlag(KEEP_SIGNED_IN_KEY, true))
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
+  const [guestBusy, setGuestBusy] = useState(false)
   const [guestError, setGuestError] = useState<Error>()
   const [waking, setWaking] = useState(false)
 
   async function continueAsGuest() {
-    setBusy(true)
+    setGuestBusy(true)
     setGuestError(undefined)
     try {
       // The free host may be asleep: keep trying while it wakes instead of failing on the first attempt.
@@ -35,109 +43,146 @@ export function SignInPage() {
     } catch (e) {
       setGuestError(
         e instanceof ApiError && e.status === 404
-          ? new Error('Guest sign-in is switched off on this server because real sign-in is configured. Set the web app’s Supabase values and redeploy.')
+          ? new Error('Guest access is switched off on this deployment. Sign in or create an account.')
           : (e as Error),
       )
     } finally {
-      setBusy(false)
+      setGuestBusy(false)
       setWaking(false)
     }
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    setMessage(null)
+    setError(null)
     if (mode === 'dev') {
       if (email.trim()) devSignIn(email.trim())
       return
     }
-    if (!supabase) return
     setBusy(true)
-    const { data, error } = creating
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password })
-    setBusy(false)
-    if (error) setMessage({ kind: 'error', text: error.message })
-    else if (creating && !data.session)
-      setMessage({ kind: 'info', text: 'Check your inbox to confirm the address, then sign in.' })
+    try {
+      await passwordSignIn(email.trim(), password, keep)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function google() {
+    setError(null)
+    try {
+      await googleSignIn()
+    } catch (err) {
+      setError((err as Error).message)
+    }
   }
 
   return (
-    <main className="signin">
-      <div className="signin-card">
-        <div className="signin-brand">OpportunityPilot</div>
-        <h1 className="signin-title">{mode === 'guest' ? 'Try it as a guest' : creating ? 'Create your account' : 'Sign in'}</h1>
+    <AuthLayout
+      headline={
+        <>
+          Opportunities that fit you —<br />
+          with the evidence attached.
+        </>
+      }
+      lead="It reads the sources you choose, scores what it finds against criteria you set, and shows why. You approve what happens next. Nothing is sent or applied on its own."
+      asideTitle="Built for"
+      asideItems={['Candidates looking for roles', 'Sales teams looking for customers']}
+      footnote={WAKE_NOTE}
+    >
+      <AuthCardHeader title="Sign in" subtitle="Welcome back." />
 
-        {sessionExpired && (
-          <p className="notice notice-warning" role="status">
-            {mode === 'guest'
-              ? 'Your guest session ended — the demo server restarted, which also clears its temporary data.'
-              : 'Your session expired. Sign in again to continue.'}
+      {sessionExpired && (
+        <p className="notice notice-warning" role="status">
+          Your session ended. Sign in again to continue — anything already saved is still there.
+        </p>
+      )}
+
+      {mode === 'dev' ? (
+        <form onSubmit={submit} className="stack-3">
+          <p className="notice notice-neutral">
+            <strong>Development sign-in.</strong> Local only — any name creates a separate synthetic user.
           </p>
-        )}
-
-        {mode === 'guest' ? (
-          <div className="stack-3">
-            <p className="notice notice-neutral">
-              <strong>Demo mode.</strong> Accounts are not set up yet, so you get a private guest space in this browser.
-              Other visitors cannot see it. Data is temporary: it is cleared when the server restarts, which on free
-              hosting happens after a few idle minutes.
-            </p>
-            {guestError && <ErrorNotice error={guestError} />}
-            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void continueAsGuest()}>
-              {busy ? (waking ? 'Waking the server… this can take a minute' : 'Starting…') : 'Continue as guest'}
-            </button>
-            <p className="hint">The first visit can take up to a minute while the server wakes up.</p>
+          <div className="field">
+            <label htmlFor="email">Dev user name or email</label>
+            <input id="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
-        ) : (
-          <form onSubmit={submit} className="stack-3">
-            {mode === 'dev' && (
-              <p className="notice notice-neutral">
-                <strong>Development sign-in.</strong> Local only — any name creates a separate synthetic user. This
-                option does not exist in production builds.
-              </p>
-            )}
-            <div className="field">
-              <label htmlFor="email">{mode === 'dev' ? 'Dev user name or email' : 'Email'}</label>
-              <input
-                id="email"
-                type={mode === 'dev' ? 'text' : 'email'}
-                autoComplete="username"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            {mode === 'supabase' && (
-              <div className="field">
-                <label htmlFor="password">Password</label>
-                <input
-                  id="password"
-                  type="password"
-                  autoComplete={creating ? 'new-password' : 'current-password'}
-                  required
-                  minLength={8}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            )}
-            {message && (
-              <p className={`notice ${message.kind === 'error' ? 'notice-danger' : 'notice-neutral'}`} role="alert">
-                {message.text}
-              </p>
-            )}
-            <button className="btn btn-primary" type="submit" disabled={busy}>
-              {busy ? 'Working…' : creating ? 'Create account' : 'Sign in'}
-            </button>
-            {mode === 'supabase' && (
-              <button type="button" className="btn-link" onClick={() => setCreating((c) => !c)}>
-                {creating ? 'I already have an account' : 'Create an account'}
-              </button>
-            )}
-          </form>
-        )}
-      </div>
-    </main>
+          <button className="btn btn-primary auth-wide" type="submit">
+            Sign in
+          </button>
+        </form>
+      ) : accounts ? (
+        <form onSubmit={submit} className="stack-3">
+          <GoogleButton label="Continue with Google" onClick={() => void google()} disabled={busy} />
+          <Divider label="or" />
+          <div className="field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              autoComplete="username"
+              placeholder="you@company.com"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <PasswordField
+            id="password"
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            autoComplete="current-password"
+            labelAside={
+              <Link className="small" to={AUTH_PATHS.reset}>
+                Forgot?
+              </Link>
+            }
+          />
+          <label className="checkbox-row">
+            <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+            Keep me signed in on this device
+          </label>
+          {error && (
+            <p className="notice notice-danger" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="btn btn-primary auth-wide" type="submit" disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+        </form>
+      ) : (
+        <p className="notice notice-neutral">
+          <strong>Accounts are not switched on for this deployment yet.</strong> Email and Google sign-in appear here
+          once the Supabase sign-in keys are set. Until then, continue as a guest.
+        </p>
+      )}
+
+      {mode !== 'dev' && (
+        <div className="stack-2">
+          {accounts && <Divider label="No account needed" />}
+          {guestError && <ErrorNotice error={guestError} />}
+          <button
+            className={`btn ${accounts ? 'btn-secondary' : 'btn-primary'} auth-wide`}
+            type="button"
+            disabled={guestBusy}
+            onClick={() => void continueAsGuest()}
+          >
+            {guestBusy ? (waking ? 'Waking the server… this can take a minute' : 'Starting…') : 'Continue as guest'}
+          </button>
+          <p className="hint auth-center">
+            Guest data is saved but tied to this browser{accounts ? '' : ', and sign-in is guest-only on this deployment'}.
+          </p>
+        </div>
+      )}
+
+      {accounts && (
+        <footer className="auth-card-foot">
+          New here? <Link to={AUTH_PATHS.signup}>Create an account</Link>
+        </footer>
+      )}
+    </AuthLayout>
   )
 }
