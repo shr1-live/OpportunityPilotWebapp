@@ -1,13 +1,53 @@
+import { useState, type ReactNode } from 'react'
 import { ApiError, ApiStillUnreachableError, ApiUnreachableError } from '../lib/api'
 
-export function ErrorNotice({ error, onRetry }: { error: Error; onRetry?: () => void }) {
-  const text =
-    error instanceof ApiStillUnreachableError
-      ? 'The API is still not responding after retrying for about two minutes. The free host may be restarting — try again in a moment.'
-      : error instanceof ApiUnreachableError
-        ? 'The API could not be reached. On free hosting it sleeps when idle and can take up to a minute to wake — try again in a moment.'
-        : error.message
+const timeFmt = new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit' })
+
+function describe(error: Error): string {
+  if (error instanceof ApiStillUnreachableError)
+    return 'The API is still not responding after retrying for about two minutes. The free host may be restarting — try again in a moment.'
+  if (error instanceof ApiUnreachableError)
+    return 'The API could not be reached. On free hosting it sleeps when idle and can take up to a minute to wake — try again in a moment.'
+  return error.message
+}
+
+/**
+ * Inline by default (inside forms and cards). With `what`, renders the design's "request failed" card:
+ * "Could not load X", the reason, a support reference (never a server trace), Try again and an optional way out.
+ */
+export function ErrorNotice({ error, onRetry, what, secondary }: { error: Error; onRetry?: () => void; what?: string; secondary?: ReactNode }) {
+  const text = describe(error)
   const correlationId = error instanceof ApiError ? error.correlationId : undefined
+  // When the failure was first shown, for the support reference.
+  const [shownAt] = useState(() => timeFmt.format(new Date()))
+
+  if (what) {
+    return (
+      <section className="state state-error" role="alert">
+        <div className="row">
+          <span className="state-error-icon" aria-hidden="true">
+            ⚠
+          </span>
+          <h3 className="state-title">Could not load {what}</h3>
+        </div>
+        <p className="state-text">{text} Your data is untouched.</p>
+        {correlationId && (
+          <p className="mono muted-small">
+            reference {correlationId} · {shownAt}
+          </p>
+        )}
+        <div className="state-actions">
+          {onRetry && (
+            <button type="button" className="btn btn-primary btn-sm" onClick={onRetry}>
+              ↻ Try again
+            </button>
+          )}
+          {secondary}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <div className="notice notice-danger" role="alert">
       <span>{text}</span>

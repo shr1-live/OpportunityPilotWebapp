@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { LoadingState } from '../../components/States'
 import type { CampaignSummary, ProfileSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
@@ -33,7 +34,7 @@ export function CampaignsPage() {
       />
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
-      {campaigns.loading && !campaigns.data && <p className="muted-small">Loading campaigns…</p>}
+      {campaigns.loading && !campaigns.data && <LoadingState label="Loading campaigns…" waking={campaigns.waking} rows={3} />}
 
       {campaigns.data && campaigns.data.length === 0 && (
         <div className="empty">

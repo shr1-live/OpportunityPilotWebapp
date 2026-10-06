@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { EmptyState, FilteredEmpty, LoadingState } from '../../components/States'
 import { api, apiDownload } from '../../lib/api'
 import { exportFilename, saveBlob } from '../../lib/download'
 import type {
@@ -60,19 +61,25 @@ export function OpportunitiesPage() {
       />
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
-      {campaigns.loading && !campaigns.data && <p className="muted-small">Loading campaigns…</p>}
+      {campaigns.loading && !campaigns.data && <LoadingState label="Loading campaigns…" waking={campaigns.waking} rows={3} />}
 
       {campaigns.data && list.length === 0 && (
-        <div className="empty">
-          <div className="empty-title">No opportunities yet</div>
-          <p className="empty-text">
-            Opportunities come from research runs, and a run belongs to a campaign. Build a campaign, add sources and queue
-            a run — matches appear here as they are scored.
-          </p>
-          <Link className="btn btn-primary" to="/campaigns/new">
-            New campaign
-          </Link>
-        </div>
+        <EmptyState
+          icon="☰"
+          title="No opportunities yet"
+          actions={
+            <>
+              <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+                Build a campaign
+              </Link>
+              <Link className="btn btn-secondary btn-sm" to="/">
+                Try a sample run
+              </Link>
+            </>
+          }
+        >
+          Nothing has been researched. A campaign needs one source and one criterion to produce its first result.
+        </EmptyState>
       )}
 
       {campaigns.data && list.length > 0 && (
@@ -186,13 +193,14 @@ function CampaignOpportunities({ campaignId, campaign }: { campaignId: string; c
         key={`${filters.outcome}|${filters.status}|${filters.sort}|${refreshes}`}
         campaignId={campaignId}
         filters={filters}
+        onClearFilters={() => setFilters((f) => ({ ...f, outcome: '', status: '' }))}
       />
       <p className="hint">Bulk sending is not offered: every message is approved individually once outreach arrives.</p>
     </section>
   )
 }
 
-function OpportunityTable({ campaignId, filters }: { campaignId: string; filters: OpportunityFilters }) {
+function OpportunityTable({ campaignId, filters, onClearFilters }: { campaignId: string; filters: OpportunityFilters; onClearFilters: () => void }) {
   const first = useApi<OpportunityPage>(opportunitiesPath(campaignId, filters, 0))
   const [more, setMore] = useState<OpportunitySummary[]>([])
   const [fetchedMore, setFetchedMore] = useState(0)
@@ -206,7 +214,7 @@ function OpportunityTable({ campaignId, filters }: { campaignId: string; filters
   const { refreshOverview } = useShell()
 
   if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} />
-  if (!first.data) return <p className="muted-small">Loading opportunities…</p>
+  if (!first.data) return <LoadingState label="Loading opportunities…" waking={first.waking} rows={6} />
 
   const items = appendUnique(first.data.items, more).map((o) => patched[o.id] ?? o)
   const total = first.data.total
@@ -248,20 +256,21 @@ function OpportunityTable({ campaignId, filters }: { campaignId: string; filters
 
   if (items.length === 0) {
     return filtered ? (
-      <div className="empty">
-        <div className="empty-title">Nothing matches these filters</div>
-        <p className="empty-text">Set Outcome and Status to All to see every opportunity in this campaign.</p>
-      </div>
+      <FilteredEmpty onClear={onClearFilters}>
+        {[filters.outcome && `Outcome “${filters.outcome}”`, filters.status && `status “${STATUS_LABELS[filters.status]?.text ?? filters.status}”`].filter(Boolean).join(' and ')}{' '}
+        together match none of the opportunities in this campaign.
+      </FilteredEmpty>
     ) : (
-      <div className="empty">
-        <div className="empty-title">No opportunities in this campaign yet</div>
-        <p className="empty-text">
-          They are written by research runs. Check the campaign has sources, then queue a run from its review step.
-        </p>
-        <Link className="btn btn-secondary" to={`/campaigns/${campaignId}/edit?step=4`}>
-          Review and run
-        </Link>
-      </div>
+      <EmptyState
+        title="No opportunities in this campaign yet"
+        actions={
+          <Link className="btn btn-secondary btn-sm" to={`/campaigns/${campaignId}/edit?step=4`}>
+            Review and run
+          </Link>
+        }
+      >
+        They are written by research runs. Check the campaign has sources, then queue a run from its review step.
+      </EmptyState>
     )
   }
 

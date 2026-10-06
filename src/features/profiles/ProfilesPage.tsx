@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBlocker, useNavigate, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { LoadingState } from '../../components/States'
 import { TagInput } from '../../components/TagInput'
 import { api, ApiError } from '../../lib/api'
 import type { Profile, ProfileData, ProfileSummary, ProfileType } from '../../lib/types'
@@ -71,7 +72,7 @@ export function ProfilesPage() {
           </div>
           <div className="profiles2-list-body">
             {list.error && <ErrorNotice error={list.error} onRetry={list.reload} />}
-            {list.loading && !list.data && <p className="muted-small">Loading profiles…</p>}
+            {list.loading && !list.data && <LoadingState label="Loading profiles…" waking={list.waking} rows={3} />}
             {list.data?.length === 0 && (
               <div className="profiles2-empty">
                 <strong>No profiles yet</strong>
@@ -124,7 +125,7 @@ export function ProfilesPage() {
 function ExistingProfile({ id, onSaved }: { id: string; onSaved: () => void }) {
   const profile = useApi<Profile>(`/api/v1/profiles/${id}`)
   if (profile.error) return <div className="profiles2-pad"><ErrorNotice error={profile.error} onRetry={profile.reload} /></div>
-  if (!profile.data) return <div className="profiles2-pad muted-small">Loading profile…</div>
+  if (!profile.data) return <div className="profiles2-pad"><LoadingState label="Loading profile…" waking={profile.waking} rows={4} /></div>
   return <ProfileEditor key={`${id}-${profile.data.version}`} existing={profile.data} onSaved={() => { onSaved(); profile.reload() }} />
 }
 

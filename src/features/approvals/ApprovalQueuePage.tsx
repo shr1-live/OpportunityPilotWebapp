@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { EmptyState, LoadingState } from '../../components/States'
 import { api } from '../../lib/api'
 import type { ApprovalItem, ApprovalPage, CampaignSummary, DecideRequest, DecideResult } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -136,7 +137,7 @@ function Queue({
   }, [allState])
 
   if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} />
-  if (!first.data) return <p className="muted-small">Loading suggestions…</p>
+  if (!first.data) return <LoadingState label="Loading suggestions…" waking={first.waking} />
 
   const total = first.data.total
   const count = visibleSelection.size
@@ -338,34 +339,40 @@ function EmptyQueue({
   if (campaignId) {
     const threshold = campaign?.autoSuggestMinScore
     return (
-      <div className="empty">
-        <div className="empty-title">Nothing from this campaign is waiting for approval</div>
-        <p className="empty-text">
+      <EmptyState
+        title="Nothing from this campaign is waiting for approval"
+        actions={
+          <Link className="btn btn-secondary btn-sm" to={`/campaigns/${campaignId}/edit?step=2`}>
+            Open its Filters step
+          </Link>
+        }
+      >
+        <p>
           {threshold === null
             ? 'Suggestions are off for this campaign. Turn on “Suggest jobs for approval” in its Filters step; after the next research run, qualified jobs at or above your threshold wait here.'
             : typeof threshold === 'number'
               ? `This campaign suggests qualified jobs scoring at least ${threshold}. None are waiting — queue a research run, or lower the threshold in its Filters step.`
               : 'Suggestions appear after a research run when “Suggest jobs for approval” is on in the campaign’s Filters step.'}
         </p>
-        <Link className="btn btn-secondary" to={`/campaigns/${campaignId}/edit?step=2`}>
-          Open its Filters step
-        </Link>
-      </div>
+      </EmptyState>
     )
   }
   const withSuggestions = jobCampaigns?.filter((c) => typeof c.autoSuggestMinScore === 'number').length
   return (
-    <div className="empty">
-      <div className="empty-title">Nothing is waiting for approval</div>
-      <p className="empty-text">
+    <EmptyState
+      title="Nothing is waiting for approval"
+      actions={
+        <Link className="btn btn-secondary btn-sm" to="/campaigns">
+          Open campaigns
+        </Link>
+      }
+    >
+      <p>
         Suggestions appear here after a research run, when a Job campaign has &ldquo;Suggest jobs for approval&rdquo;
         turned on in its Filters step: qualified jobs scoring at least the threshold you set wait here, and nothing is
         applied until you approve.
         {withSuggestions === 0 && ' None of your Job campaigns has it turned on yet.'}
       </p>
-      <Link className="btn btn-secondary" to="/campaigns">
-        Open campaigns
-      </Link>
-    </div>
+    </EmptyState>
   )
 }

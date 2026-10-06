@@ -934,3 +934,45 @@ p { margin: 0; }
   .editor-grid, .type-row { grid-template-columns: minmax(0, 1fr); }
   .profiles2-head, .profiles2-pad, .save-bar { padding-left: 16px; padding-right: 16px; }
 }
+
+/* ---- Shared states (design round 3 `States`): fill the width, say what is true, offer the next action ---- */
+.state {
+  background: var(--op-surface); border: 1px solid var(--op-line); border-radius: 10px; padding: 20px 22px;
+  display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: var(--op-space-4);
+}
+.state-title { margin: 0; font-size: 15px; font-weight: 600; color: var(--op-ink); }
+.state-text { color: var(--op-muted); max-width: 70ch; line-height: 1.55; }
+.state-text p { margin: 0; }
+.state-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.state-icon {
+  display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 8px;
+  background: var(--op-neutral-tint); color: var(--op-on-neutral-tint); font-size: 16px;
+}
+.state-error-icon { color: var(--op-on-danger-tint); font-size: 16px; }
+.state-error { border-color: var(--op-danger-border); }
+.state-split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.state-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; color: var(--op-muted); }
+.state-list li::before { content: '›'; margin-right: 10px; color: var(--op-faint); }
+.state-today { width: 100%; justify-content: center; text-align: center; }
+.state-loading { align-items: stretch; }
+.skeleton-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+.skeleton-card { border: 1px solid var(--op-hair); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.skeleton-rows { display: flex; flex-direction: column; }
+.skeleton-row { display: grid; grid-template-columns: 2fr 1.4fr 1fr; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--op-hair); }
+.sk { display: block; height: 10px; border-radius: 5px; background: var(--op-skeleton); animation: sk-pulse 1.4s ease-in-out infinite; }
+.sk-mid { width: 80%; }
+.sk-short { width: 50%; }
+.sk-block { height: 18px; width: 40%; }
+@keyframes sk-pulse { 50% { opacity: 0.55; } }
+.spinner {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--op-line); border-top-color: var(--op-primary);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* Older hand-made empties use the same look until their page is restyled. */
+.empty { text-align: left; align-items: flex-start; border-style: solid; border-color: var(--op-line); padding: 20px 22px; }
+@media (max-width: 860px) {
+  .state-split { grid-template-columns: minmax(0, 1fr); }
+  .skeleton-row { grid-template-columns: 1fr 1fr; }
+  .skeleton-row .sk-short { display: none; }
+}

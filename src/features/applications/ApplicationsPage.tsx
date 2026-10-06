@@ -3,6 +3,7 @@ import { safeHref } from '../opportunities/opportunityModel'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { EmptyState, FilteredEmpty, LoadingState } from '../../components/States'
 import { api } from '../../lib/api'
 import type { ApplicationItem, ApplicationPage, ApplicationSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -85,7 +86,7 @@ export function ApplicationsPage() {
           </div>
         </div>
         {/* Keyed by filters so a change starts again from the first page. */}
-        <ApplicationsTable key={`${filters.status}|${filters.platform}|${refreshes}`} filters={filters} />
+        <ApplicationsTable key={`${filters.status}|${filters.platform}|${refreshes}`} filters={filters} onClearFilters={() => setFilters({ status: '', platform: '' })} />
       </section>
 
       <HowItWorks />
@@ -142,7 +143,7 @@ function SummaryStats({
   )
 }
 
-function ApplicationsTable({ filters }: { filters: ApplicationFilters }) {
+function ApplicationsTable({ filters, onClearFilters }: { filters: ApplicationFilters; onClearFilters: () => void }) {
   const first = useApi<ApplicationPage>(applicationsPath(filters, 0))
   const [more, setMore] = useState<ApplicationItem[]>([])
   // Rows received from the server, duplicates included: the next offset must move past all of them.
@@ -151,7 +152,7 @@ function ApplicationsTable({ filters }: { filters: ApplicationFilters }) {
   const [moreError, setMoreError] = useState<Error>()
 
   if (first.error && !first.data) return <ErrorNotice error={first.error} onRetry={first.reload} />
-  if (!first.data) return <p className="muted-small">Loading applications…</p>
+  if (!first.data) return <LoadingState label="Loading applications…" waking={first.waking} />
 
   const items = appendUnique(first.data.items, more)
   const total = first.data.total
@@ -174,21 +175,22 @@ function ApplicationsTable({ filters }: { filters: ApplicationFilters }) {
 
   if (items.length === 0) {
     return filtered ? (
-      <div className="empty">
-        <div className="empty-title">No applications match these filters</div>
-        <p className="empty-text">Set both filters to All to see everything the agent has reported.</p>
-      </div>
+      <FilteredEmpty title="No applications match these filters" onClear={onClearFilters}>
+        {[filters.status && `Status “${STATUS_FILTERS.find((x) => x.value === filters.status)?.label ?? filters.status}”`, filters.platform && `platform “${PLATFORM_FILTERS.find((x) => x.value === filters.platform)?.label ?? filters.platform}”`].filter(Boolean).join(' and ')}{' '}
+        together match none of the applications the agent has reported.
+      </FilteredEmpty>
     ) : (
-      <div className="empty">
-        <div className="empty-title">No applications yet</div>
-        <p className="empty-text">
-          The apply agent has not reported anything for your account, which usually means it is not connected yet. It
-          runs on your computer and needs an agent key from the setup section below.
-        </p>
-        <button type="button" className="btn btn-secondary" onClick={showAgentSetup}>
-          Set up the agent
-        </button>
-      </div>
+      <EmptyState
+        title="No applications yet"
+        actions={
+          <button type="button" className="btn btn-primary btn-sm" onClick={showAgentSetup}>
+            Set up the agent
+          </button>
+        }
+      >
+        The apply agent has not reported anything for your account, which usually means it is not connected yet. It runs
+        on your computer and needs an agent key from the setup section below.
+      </EmptyState>
     )
   }
 
