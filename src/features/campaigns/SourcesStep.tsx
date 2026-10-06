@@ -17,10 +17,10 @@ import {
   SOURCE_STATUS_LABELS,
   sourceKindAllowed,
 } from './campaignModel'
-import { AdzunaForm, BoardForm } from './JobBoardSources'
+import { AdzunaForm, AggregateBoardForm, BoardForm } from './JobBoardSources'
 
 /** Sources the server reads afresh on every run; they have no items until a run has read them. */
-const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna'])
+const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Remotive', 'RemoteOk'])
 
 function sourceContent(s: Source): string {
   if (s.kind === 'Paste') return `${s.textLength.toLocaleString()} characters`
@@ -38,6 +38,12 @@ const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'Greenhouse', label: 'Company careers board — Greenhouse', description: 'Every open job of one company on Greenhouse' },
   { kind: 'Lever', label: 'Company careers board — Lever', description: 'Every open job of one company on Lever' },
   { kind: 'Adzuna', label: 'Adzuna job search (India)', description: 'Searches Adzuna with your job titles' },
+  { kind: 'Ashby', label: 'Company careers board — Ashby', description: 'Open jobs from one Ashby company board' },
+  { kind: 'SmartRecruiters', label: 'Company careers board — SmartRecruiters', description: 'Open jobs from one company' },
+  { kind: 'Recruitee', label: 'Company careers board — Recruitee', description: 'Open jobs from one company' },
+  { kind: 'Workable', label: 'Company careers board — Workable', description: 'Open jobs from one company' },
+  { kind: 'Remotive', label: 'Remotive remote jobs', description: 'Board-wide remote job feed' },
+  { kind: 'RemoteOk', label: 'Remote OK jobs', description: 'Board-wide remote job feed' },
 ]
 
 export function SourcesStep({ campaign }: { campaign: Campaign }) {
@@ -187,11 +193,15 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
           {adding === 'Url' && <UrlForm campaign={campaign} kind="Url" onAdded={() => added('URL')} />}
           {adding === 'Feed' && <UrlForm campaign={campaign} kind="Feed" onAdded={() => added('Feed')} />}
           {adding === 'Csv' && <CsvImport campaign={campaign} onAdded={() => added('CSV import')} />}
-          {(adding === 'Greenhouse' || adding === 'Lever') && campaign.mode === 'Job' && (
+          {(adding === 'Greenhouse' || adding === 'Lever' || adding === 'Ashby' || adding === 'SmartRecruiters' ||
+            adding === 'Recruitee' || adding === 'Workable') && campaign.mode === 'Job' && (
             <BoardForm key={adding} campaign={campaign} kind={adding} onAdded={() => added(`${adding} board`)} />
           )}
           {adding === 'Adzuna' && campaign.mode === 'Job' && (
             <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
+          )}
+          {(adding === 'Remotive' || adding === 'RemoteOk') && campaign.mode === 'Job' && (
+            <AggregateBoardForm campaign={campaign} kind={adding} onAdded={() => added(SOURCE_KIND_LABELS[adding])} />
           )}
         </div>
       </section>

@@ -2,7 +2,7 @@
 
 Every route in `src/App.tsx`, plus planned screens that have a flow-doc entry but no route. Status mirrors the flow doc and is changed only by `/build-screen` (or `/resolve-oq` when an OQ changes a route). All signed-in routes render inside `AppShell`.
 
-Last updated: 2026-10-05.
+Last updated: 2026-10-06 (design round 3).
 
 | Route | Component | Flow doc → entry | Status |
 |---|---|---|---|
@@ -27,10 +27,12 @@ Last updated: 2026-10-05.
 | `/applications` | `src/features/applications/ApplicationsPage.tsx` (+ `AgentSetup.tsx`, `HowItWorks.tsx`) | `docs/CANDIDATE_FLOW.md` → Applications | built |
 | `/outreach` | `src/features/placeholder/NotBuiltPage.tsx` (M5 placeholder) | `docs/SALES_FLOW.md` → Outreach — Inbox and draft editor | not built |
 | `/follow-ups` | `src/features/placeholder/NotBuiltPage.tsx` (M7 placeholder) | `docs/SALES_FLOW.md` → Follow-ups | not built |
+| `/projects`, `/projects/:id` (Sales rail) | `src/features/sales/SalesProjectsPage.tsx`, `SalesProjectDetailPage.tsx` | `TASKS.md` R11 / N5 | manual project list + bid draft/approval built; provider ingestion and placement remain |
+| `/proposals`, `/bids` (Sales rail) | `src/features/sales/SalesProposalsPage.tsx`, `SalesBidsPage.tsx` | `docs/SALES_FLOW.md` → Proposal drafts / Freelancer.com bids | manual proposal review and provider-confirmed bid tracking built; placement remains pending |
+| `/how-it-works` | `src/features/guide/HowItWorksPage.tsx` | `docs/SHARED_FLOW.md` → Update 2026-10-06 | built |
 | — (section of `/opportunities/:id`) | — | `docs/CANDIDATE_FLOW.md` → Cover notes | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Proposal drafts | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Freelancer.com bids | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Batch approval | not built |
 
-Navigation rail order (`NAV` in `src/features/shell/AppShell.tsx`): Overview, Applications, Campaigns, Opportunities, Approvals (count badge from `overview.awaitingApproval`), Outreach, Follow-ups, Profiles, Sources & integrations, Settings. Outreach and Follow-ups lead to placeholders (OQ-FE-005, OQ-FE-006).
-| `/projects`, `/proposals`, `/bids` (Sales rail) | `src/features/placeholder/NotBuiltPage.tsx` | `TASKS.md` R11 / N5 | not built — honest placeholder |
+Navigation rail (`navGroupsFor` in `src/features/shell/shellModel.ts`): **Candidate** — Overview · Find: Campaigns, Opportunities · Decide: Approvals · Act: Applications, Outreach (Soon) · Track: Follow-ups (Soon) · Set up: Profiles, Sources & integrations, Settings, How it works. **Sales** — Overview · Find: Campaigns, Projects & tenders (Soon), Companies (`/opportunities`) · Decide: Approvals · Act: Proposals & bids (Soon), Outreach (Soon) · Track: Bids sent (Soon), Follow-ups (Soon) · Set up (same).

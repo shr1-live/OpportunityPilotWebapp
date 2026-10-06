@@ -3,6 +3,33 @@ import { config, supabaseConfigured } from './config'
 
 const KEEP_SIGNED_IN_KEY = 'op.keepSignedIn'
 
+function authStorageKeys(): string[] {
+  if (!config.supabaseUrl) return []
+  try {
+    const projectRef = new URL(config.supabaseUrl).hostname.split('.')[0]
+    const base = `sb-${projectRef}-auth-token`
+    return [base, `${base}-code-verifier`]
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Select where the next Supabase session is persisted and remove any older copy from the other store.
+ * This prevents toggling "Keep me signed in" from reviving a stale token left by an earlier sign-in.
+ */
+export function setSessionPersistence(persistent: boolean): void {
+  try {
+    for (const key of authStorageKeys()) {
+      localStorage.removeItem(key)
+      sessionStorage.removeItem(key)
+    }
+    localStorage.setItem(KEEP_SIGNED_IN_KEY, persistent ? '1' : '0')
+  } catch {
+    /* storage unavailable: Supabase keeps the session in memory for this page view */
+  }
+}
+
 /**
  * "Keep me signed in on this device": the session lives in localStorage when on (the default), and in
  * sessionStorage when off, so it ends with the tab. The flag is read on every access.

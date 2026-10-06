@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  activeGuestToken,
   authScreenFor,
   formatCountdown,
   isAuthOnlyPath,
   passwordStrength,
   resendSecondsLeft,
-  signUpEmailTaken,
 } from './authModel'
 
 describe('account screens', () => {
@@ -33,16 +33,18 @@ describe('account screens', () => {
     expect(passwordStrength('Abcdefgh1234!xyz').label).toBe('Strong')
   })
 
-  it('spots the existing-account answer from Supabase', () => {
-    expect(signUpEmailTaken({ identities: [] })).toBe(true)
-    expect(signUpEmailTaken({ identities: [{}] })).toBe(false)
-    expect(signUpEmailTaken(null)).toBe(false)
-  })
-
   it('counts down the resend cooldown', () => {
     expect(resendSecondsLeft(0, 18_000)).toBe(42)
     expect(resendSecondsLeft(0, 90_000)).toBe(0)
     expect(formatCountdown(42)).toBe('0:42')
     expect(formatCountdown(75)).toBe('1:15')
+  })
+
+  it('accepts only an unexpired server-issued guest session', () => {
+    const now = Date.parse('2026-10-06T10:00:00Z')
+    expect(activeGuestToken({ token: 'valid', expiresAt: '2026-10-06T10:01:00Z' }, now)).toBe('valid')
+    expect(activeGuestToken({ token: 'expired', expiresAt: '2026-10-06T09:59:00Z' }, now)).toBeNull()
+    expect(activeGuestToken({ token: 'bad-date', expiresAt: 'not-a-date' }, now)).toBeNull()
+    expect(activeGuestToken(null, now)).toBeNull()
   })
 })

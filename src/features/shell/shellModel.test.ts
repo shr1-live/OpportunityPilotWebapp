@@ -49,7 +49,7 @@ describe('NAV_GROUPS', () => {
   it('keeps every top-level route reachable, each once', () => {
     const routes = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.to))
     expect([...routes].sort()).toEqual(
-      ['/', '/applications', '/approvals', '/campaigns', '/follow-ups', '/integrations', '/opportunities', '/outreach', '/profiles', '/settings'].sort(),
+      ['/', '/applications', '/approvals', '/campaigns', '/follow-ups', '/integrations', '/opportunities', '/outreach', '/profiles', '/settings', '/how-it-works'].sort(),
     )
   })
 
@@ -164,7 +164,10 @@ describe('workspace rails', () => {
 
   it('marks the sales destinations without an API as not built', () => {
     const notBuilt = navGroupsFor('sales').flatMap((g) => g.items).filter((i) => i.notBuilt).map((i) => i.to)
-    expect(notBuilt).toEqual(expect.arrayContaining(['/projects', '/proposals', '/bids']))
+    expect(notBuilt).toEqual(expect.arrayContaining(['/outreach', '/follow-ups']))
+    expect(notBuilt).not.toContain('/projects')
+    expect(notBuilt).not.toContain('/proposals')
+    expect(notBuilt).not.toContain('/bids')
   })
 
   it('finds the Sales group for sales-only paths', () => {

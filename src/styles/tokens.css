@@ -364,34 +364,7 @@ body {
   }
 }
 
-/* ---- Legacy aliases — TEMPORARY. Old token names (design v1 and v2) mapped to
- * round-3 tokens so pages not yet restyled keep working, in light and dark.
- * Every alias points at a token that has a dark value. R13 removes this block
- * once no rule uses these names (OQ-FE-041). ----------------------------- */
+/* ---- App sizes the round-3 tokens do not name. ---- */
 :root {
-  --op-background: var(--op-bg);
-  --op-surface-muted: var(--op-panel-head);
-  --op-navigation: var(--op-nav);
-  --op-navigation-active: var(--op-nav-active);
-  --op-navigation-text: var(--op-nav-ink);
-  --op-navigation-divider: var(--op-nav-border);
-  --op-text: var(--op-ink);
-  --op-border: var(--op-line);
-  --op-border-strong: var(--op-field-border);
-  --op-border-subtle: var(--op-hair);
-  --op-success: var(--op-on-green-tint);
-  --op-warning: var(--op-on-amber-tint);
-  --op-danger: var(--op-on-danger-tint);
-  --op-on-success-tint: var(--op-on-green-tint);
-  --op-on-warning-tint: var(--op-on-amber-tint);
-  --op-warning-banner: var(--op-banner-bg);
-  --op-warning-banner-border: var(--op-banner-border);
-  --op-warning-border: var(--op-banner-border);
-  --op-success-tint: var(--op-green-tint);
-  --op-warning-tint: var(--op-amber-tint);
-  --op-primary-tint-strong: var(--op-primary-tint);
-  --op-ai-surface: var(--op-ai-bg);
-  --op-ai-text: var(--op-ai-ink);
   --op-text-section: 13px;
-  --op-text-table: var(--op-text-body);
 }

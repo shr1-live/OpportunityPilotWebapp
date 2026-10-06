@@ -16,7 +16,7 @@ All are `VITE_` build-time values compiled into the public bundle — public val
 | `VITE_DEV_AUTH` | `true` enables development sign-in (`X-Dev-User`); needs the API in Development with `Auth:DevBypass=true` | `true` | Ignored: gated by `import.meta.env.DEV`, so it is compiled out of production builds | `src/lib/config.ts` |
 | `NODE_VERSION` | Node for the Render build | — | `22.12.0` in `render.yaml` | Render |
 
-Browser storage: localStorage `op.devUser` (dev mode), `op.guestToken` (guest mode); Supabase keeps its own session (`persistSession`, `autoRefreshToken`).
+Browser storage: localStorage `op.devUser` (dev mode), `op.guestToken` (guest token plus server expiry); Supabase keeps its own session (`persistSession`, `autoRefreshToken`). The selected local/session store is cleared before a new password sign-in so an older token cannot reappear when persistence changes.
 
 ## API
 
@@ -37,7 +37,7 @@ Endpoints the web app calls today:
 | Campaigns | `GET/POST /api/v1/campaigns`, `GET/PUT /api/v1/campaigns/:id` |
 | Sources | `GET/POST /api/v1/campaigns/:id/sources`, `DELETE /api/v1/campaigns/:id/sources/:sourceId`, `POST /api/v1/imports/preview`, `POST /api/v1/imports/:importId/commit` |
 | Research | `POST /api/v1/campaigns/:id/research`, `GET /api/v1/campaigns/:id/research-jobs`, `GET /api/v1/research-jobs/:id`, `POST /api/v1/research-jobs/:id/cancel` |
-| Opportunities | `GET /api/v1/campaigns/:id/opportunities`, `GET /api/v1/opportunities/:id`, `PATCH /api/v1/opportunities/:id/status`, `GET /api/v1/campaigns/:id/export` |
+| Opportunities | `GET /api/v1/campaigns/:id/opportunities`, `GET /api/v1/opportunities/:id`, `PATCH /api/v1/opportunities/:id/status`, `GET /api/v1/campaigns/:id/export`, `GET/POST /api/v1/opportunities/:id/drafts`, `PUT/POST/DELETE /api/v1/drafts/:id` (CoverNote) |
 | Approvals | `GET /api/v1/approvals?campaignId&take&skip`, `POST /api/v1/approvals/decide` (phase-1 contract; also `POST …/sources` kinds `Greenhouse`, `Lever`, `Adzuna` and `autoSuggestMinScore` on campaign bodies) |
 | Applications / agent | `GET /api/v1/applications`, `GET /api/v1/applications/summary`, `GET/POST /api/v1/agent-keys`, `DELETE /api/v1/agent-keys/:id` |
 
@@ -57,9 +57,9 @@ Chosen at build time in `src/features/auth/AuthProvider.tsx`:
 
 | Mode | When | Credentials sent to the API | Notes |
 |---|---|---|---|
-| supabase | `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set | `Authorization: Bearer <Supabase access token>` | Email + password sign-in and sign-up |
+| supabase | `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` set | `Authorization: Bearer <Supabase access token>` | Email/password + Google; access tokens refresh automatically and once more before API calls when near expiry |
 | dev | Supabase not set, `VITE_DEV_AUTH=true`, dev build | `X-Dev-User: <name>` | Any name is a separate synthetic user; impossible in production builds |
-| guest | Neither of the above (current production) | `Authorization: Bearer <guest token>` from `POST /api/v1/auth/guest` | Demo mode; the API disables it (404) once real sign-in is configured; data may be in-memory and reset on restart |
+| guest | Neither of the above (current production) | `Authorization: Bearer <guest token>` from `POST /api/v1/auth/guest` | Demo mode; the browser enforces the returned expiry. With real sign-in the API keeps guests only when `Auth__AllowGuests=true`; data may be in-memory and reset on restart |
 
 ## Sources of truth
 
@@ -68,7 +68,8 @@ Chosen at build time in `src/features/auth/AuthProvider.tsx`:
 | Designs (visual reference, not routing) | `../opportunitypilot-ui/*.dc.html`, `../opportunitypilot-ui/README.md` |
 | Design tokens | `../opportunitypilot-ui/tokens.css` → copied verbatim to `src/styles/tokens.css` (identical on 2026-10-05) |
 | API contract — research, campaigns, sources, opportunities, agent | `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md` (built) |
-| API contract — Gemini, drafts, suppression, activities, follow-ups | `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` (not built) |
+| API contract — Gemini, drafts, suppression, activities, follow-ups | `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` (CoverNote drafts built; remaining slices not built) |
+| API contract — sales projects, bids, tenders and proposal drafts | `../OpportunityPilotWebApi/docs/SALES_CONTRACT.md` (manual project/bid/approve API built; provider feeds, drafts and UI remain) |
 | API contract — candidate phase 1: Greenhouse / Lever / Adzuna sources, `Suggested` status, approval queue | `../OpportunityPilotWebApi/docs/CANDIDATE_PHASE1_CONTRACT.md` (web built 2026-10-05; API built in parallel) |
 | API implementation status and decisions | `../OpportunityPilotWebApi/docs/IMPLEMENTATION_STATUS.md`, `../OpportunityPilotWebApi/docs/DECISIONS.md` |
 | Product status, decisions, next steps | `../HANDOFF.md` |

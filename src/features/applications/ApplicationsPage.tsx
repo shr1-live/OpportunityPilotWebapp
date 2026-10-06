@@ -38,59 +38,78 @@ export function ApplicationsPage() {
   }
 
   return (
-    <div className="page stack-6">
+    <div className="page page-wide stack-4">
       <PageHeader
         title="Applications"
-        subtitle="Jobs the OpportunityPilot agent applied to from your own logged-in browser, plus the ones it skipped or needs you for."
+        subtitle={
+          <>
+            Everything the apply agent did, plus the jobs you marked applied yourself. The agent runs on{' '}
+            <strong>your machine, in your own logged-in browser</strong> — this page only reads what it reports back.
+          </>
+        }
         actions={
-          <button type="button" className="btn btn-secondary btn-sm" onClick={refresh}>
-            Refresh
-          </button>
+          <>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={refresh}>
+              ↻ Refresh
+            </button>
+            <button type="button" className="btn btn-primary btn-sm" onClick={showAgentSetup}>
+              Agent setup
+            </button>
+          </>
         }
       />
 
       <SummaryStats summary={summary.data} loading={summary.loading} error={summary.error} onRetry={summary.reload} />
 
-      <section className="stack-3" aria-labelledby="applications-heading">
-        <h3 id="applications-heading" className="section-heading">
-          Activity
-        </h3>
-        <div className="filters">
-          <div className="field">
-            <label htmlFor="filter-status">Status</label>
-            <select
-              id="filter-status"
-              value={filters.status}
-              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value as ApplicationFilters['status'] }))}
-            >
-              {STATUS_FILTERS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+      <div className="apps-grid">
+        <section className="panel" aria-labelledby="applications-heading">
+          <header className="panel-head">
+            <h3 id="applications-heading" className="eyebrow">
+              Agent results
+            </h3>
+            <div className="grow" />
+            <label className="pill-select">
+              <span>Status</span>
+              <select
+                id="filter-status"
+                value={filters.status}
+                onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value as ApplicationFilters['status'] }))}
+              >
+                {STATUS_FILTERS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="pill-select">
+              <span>Platform</span>
+              <select
+                id="filter-platform"
+                value={filters.platform}
+                onChange={(e) => setFilters((f) => ({ ...f, platform: e.target.value as ApplicationFilters['platform'] }))}
+              >
+                {PLATFORM_FILTERS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </header>
+          <div className="panel-body">
+            {/* Keyed by filters so a change starts again from the first page. */}
+            <ApplicationsTable
+              key={`${filters.status}|${filters.platform}|${refreshes}`}
+              filters={filters}
+              onClearFilters={() => setFilters({ status: '', platform: '' })}
+            />
           </div>
-          <div className="field">
-            <label htmlFor="filter-platform">Platform</label>
-            <select
-              id="filter-platform"
-              value={filters.platform}
-              onChange={(e) => setFilters((f) => ({ ...f, platform: e.target.value as ApplicationFilters['platform'] }))}
-            >
-              {PLATFORM_FILTERS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {/* Keyed by filters so a change starts again from the first page. */}
-        <ApplicationsTable key={`${filters.status}|${filters.platform}|${refreshes}`} filters={filters} onClearFilters={() => setFilters({ status: '', platform: '' })} />
-      </section>
+        </section>
+        <AgentSetup />
+      </div>
 
       <HowItWorks />
-      <AgentSetup />
     </div>
   )
 }
@@ -106,39 +125,43 @@ function SummaryStats({
   error: Error | undefined
   onRetry: () => void
 }) {
-  if (error && !summary) return <ErrorNotice error={error} onRetry={onRetry} />
-  const pending = loading && !summary ? 'Loading…' : undefined
-
+  if (error && !summary) return <ErrorNotice error={error} onRetry={onRetry} what="the agent summary" />
+  const pending = loading && !summary
+  const v = (n: number | undefined) => (pending || n === undefined ? '—' : n)
   return (
-    <div className="stat-grid">
-      <section className="card stat">
-        <div className="stat-label">Applied</div>
-        <div className="stat-value op-numeric">{summary?.applied ?? '—'}</div>
-        <div className="muted-small">{pending ?? `${summary?.appliedLast7Days ?? 0} in the last 7 days`}</div>
-      </section>
-      <section className="card stat">
-        <div className="stat-label">Needs you</div>
-        <div className={`stat-value op-numeric ${summary?.needsManual ? 'text-warning' : ''}`}>
-          {summary?.needsManual ?? '—'}
+    <div className="kpi-strip">
+      <div className="kpi">
+        <div className="eyebrow">Applied</div>
+        <div className="kpi-value op-numeric">{v(summary?.applied)}</div>
+        <div className="muted-small">{summary ? `${summary.appliedLast7Days} in the last 7 days` : 'Loading…'}</div>
+      </div>
+      <div className="kpi">
+        <div className="eyebrow">Needs you</div>
+        <div className={`kpi-value op-numeric ${summary?.needsManual ? 'text-warning' : ''}`}>{v(summary?.needsManual)}</div>
+        <div className="muted-small">captcha or a question</div>
+      </div>
+      <div className="kpi">
+        <div className="eyebrow">Dry run</div>
+        <div className="kpi-value op-numeric">{v(summary?.dryRun)}</div>
+        <div className="muted-small">filled, not submitted</div>
+      </div>
+      <div className="kpi">
+        <div className="eyebrow">Failed</div>
+        <div className={`kpi-value op-numeric ${summary?.failed ? 'text-danger' : ''}`}>{v(summary?.failed)}</div>
+        <div className="muted-small">layout changed or no confirmation</div>
+      </div>
+      <div className="kpi">
+        <div className="eyebrow">Skipped</div>
+        <div className="kpi-value op-numeric">{v(summary?.skipped)}</div>
+        <div className="muted-small">already applied</div>
+      </div>
+      <div className="kpi">
+        <div className="eyebrow">Last activity</div>
+        <div className="kpi-value kpi-small">
+          {summary?.lastActivityAt ? <time dateTime={summary.lastActivityAt}>{formatWhen(summary.lastActivityAt)}</time> : summary ? 'No runs yet' : '—'}
         </div>
-        <div className="muted-small">{pending ?? 'Questions your saved answers don’t cover'}</div>
-      </section>
-      <section className="card stat">
-        <div className="stat-label">Dry runs</div>
-        <div className="stat-value op-numeric">{summary?.dryRun ?? '—'}</div>
-        <div className="muted-small">{pending ?? 'Filled but not submitted'}</div>
-      </section>
-      <section className="card stat">
-        <div className="stat-label">Last activity</div>
-        {summary?.lastActivityAt ? (
-          <div className="stat-value stat-empty">
-            <time dateTime={summary.lastActivityAt}>{formatWhen(summary.lastActivityAt)}</time>
-          </div>
-        ) : (
-          <div className="stat-value stat-empty">{summary ? 'No runs yet' : '—'}</div>
-        )}
-        <div className="muted-small">{pending ?? 'Last result the agent reported'}</div>
-      </section>
+        <div className="muted-small">last result the agent reported</div>
+      </div>
     </div>
   )
 }

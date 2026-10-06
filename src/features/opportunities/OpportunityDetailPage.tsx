@@ -10,6 +10,7 @@ import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
 import { MODE_LABELS } from '../campaigns/campaignModel'
 import { useShell } from '../shell/ShellContext'
+import { CoverNotePanel } from './CoverNotePanel'
 import {
   agentApplyPlatform,
   displayUrl,
@@ -327,6 +328,8 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
         </section>
 
         <div className="stack-4">
+          {o.mode === 'Job' && <CoverNotePanel opportunityId={o.id} />}
+
           <section className="panel" aria-labelledby="evidence-heading">
             <header className="panel-head">
               <h3 id="evidence-heading" className="eyebrow">

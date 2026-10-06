@@ -6,6 +6,7 @@ import type { Campaign, Source } from '../../lib/types'
 import { useShell } from '../shell/ShellContext'
 import {
   adzunaSearch,
+  type AggregateBoardKind,
   BOARD_EXAMPLES,
   type BoardKind,
   fieldError,
@@ -36,7 +37,7 @@ function SourceCapability({ kind }: { kind: JobSourceKind }) {
   )
 }
 
-/** Greenhouse board token or Lever company slug — typed, or derived from a pasted board link. */
+/** Per-company public job-board slug — typed, or derived from a pasted careers link. */
 export function BoardForm({ campaign, kind, onAdded }: { campaign: Campaign; kind: BoardKind; onAdded: () => void }) {
   const [input, setInput] = useState('')
   const [label, setLabel] = useState('')
@@ -47,7 +48,6 @@ export function BoardForm({ campaign, kind, onAdded }: { campaign: Campaign; kin
   const parsed = parseBoardInput(kind, input)
   const example = BOARD_EXAMPLES[kind]
   const what = kind === 'Greenhouse' ? 'Board token' : 'Company slug'
-  const host = kind === 'Greenhouse' ? 'boards.greenhouse.io/' : 'jobs.lever.co/'
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -98,8 +98,8 @@ export function BoardForm({ campaign, kind, onAdded }: { campaign: Campaign; kin
           onBlur={() => setTouched(true)}
         />
         <p id={`${id}-board-hint`} className="hint">
-          The part after <code>{host}</code> in the company&rsquo;s job board address — for <code>{example.url}</code> it
-          is <code>{example.token}</code>. You can paste the whole link. Jobs are read through {kind}&rsquo;s public
+          The company identifier in its careers address — for <code>{example.url}</code> it is <code>{example.token}</code>.
+          You can paste the whole link. Jobs are read through {kind}&rsquo;s public
           job-board API: no login, no scraping. One company per source.
         </p>
         {parsed.token && input.trim() !== parsed.token && (
@@ -124,6 +124,36 @@ export function BoardForm({ campaign, kind, onAdded }: { campaign: Campaign; kin
         </button>
         {!parsed.token && <span className="muted-small">Enter a valid {what.toLowerCase()} or board link first.</span>}
       </div>
+    </form>
+  )
+}
+
+/** Board-wide public feeds with no account identifier or secret. */
+export function AggregateBoardForm({ campaign, kind, onAdded }: { campaign: Campaign; kind: AggregateBoardKind; onAdded: () => void }) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<Error>()
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(undefined)
+    try {
+      await api<Source>(`/api/v1/campaigns/${campaign.id}/sources`, {
+        method: 'POST',
+        body: JSON.stringify({ kind }),
+      })
+      onAdded()
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <form className="stack-3" onSubmit={(e) => void submit(e)}>
+      <SourceCapability kind={kind} />
+      <p className="small">Reads the public {kind === 'RemoteOk' ? 'Remote OK' : kind} remote-jobs feed on each research run. No login or API key is required.</p>
+      {error && <ErrorNotice error={error} />}
+      <div><button type="submit" className="btn btn-primary" disabled={busy}>{busy ? 'Adding…' : `Add ${kind === 'RemoteOk' ? 'Remote OK' : kind}`}</button></div>
     </form>
   )
 }

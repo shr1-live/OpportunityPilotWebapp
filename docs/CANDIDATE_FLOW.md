@@ -179,15 +179,26 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 - **Route:** none yet (planned as a section of `/opportunities/:id`)
 - **Component:** none yet (planned in `src/features/opportunities/` or a new `src/features/drafts/`)
 - **What it shows:** (planned, `M4_M5_CONTRACT.md` channel `CoverNote`) A generated cover note for the job: greeting, role, matched required skills, the profile's own offer sentence, availability, with `[placeholders]` for unknowns; the basis of each claim (Profile / Evidence); version, approval state, source (Template or Gemini + fallback reason). AI text on the AI surface.
-- **Actions:** (planned) Generate → `POST /api/v1/opportunities/:id/drafts { channel: 'CoverNote' }`; edit → `PUT /api/v1/drafts/:id` (clears approval); approve → `POST /api/v1/drafts/:id/approve { version }`; the agent fills the approved note into cover-letter fields (agent side not specified).
-- **State (reads):** (planned) `GET /api/v1/opportunities/:id/drafts`, `GET /api/v1/drafts/:id`.
-- **State (writes):** (planned) the POST/PUT calls above, `POST /api/v1/drafts/:id/revoke-approval`, `DELETE /api/v1/drafts/:id`.
+- **Actions:** Generate → `POST /api/v1/opportunities/:id/drafts { channel: 'CoverNote' }`; edit and save → `PUT /api/v1/drafts/:id` (clears approval); approve → `POST /api/v1/drafts/:id/approve { version }`; revoke approval or delete. The agent fills the approved note only into cover-letter-like free-text fields.
+- **State (reads):** `GET /api/v1/opportunities/:id/drafts`.
+- **State (writes):** the POST/PUT calls above, `POST /api/v1/drafts/:id/revoke-approval`, `DELETE /api/v1/drafts/:id`.
 - **Navigation out:** (planned) none beyond the detail page.
-- **Validation:** (planned) Approve disabled when the body is empty or the version is stale (409); every disabled control states its blocker (`sendBlockers`).
-- **Status:** not built
-- **TODOs:** API M5 not built (OQ-FE-008). Approval model open (OQ-FE-001). Agent cover-letter filling unspecified.
+- **Validation:** Approve disabled when the body is empty, has unsaved edits, or the API reports a stale version (409); every disabled control states its blocker (`sendBlockers`). Editing an approved note requires saving before it can be approved again.
+- **Status:** built locally — browser verification pending
+- **TODOs:** Gemini and other draft channels remain API work (OQ-BE-006/OQ-BE-007). Sending remains blocked until Gmail (M6). Full live LinkedIn/Naukri selector verification remains OQ-BE-001.
 
 ### Update 2026-10-05 — MVP research rules
 - **Builder step 2 (Job)**: hard filters gain "Exclude staffing agencies" (checkbox → `criteria.excludeStaffingAgencies`) and "Only postings from the last N days" (1–365, empty = off → `criteria.maxPostingAgeDays`). Both shown in the step-4 review.
 - **Opportunity detail**: each fit-contribution row shows the exact sentence that justified the verdict (`breakdown[].excerpt`), styled as quoted evidence; nothing shown when the verdict is Unknown.
 
+### Update 2026-10-06 — design round 3 (layout; same API calls, same rules)
+
+Designs: `../opportunitypilot-ui/` (`Campaigns`, `Campaign*`, `ResearchProgress`, `Opportunities`, `OpportunityDetail`, `Approvals`, `Applications`, `Mobile*`). Where an entry above disagrees on layout, this section wins.
+
+- **Campaigns — List:** mode chips (All / Jobs / Customers with counts; `filterCampaigns`, `campaignFilterCounts`), panel "All campaigns · N running" with + New campaign; columns Campaign, Mode, Sources, Found, Suggest at, Last run, Status, next step ("Progress" while the latest run is queued/running — `isRunning` — otherwise "Run now" → step 4). Two explainer panels: Jobs campaigns feed Approvals; Customers campaigns stop at the shortlist. Empty: `EmptyState` with the four steps.
+- **Campaign builder (all steps):** wide page; stepper shows ✓ on finished steps; the step heading is visually hidden (still the focus target); step content is laid out as panels in a responsive grid; sticky save bar "Saving is not running. A run is queued only on step 4." Step 1 adds a "What this mode will do" panel (four numbered lines per mode) above the criteria summary. Step 4 shows "Loading…" instead of "Profile not found" while profiles load.
+- **Opportunities — List:** toolbar of pill selects (Campaign, Outcome, Status, Sort) + search box + Refresh + Export CSV. Search filters **only the rows already loaded** (`searchLoaded`; the API has no search) and says so. Header action "Go to approvals · N" when suggestions wait. Panel "N opportunities" with qualified / suggested / excluded counts of loaded rows. Columns: select, Opportunity, Mode, Fit (number + meter; "—" for Excluded), Evidence (coverage meter, amber below 70%), Outcome, Status, Updated, one next step (`primaryAction`: Approve, Shortlist, Restore, Open posting, Review). Selection bar: N selected · Shortlist · Dismiss · Export selection (client-side CSV, `selectionCsv`); rows whose status does not allow the move are skipped and counted (`canMoveTo`). No bulk send or apply.
+- **Opportunity — Detail:** header badges Mode · Outcome · Status, "Open posting ↗" inline, decision buttons in the header (Reject/Dismiss, Restore, Shortlist, "✓ Approve — adds to shortlist"). Three columns: score card (fit, meter, coverage, reason) + "What is still unknown" (unknown criteria and gaps, link to add a source) + Facts | "How the score was built" (criterion, verdict, points with meter, the matched sentence or reason, evidence links; total line; text as retrieved) | Evidence, Activity, "Applies via" and Open application page, Set status.
+- **Approval queue:** pill campaign select; selection bar with "✓ Approve selected · N", Reject selected, Approve all; one panel per campaign ("NAME · N suggested", threshold, Suggestion settings) with a table: Job, Platform, Fit meter, Evidence meter, Why it was suggested, Applies via ("Your agent" / "You apply").
+- **Applications:** KPI strip (Applied, Needs you, Dry run, Failed, Skipped, Last activity); "Agent results" panel with Status/Platform pill filters beside the agent setup panel; "How the apply agent works" below. Header: Refresh, Agent setup.
+- **Phones (< 860 px):** opportunity and approval tables render each row as a card (title, fit on the right, then badges and meters).

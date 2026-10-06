@@ -41,7 +41,16 @@ export interface Capability {
 }
 
 /** Capability keys for the open job sources (CANDIDATE_PHASE1_CONTRACT.md §1), category "Sources". */
-export type SourceCapabilityKey = 'greenhouse' | 'lever' | 'adzuna'
+export type SourceCapabilityKey =
+  | 'greenhouse'
+  | 'lever'
+  | 'adzuna'
+  | 'ashby'
+  | 'smartrecruiters'
+  | 'recruitee'
+  | 'workable'
+  | 'remotive'
+  | 'remoteok'
 
 export interface Capabilities {
   environment: string
@@ -119,7 +128,21 @@ export interface CreatedAgentKey extends AgentKey {
 /** Only Job and Customer are accepted by the API until M7. */
 export type OpportunityMode = 'Customer' | 'Partner' | 'Investor' | 'Job' | 'Freelance'
 /** Greenhouse, Lever and Adzuna are Job-campaign sources (CANDIDATE_PHASE1_CONTRACT.md); Customer campaigns reject them. */
-export type SourceKind = 'Paste' | 'Csv' | 'Url' | 'Feed' | 'Agent' | 'Greenhouse' | 'Lever' | 'Adzuna'
+export type SourceKind =
+  | 'Paste'
+  | 'Csv'
+  | 'Url'
+  | 'Feed'
+  | 'Agent'
+  | 'Greenhouse'
+  | 'Lever'
+  | 'Adzuna'
+  | 'Ashby'
+  | 'SmartRecruiters'
+  | 'Recruitee'
+  | 'Workable'
+  | 'Remotive'
+  | 'RemoteOk'
 export type SourceStatus = 'Pending' | 'Ok' | 'Failed' | 'Skipped'
 export type ResearchJobState = 'Queued' | 'Running' | 'Completed' | 'CompletedWithGaps' | 'Failed' | 'Cancelled'
 export type ResearchStage = 'Prepare' | 'Gather' | 'Extract' | 'Filter' | 'Score' | 'Complete'
@@ -135,7 +158,19 @@ export type OpportunityStatus =
   | 'Responded'
   | 'Interested'
   | 'Closed'
-export type JobPlatform = 'LinkedIn' | 'Naukri' | 'Other' | 'Greenhouse' | 'Lever' | 'Adzuna'
+export type JobPlatform =
+  | 'LinkedIn'
+  | 'Naukri'
+  | 'Other'
+  | 'Greenhouse'
+  | 'Lever'
+  | 'Adzuna'
+  | 'Ashby'
+  | 'SmartRecruiters'
+  | 'Recruitee'
+  | 'Workable'
+  | 'Remotive'
+  | 'RemoteOk'
 export type EventLevel = 'Info' | 'Warning' | 'Error'
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite'
 
@@ -323,6 +358,77 @@ export interface OpportunityDetail extends OpportunitySummary {
   gaps: string[]
   evidence: Evidence[]
   activities: OpportunityActivity[]
+}
+
+// ---------- Outreach drafts (OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md) ----------
+
+export type DraftChannel = 'Email' | 'CoverNote' | 'LinkedInMessage' | 'ContactForm'
+export type DraftState = 'Draft' | 'Approved'
+export type DraftSource = 'Gemini' | 'Template'
+
+export interface DraftClaim {
+  text: string
+  basis: 'Profile' | 'Evidence'
+  evidenceId: string | null
+}
+
+export interface OutreachDraft {
+  id: string
+  opportunityId: string
+  channel: DraftChannel
+  recipient: string | null
+  recipientVerified: boolean
+  subject: string | null
+  body: string
+  version: number
+  state: DraftState
+  approvedVersion: number | null
+  approvedAt: string | null
+  source: DraftSource
+  fallbackReason: string | null
+  claims: DraftClaim[]
+  sendReady: boolean
+  sendBlockers: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ---------- Sales pipeline (OpportunityPilotWebApi/docs/SALES_CONTRACT.md) ----------
+
+export type SalesProjectSource = 'Freelancer' | 'TenderFeed' | 'PublicUrl' | 'Manual'
+export type SalesProjectState = 'New' | 'Shortlisted' | 'BidPrepared' | 'BidApproved' | 'BidPlaced' | 'ManualHandoff' | 'Dismissed'
+export type SalesBidState = 'Draft' | 'Approved' | 'Placed' | 'Failed'
+
+export interface SalesBid {
+  id: string
+  projectId: string
+  amount: number
+  currency: string
+  deliveryDays: number
+  proposal: string
+  version: number
+  state: SalesBidState
+  approvedVersion: number | null
+  approvedAt: string | null
+  hasValidApproval: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SalesProject {
+  id: string
+  source: SalesProjectSource
+  externalId: string | null
+  title: string
+  buyer: string | null
+  description: string | null
+  url: string | null
+  deadlineUtc: string | null
+  state: SalesProjectState
+  version: number
+  bids: SalesBid[]
+  createdAt: string
+  updatedAt: string
 }
 
 // ---------- Approval queue (docs/CANDIDATE_PHASE1_CONTRACT.md §2 in OpportunityPilotWebApi) ----------

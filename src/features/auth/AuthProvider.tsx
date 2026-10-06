@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { api, configureApiAuth } from '../../lib/api'
 import { config, supabaseConfigured } from '../../lib/config'
-import { supabase } from '../../lib/supabase'
-import { AUTH_PATHS, KEEP_SIGNED_IN_KEY, signUpEmailTaken, writeFlag } from './authModel'
+import { setSessionPersistence, supabase } from '../../lib/supabase'
+import { activeGuestToken, AUTH_PATHS, type StoredGuestSession } from './authModel'
 
 /**
  * supabase: real accounts (email + password, Google), with "Continue as guest" next to them when the API allows it.
@@ -11,7 +11,7 @@ import { AUTH_PATHS, KEEP_SIGNED_IN_KEY, signUpEmailTaken, writeFlag } from './a
  */
 export type AuthMode = 'supabase' | 'dev' | 'guest'
 
-export type SignUpResult = 'signed-in' | 'verify-email' | 'email-taken'
+export type SignUpResult = 'signed-in' | 'verify-email'
 
 interface AuthState {
   mode: AuthMode
@@ -35,6 +35,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null)
 const DEV_USER_KEY = 'op.devUser'
 const GUEST_TOKEN_KEY = 'op.guestToken'
+const TOKEN_REFRESH_WINDOW_MS = 60_000
 
 function read(key: string): string | null {
   try {
@@ -53,6 +54,21 @@ function write(key: string, value: string | null) {
   }
 }
 
+function readGuestToken(): string | null {
+  const stored = read(GUEST_TOKEN_KEY)
+  if (!stored) return null
+  try {
+    const session = JSON.parse(stored) as StoredGuestSession
+    const token = activeGuestToken(session)
+    if (!token) write(GUEST_TOKEN_KEY, null)
+    return token
+  } catch {
+    // Old releases stored only the token and therefore could not verify its expiry.
+    write(GUEST_TOKEN_KEY, null)
+    return null
+  }
+}
+
 function requireSupabase() {
   if (!supabase) throw new Error('Accounts are not switched on for this deployment yet. Continue as guest instead.')
   return supabase
@@ -66,39 +82,68 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const mode: AuthMode = supabaseConfigured ? 'supabase' : config.devAuth ? 'dev' : 'guest'
   const [session, setSession] = useState<Session | null>(null)
   const [devUser, setDevUser] = useState<string | null>(mode === 'dev' ? read(DEV_USER_KEY) : null)
-  const [guestToken, setGuestToken] = useState<string | null>(mode === 'dev' ? null : read(GUEST_TOKEN_KEY))
+  const [guestToken, setGuestToken] = useState<string | null>(mode === 'dev' ? null : readGuestToken())
   const [ready, setReady] = useState(mode !== 'supabase')
   const [sessionExpired, setSessionExpired] = useState(false)
   const [recovering, setRecovering] = useState(false)
+  const refreshPromise = useRef<Promise<Session | null> | null>(null)
 
   useEffect(() => {
     if (!supabase) return
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    void supabase.auth.getSession().then(({ data, error }) => {
+      setSession(error ? null : data.session)
+      if (error) setSessionExpired(true)
       setReady(true)
     })
     const { data } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s)
+      setReady(true)
       if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (event === 'SIGNED_OUT') setRecovering(false)
+      if (s && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+        setSessionExpired(false)
+      }
     })
     return () => data.subscription.unsubscribe()
   }, [])
 
-  const value = useMemo<AuthState>(() => {
-    const signOut = async () => {
-      if (supabase) await supabase.auth.signOut()
-      write(DEV_USER_KEY, null)
-      write(GUEST_TOKEN_KEY, null)
-      setDevUser(null)
-      setGuestToken(null)
-      setRecovering(false)
-    }
+  const signOut = useCallback(async () => {
+    if (supabase) await supabase.auth.signOut()
+    write(DEV_USER_KEY, null)
+    write(GUEST_TOKEN_KEY, null)
+    setSession(null)
+    setDevUser(null)
+    setGuestToken(null)
+    setRecovering(false)
+  }, [])
 
+  const currentAccessToken = useCallback(async (): Promise<string | null> => {
+    if (!supabase) return null
+    const { data, error } = await supabase.auth.getSession()
+    if (error || !data.session) return null
+    const expiresAtMs = (data.session.expires_at ?? 0) * 1000
+    if (expiresAtMs > Date.now() + TOKEN_REFRESH_WINDOW_MS) return data.session.access_token
+
+    if (!refreshPromise.current) {
+      refreshPromise.current = supabase.auth
+        .refreshSession()
+        .then(({ data: refreshed, error: refreshError }) => {
+          if (refreshError) return null
+          return refreshed.session
+        })
+        .finally(() => {
+          refreshPromise.current = null
+        })
+    }
+    return (await refreshPromise.current)?.access_token ?? null
+  }, [])
+
+  useEffect(() => {
     configureApiAuth(
       async (): Promise<Record<string, string>> => {
         if (supabase) {
-          const { data } = await supabase.auth.getSession()
-          if (data.session) return { Authorization: `Bearer ${data.session.access_token}` }
+          const token = await currentAccessToken()
+          if (token) return { Authorization: `Bearer ${token}` }
         }
         if (mode === 'dev' && devUser) return { 'X-Dev-User': devUser }
         if (guestToken) return { Authorization: `Bearer ${guestToken}` }
@@ -110,7 +155,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void signOut()
       },
     )
+    return () => configureApiAuth(async () => ({}), () => {})
+  }, [currentAccessToken, devUser, guestToken, mode, signOut])
 
+  const value = useMemo<AuthState>(() => {
     const user = session
       ? { id: session.user.id, email: session.user.email ?? 'Signed in', guest: false }
       : mode === 'dev' && devUser
@@ -132,13 +180,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setDevUser(name)
       },
       guestSignIn: async () => {
-        const { token } = await api<{ token: string; expiresAt: string }>('/api/v1/auth/guest', { method: 'POST' })
-        write(GUEST_TOKEN_KEY, token)
+        const guest = await api<StoredGuestSession>('/api/v1/auth/guest', { method: 'POST' })
+        write(GUEST_TOKEN_KEY, JSON.stringify(guest))
         setSessionExpired(false)
-        setGuestToken(token)
+        setGuestToken(guest.token)
       },
       passwordSignIn: async (email, password, keepSignedIn) => {
-        writeFlag(KEEP_SIGNED_IN_KEY, keepSignedIn)
+        setSessionPersistence(keepSignedIn)
         const { error } = await requireSupabase().auth.signInWithPassword({ email, password })
         if (error) throw new Error(error.message)
         setSessionExpired(false)
@@ -157,7 +205,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           options: { data: { full_name: name }, emailRedirectTo: origin() },
         })
         if (error) throw new Error(error.message)
-        if (signUpEmailTaken(data.user)) return 'email-taken'
         return data.session ? 'signed-in' : 'verify-email'
       },
       resendVerification: async (email) => {
@@ -183,7 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRecovering(false)
       },
     }
-  }, [mode, ready, session, devUser, guestToken, sessionExpired, recovering])
+  }, [mode, ready, session, devUser, guestToken, sessionExpired, recovering, signOut])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
