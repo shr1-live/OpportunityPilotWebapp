@@ -122,7 +122,7 @@ None. There is no `paths`/`baseUrl` in `tsconfig.app.json` and no `resolve.alias
 ### Git workflow
 
 - Every feature or change goes on a **new branch** (`feature/`, `fix/`, `docs/`, `chore/` + name); never commit to `main`. Run this repo's checks, commit, then from the workspace root run `bash tools/pr.sh <repo> "<title>" <body-file>`: it pushes, raises a PR to `main` and **squash-merges** it (auto-merge authorised by the user *for now*; if withdrawn, pass `--no-merge` and wait), deletes the branch and pulls `main`. `main` deploys automatically, so a merge is a release.
-- **Always push**: never leave changes uncommitted or unpushed. At the end of every task, and before stopping for any reason (credit limit, session end, waiting for the user), run `git status` and push everything: finished work → PR merged; unfinished work → committed on its branch, pushed, PR raised with `--no-merge` titled `WIP: …`, and listed in the workspace `PENDING_TASKS.md`. Delete throwaway `scratch-*` files instead of leaving them untracked.
+- **Push only at the end of the session or when the user says so (rule, set by the user 2026-10-06 — replaces "always push"):** commit locally as each task finishes; a local commit deploys nothing. Do **not** push, raise or merge a PR after a task or a minor change: every push/merge to `main` deploys Vercel and Render and uses up free-tier limits. Push + PR + merge only when **all tasks of the session are done and verified** (typecheck, lint, tests, build, browser check through the local proxy against the live API), or when the user **explicitly** asks. If the session must stop early, leave the work committed locally on its branch (no push) and note the branch in `TASKS.md`. See `../CLAUDE.md`.
 
 ### Do not
 
