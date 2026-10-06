@@ -6,6 +6,7 @@ import {
   initials,
   NAV_COLLAPSED_KEY,
   NAV_GROUPS,
+  navGroupsFor,
   navAccessibleName,
   navCount,
   navGroupFor,
@@ -149,5 +150,24 @@ describe('labels', () => {
     expect(initials('first.last@example.com')).toBe('FL')
     expect(initials('guest')).toBe('G')
     expect(initials('')).toBe('?')
+  })
+})
+
+describe('workspace rails', () => {
+  it('gives Sales its own destinations and keeps Candidate unchanged', () => {
+    const sales = navGroupsFor('sales').flatMap((g) => g.items.map((i) => i.label))
+    expect(sales).toContain('Projects & tenders')
+    expect(sales).toContain('Companies')
+    expect(sales).toContain('Bids sent')
+    expect(navGroupsFor('candidate')).toBe(NAV_GROUPS)
+  })
+
+  it('marks the sales destinations without an API as not built', () => {
+    const notBuilt = navGroupsFor('sales').flatMap((g) => g.items).filter((i) => i.notBuilt).map((i) => i.to)
+    expect(notBuilt).toEqual(expect.arrayContaining(['/projects', '/proposals', '/bids']))
+  })
+
+  it('finds the Sales group for sales-only paths', () => {
+    expect(navGroupFor('/bids', navGroupsFor('sales'))?.label).toBe('Track')
   })
 })

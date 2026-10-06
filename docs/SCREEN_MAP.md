@@ -33,3 +33,4 @@ Last updated: 2026-10-05.
 | — (no route) | — | `docs/SALES_FLOW.md` → Batch approval | not built |
 
 Navigation rail order (`NAV` in `src/features/shell/AppShell.tsx`): Overview, Applications, Campaigns, Opportunities, Approvals (count badge from `overview.awaitingApproval`), Outreach, Follow-ups, Profiles, Sources & integrations, Settings. Outreach and Follow-ups lead to placeholders (OQ-FE-005, OQ-FE-006).
+| `/projects`, `/proposals`, `/bids` (Sales rail) | `src/features/placeholder/NotBuiltPage.tsx` | `TASKS.md` R11 / N5 | not built — honest placeholder |

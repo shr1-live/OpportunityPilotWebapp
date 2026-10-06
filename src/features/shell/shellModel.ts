@@ -24,7 +24,7 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-/** The rail, grouped by the job each destination does (design v2, ShellStates.dc.html). Routes are unchanged. */
+/** The Candidate rail, grouped by the job each destination does (design ShellStates / WorkspaceSwitcher). */
 export const NAV_GROUPS: NavGroup[] = [
   { id: 'home', label: null, items: [{ to: '/', label: 'Overview', icon: 'overview', end: true }] },
   {
@@ -73,6 +73,53 @@ export const NAV_GROUPS: NavGroup[] = [
   },
 ]
 
+const SETUP_GROUP = NAV_GROUPS[NAV_GROUPS.length - 1]
+
+/**
+ * The Sales rail (design WorkspaceSwitcher): genuinely different destinations, not a filter. Companies are the
+ * opportunities a Customer campaign finds; projects, proposals and bids wait for the sales API (N5).
+ */
+export const SALES_NAV_GROUPS: NavGroup[] = [
+  NAV_GROUPS[0],
+  {
+    id: 'find',
+    label: 'Find',
+    items: [
+      { to: '/campaigns', label: 'Campaigns', icon: 'campaigns', count: { key: 'campaigns', tone: 'muted', srLabel: 'campaigns' } },
+      { to: '/projects', label: 'Projects & tenders', icon: 'projects', notBuilt: true },
+      { to: '/opportunities', label: 'Companies', icon: 'opportunities' },
+    ],
+  },
+  {
+    id: 'decide',
+    label: 'Decide',
+    items: [
+      { to: '/approvals', label: 'Approvals', icon: 'approvals', count: { key: 'awaitingApproval', tone: 'attention', srLabel: 'awaiting approval' } },
+    ],
+  },
+  {
+    id: 'act',
+    label: 'Act',
+    items: [
+      { to: '/proposals', label: 'Proposals & bids', icon: 'applications', notBuilt: true },
+      { to: '/outreach', label: 'Outreach', icon: 'outreach', notBuilt: true },
+    ],
+  },
+  {
+    id: 'track',
+    label: 'Track',
+    items: [
+      { to: '/bids', label: 'Bids sent', icon: 'bids', notBuilt: true },
+      { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps', notBuilt: true },
+    ],
+  },
+  SETUP_GROUP,
+]
+
+export function navGroupsFor(workspace: Workspace): NavGroup[] {
+  return workspace === 'sales' ? SALES_NAV_GROUPS : NAV_GROUPS
+}
+
 /** The figure to show next to a nav item, or null when there is nothing to show (unknown, zero, or no count). */
 export function navCount(item: NavItem, overview: Overview | undefined): number | null {
   if (!item.count || !overview) return null
@@ -88,9 +135,9 @@ export function navAccessibleName(item: NavItem, count: number | null): string {
 }
 
 /** The group a path belongs to, for the top-bar hint. Longest matching route wins; `/` only matches itself. */
-export function navGroupFor(pathname: string): NavGroup | undefined {
+export function navGroupFor(pathname: string, groups: NavGroup[] = NAV_GROUPS): NavGroup | undefined {
   let best: { group: NavGroup; length: number } | undefined
-  for (const group of NAV_GROUPS)
+  for (const group of groups)
     for (const item of group.items) {
       const match = item.to === '/' ? pathname === '/' : pathname === item.to || pathname.startsWith(item.to + '/')
       if (match && (!best || item.to.length > best.length)) best = { group, length: item.to.length }
@@ -108,21 +155,27 @@ export function navGroupFor(pathname: string): NavGroup | undefined {
  */
 export type Workspace = 'candidate' | 'sales'
 
-export const WORKSPACES: Record<Workspace, { label: string; tagline: string; icon: IconName }> = {
-  candidate: { label: 'Candidate', tagline: 'Finding roles for you', icon: 'candidate' },
-  sales: { label: 'Sales', tagline: 'Finding businesses to sell to', icon: 'sales' },
+export const WORKSPACES: Record<Workspace, { label: string; tagline: string; option: string; status: string; icon: IconName }> = {
+  candidate: { label: 'Candidate', tagline: 'Finding roles for you', option: 'Roles you could apply to', status: 'Built', icon: 'candidate' },
+  sales: {
+    label: 'Sales',
+    tagline: 'Finding businesses to sell to',
+    option: 'Companies, projects and tenders to bid on',
+    status: 'Partly built',
+    icon: 'sales',
+  },
 }
 
 /** Top-bar line under the title: the pipeline group, plus a real count where the shell already has one. */
 export function topbarHint(pathname: string, workspace: Workspace, overview: Overview | undefined): string | null {
-  const group = navGroupFor(pathname)
+  const group = navGroupFor(pathname, navGroupsFor(workspace))
   const known = (n: number | undefined) => typeof n === 'number'
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   if (pathname === '/') {
     const ws = `${WORKSPACES[workspace].label} workspace`
     return overview && known(overview.campaigns) ? `${ws} · ${plural(overview.campaigns, 'campaign', 'campaigns')}` : ws
   }
-  if (pathname === '/outreach' || pathname === '/follow-ups') return `${group?.label} · Not built yet`
+  if (['/outreach', '/follow-ups', '/projects', '/proposals', '/bids'].includes(pathname)) return `${group?.label} · Not built yet`
   let detail: string | null = null
   if (overview) {
     if (pathname === '/campaigns') detail = plural(overview.campaigns, 'campaign', 'campaigns')

@@ -13,7 +13,7 @@ import {
   type ApiStatus,
   gmailLabel,
   initials,
-  NAV_GROUPS,
+  navGroupsFor,
   navAccessibleName,
   navCount,
   readNavCollapsed,
@@ -265,6 +265,7 @@ export function AppShell() {
             </button>
             {wsMenuOpen && (
               <div className="ws-options" id="ws-options" role="group" aria-label="Choose a workspace">
+                <div className="ws-options-title">Switch workspace</div>
                 {(Object.keys(WORKSPACES) as Workspace[]).map((key) => (
                   <button
                     key={key}
@@ -282,18 +283,29 @@ export function AppShell() {
                     </span>
                     <span className="ws-text">
                       <span className="ws-name">{WORKSPACES[key].label}</span>
-                      <span className="ws-option-tagline">{WORKSPACES[key].tagline}</span>
+                      <span className="ws-option-tagline">{WORKSPACES[key].option}</span>
                     </span>
+                    <span className={`badge ${key === 'candidate' ? 'badge-success' : 'badge-warning'} ws-status`}>
+                      {WORKSPACES[key].status}
+                    </span>
+                    {key === workspace && (
+                      <span className="ws-check" aria-hidden="true">
+                        ✓
+                      </span>
+                    )}
                   </button>
                 ))}
-                <p className="ws-note">A display preference on this device. It does not change your data.</p>
+                <p className="ws-note">
+                  Both use the same campaigns engine and the same evidence rules. Switching changes what the rail shows —
+                  it never hides your data. A campaign's mode (Jobs, Customers…) is set inside the campaign.
+                </p>
               </div>
             )}
             {!collapsed && <div className="ws-tagline">{ws.tagline}</div>}
           </div>
 
           <div className="rail-groups">
-            {NAV_GROUPS.map((group) => (
+            {navGroupsFor(workspace).map((group) => (
               <div key={group.id} className="rail-group">
                 {group.label &&
                   (collapsed ? (
