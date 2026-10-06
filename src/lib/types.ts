@@ -363,3 +363,55 @@ export interface DecideResult {
   rejected: number
   skipped: number
 }
+
+/** GET /api/v1/analytics/overview?workspace=Candidate|Sales&days=30 (OpportunityPilotWebApi/docs/ANALYTICS_CONTRACT.md). */
+export type AnalyticsWorkspace = 'Candidate' | 'Sales'
+
+export interface AnalyticsOverview {
+  workspace: AnalyticsWorkspace
+  days: number
+  generatedAt: string
+  campaignCount: number
+  kpis: {
+    found: number
+    qualified: number
+    qualifyRate: number | null
+    awaitingApproval: number
+    shortlisted: number
+    shortlistedNotApplied: number
+    applied: number | null
+    appliedByAgent: number | null
+    appliedByYou: number | null
+    contacted: number | null
+    responded: number | null
+    respondedRate: number | null
+    agentNeedsYou: number
+  }
+  funnel: { key: string; label: string; count: number | null; note: string }[]
+  fitHistogram: { bands: { from: number; to: number; count: number }[]; threshold: number | null; aboveThreshold: number | null }
+  unknownCriteria: { criterion: string; label: string; unknownCount: number }[]
+  sources: {
+    sourceId: string
+    campaignId: string
+    label: string
+    kind: string
+    platform: string | null
+    read: number
+    qualified: number
+    rate: number | null
+    lastFetchedAt: string | null
+    failing: boolean
+  }[]
+  applicationsPerDay: { date: string; applied: number; replies: number }[] | null
+  attention: { kind: 'Approvals' | 'ShortlistedNotApplied' | 'AgentNeedsYou' | 'SourceFailing'; count: number; detail: string }[]
+  activeResearch: {
+    jobId: string
+    campaignId: string
+    campaignName: string
+    state: string
+    stage: string
+    counts: { candidates: number; sources: number; sourcesDone: number }
+  } | null
+  qualifiedByIndustry: { industry: string; count: number }[] | null
+  signalsFound: { signal: string; count: number }[] | null
+}
