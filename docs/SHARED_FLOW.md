@@ -48,11 +48,11 @@ There is no user-role concept yet: every signed-in user sees the same navigation
 
 - **Route:** `/` (index)
 - **Component:** `src/features/overview/OverviewPage.tsx`
-- **What it shows:** Subtitle depending on whether a profile exists. Three setup steps: 1 Add a profile (Done badge when profiles > 0), 2 Set up the apply agent (Beta badge), 3 Start a campaign (Done badge when campaigns > 0). Six stats from the API: Profiles, Campaigns, Awaiting approval (link to `/approvals`, warning colour when > 0), Shortlisted, Applications sent, Need your input (warning colour when > 0); "—" while unknown. "What this deployment can do": capability status for database, auth, linkedin, naukri.
+- **What it shows:** Subtitle depending on whether a profile exists. "See it work: try a sample run" card (`SampleRunCard.tsx`, payloads in `sampleRunModel.ts`): lists the two public boards it reads (Greenhouse `stripe`, Lever `leverdemo`) and the suggest threshold (60); button "Start sample run" shows each step while it runs. Three setup steps: 1 Add a profile (Done badge when profiles > 0), 2 Set up the apply agent (Beta badge), 3 Start a campaign (Done badge when campaigns > 0). Six stats from the API: Profiles, Campaigns, Awaiting approval (link to `/approvals`, warning colour when > 0), Shortlisted, Applications sent, Need your input (warning colour when > 0); "—" while unknown. "What this deployment can do": capability status for database, auth, linkedin, naukri.
 - **Actions:** Add profile / Review profiles → `/profiles`; Set up agent → `/applications`; New campaign → `/campaigns/new`; stat links → `/campaigns`, `/approvals`, `/opportunities`, `/applications`; "All sources and integrations" → `/integrations`; Try again on an error → reload.
 - **State (reads):** `GET /api/v1/overview` (`Overview`: profiles, applied, needsManual, campaigns, shortlisted, awaitingApproval) via `useApi`; `useShell().capabilities`.
-- **State (writes):** none.
-- **Navigation out:** `/profiles`, `/applications`, `/campaigns/new`, `/campaigns`, `/approvals`, `/opportunities`, `/integrations`.
+- **State (writes):** sample run only: `POST /api/v1/profiles` → `POST /api/v1/campaigns` → `POST /api/v1/campaigns/{id}/sources` ×2 → `POST /api/v1/campaigns/{id}/research`.
+- **Navigation out:** `/research/{jobId}` (after the sample run starts), `/profiles`, `/applications`, `/campaigns/new`, `/campaigns`, `/approvals`, `/opportunities`, `/integrations`.
 - **Validation:** none. Primary/secondary button emphasis only (step 1 primary until a profile exists; step 3 primary when a profile exists and no campaign does).
 - **Status:** built
 - **TODOs:** Not role-aware — the apply-agent step is shown to sales users (OQ-FE-003). Design `Main.dc.html` items missing: goal input, active research, recent opportunities, review queue, follow-ups (OQ-FE-031). M5 will add `draftsAwaitingReview` and `followUpsDue` (OQ-FE-028).
