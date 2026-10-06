@@ -4,7 +4,7 @@ import { Icon } from '../../components/icons'
 import { api, ApiUnreachableError } from '../../lib/api'
 import type { Capabilities, Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
-import { useAuth } from '../auth/AuthProvider'
+import { useAuth } from '../auth/AuthContext'
 import { ShellContext } from './ShellContext'
 import { ThemeToggle } from './ThemeToggle'
 import {

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthCardHeader, AuthLayout, PasswordField } from './AuthLayout'
 import { AUTH_PATHS, MIN_PASSWORD } from './authModel'
-import { useAuth } from './AuthProvider'
+import { useAuth } from './AuthContext'
 
 const STORY = {
   headline: 'Locked out?',

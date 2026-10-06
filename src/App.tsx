@@ -1,31 +1,34 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { createBrowserRouter, Link, Navigate, RouterProvider, useLocation, useNavigate } from 'react-router-dom'
-import { ApplicationsPage } from './features/applications/ApplicationsPage'
-import { ApprovalQueuePage } from './features/approvals/ApprovalQueuePage'
-import { AuthProvider, useAuth } from './features/auth/AuthProvider'
+import { AuthProvider } from './features/auth/AuthProvider'
+import { useAuth } from './features/auth/AuthContext'
 import { authScreenFor, isAuthOnlyPath, ONBOARDED_KEY, readFlag } from './features/auth/authModel'
 import { OnboardingPage } from './features/auth/OnboardingPage'
 import { NewPasswordPage, ResetPasswordPage } from './features/auth/ResetPasswordPage'
 import { SignInPage } from './features/auth/SignInPage'
 import { SignUpPage } from './features/auth/SignUpPage'
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage'
-import { CampaignBuilder } from './features/campaigns/CampaignBuilder'
-import { CampaignsPage } from './features/campaigns/CampaignsPage'
-import { IntegrationsPage } from './features/integrations/IntegrationsPage'
-import { OpportunitiesPage } from './features/opportunities/OpportunitiesPage'
-import { OpportunityDetailPage } from './features/opportunities/OpportunityDetailPage'
-import { OverviewPage } from './features/overview/OverviewPage'
-import { NotBuiltPage } from './features/placeholder/NotBuiltPage'
-import { ProfilesPage } from './features/profiles/ProfilesPage'
-import { ResearchProgressPage } from './features/research/ResearchProgressPage'
-import { SettingsPage } from './features/settings/SettingsPage'
-import { SalesProjectDetailPage } from './features/sales/SalesProjectDetailPage'
-import { SalesProjectsPage } from './features/sales/SalesProjectsPage'
-import { SalesProposalsPage } from './features/sales/SalesProposalsPage'
-import { SalesBidsPage } from './features/sales/SalesBidsPage'
-import { AppShell } from './features/shell/AppShell'
 import { EmptyState } from './components/States'
-import { HowItWorksPage } from './features/guide/HowItWorksPage'
+
+const ApplicationsPage = lazy(() => import('./features/applications/ApplicationsPage').then((m) => ({ default: m.ApplicationsPage })))
+const ApprovalQueuePage = lazy(() => import('./features/approvals/ApprovalQueuePage').then((m) => ({ default: m.ApprovalQueuePage })))
+const CampaignBuilder = lazy(() => import('./features/campaigns/CampaignBuilder').then((m) => ({ default: m.CampaignBuilder })))
+const CampaignsPage = lazy(() => import('./features/campaigns/CampaignsPage').then((m) => ({ default: m.CampaignsPage })))
+const IntegrationsPage = lazy(() => import('./features/integrations/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage })))
+const OpportunitiesPage = lazy(() => import('./features/opportunities/OpportunitiesPage').then((m) => ({ default: m.OpportunitiesPage })))
+const OpportunityDetailPage = lazy(() => import('./features/opportunities/OpportunityDetailPage').then((m) => ({ default: m.OpportunityDetailPage })))
+const OverviewPage = lazy(() => import('./features/overview/OverviewPage').then((m) => ({ default: m.OverviewPage })))
+const OutreachPage = lazy(() => import('./features/outreach/OutreachPage').then((m) => ({ default: m.OutreachPage })))
+const FollowUpsPage = lazy(() => import('./features/follow-ups/FollowUpsPage').then((m) => ({ default: m.FollowUpsPage })))
+const ProfilesPage = lazy(() => import('./features/profiles/ProfilesPage').then((m) => ({ default: m.ProfilesPage })))
+const ResearchProgressPage = lazy(() => import('./features/research/ResearchProgressPage').then((m) => ({ default: m.ResearchProgressPage })))
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const SalesProjectDetailPage = lazy(() => import('./features/sales/SalesProjectDetailPage').then((m) => ({ default: m.SalesProjectDetailPage })))
+const SalesProjectsPage = lazy(() => import('./features/sales/SalesProjectsPage').then((m) => ({ default: m.SalesProjectsPage })))
+const SalesProposalsPage = lazy(() => import('./features/sales/SalesProposalsPage').then((m) => ({ default: m.SalesProposalsPage })))
+const SalesBidsPage = lazy(() => import('./features/sales/SalesBidsPage').then((m) => ({ default: m.SalesBidsPage })))
+const AppShell = lazy(() => import('./features/shell/AppShell').then((m) => ({ default: m.AppShell })))
+const HowItWorksPage = lazy(() => import('./features/guide/HowItWorksPage').then((m) => ({ default: m.HowItWorksPage })))
 
 const SIGNED_OUT_SCREENS = {
   signin: SignInPage,
@@ -95,46 +98,8 @@ const router = createBrowserRouter([
       { path: 'opportunities', element: <OpportunitiesPage />, handle: { title: 'Opportunities' } },
       { path: 'opportunities/:id', element: <OpportunityDetailPage />, handle: { title: 'Opportunity' } },
       { path: 'approvals', element: <ApprovalQueuePage />, handle: { title: 'Approvals' } },
-      {
-        path: 'outreach',
-        handle: { title: 'Outreach' },
-        element: (
-          <NotBuiltPage
-            heading="Outreach"
-            milestone="M5"
-            description="Drafts per opportunity. Every version needs your approval before it can be sent."
-            willDo={[
-              'Draft a cover note or email per opportunity from your confirmed profile facts',
-              'Bind your approval to one version — editing it clears the approval',
-              'Send only approved versions, one at a time, never in bulk',
-            ]}
-            today={[
-              { label: 'Review shortlisted opportunities', to: '/opportunities', primary: true },
-              { label: 'Confirm your profile claims', to: '/profiles' },
-            ]}
-          />
-        ),
-      },
-      {
-        path: 'follow-ups',
-        handle: { title: 'Follow-ups' },
-        element: (
-          <NotBuiltPage
-            heading="Follow-ups"
-            milestone="M7"
-            description="Reminders grouped by due date, with opt-outs and suppression respected."
-            willDo={[
-              'Group next actions by due date, in your time zone',
-              'Mark delivered only when a provider confirms it',
-              'Respect opt-outs before any draft is written',
-            ]}
-            today={[
-              { label: 'See what needs you', to: '/applications', primary: true },
-              { label: 'Open approvals', to: '/approvals' },
-            ]}
-          />
-        ),
-      },
+      { path: 'outreach', handle: { title: 'Outreach' }, element: <OutreachPage /> },
+      { path: 'follow-ups', handle: { title: 'Follow-ups' }, element: <FollowUpsPage /> },
       {
         path: 'projects',
         handle: { title: 'Projects & tenders' },
@@ -164,7 +129,7 @@ const router = createBrowserRouter([
 export function App() {
   return (
     <AuthProvider>
-      <RouterProvider router={router} />
+      <Suspense fallback={<div className="boot" role="status">Loading page…</div>}><RouterProvider router={router} /></Suspense>
     </AuthProvider>
   )
 }

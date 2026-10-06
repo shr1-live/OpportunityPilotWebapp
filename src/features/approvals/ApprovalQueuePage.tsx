@@ -181,11 +181,15 @@ function Queue({
     const agent = items.filter((i) => i.appliesVia === 'Agent').length
     const notLoaded = total - items.length
     const message =
-      `Approve all ${items.length} suggested ${items.length === 1 ? 'job' : 'jobs'}${notLoaded > 0 ? ` shown here (${notLoaded} more are not loaded and stay waiting)` : ''}?\n\n` +
-      `They move to Shortlisted. Your agent applies to ${agent} (LinkedIn/Naukri) on its next apply run; ` +
-      `you apply to the other ${items.length - agent} from their application pages. Nothing is applied right now.`
+      `Approve all ${total} suggested ${total === 1 ? 'job' : 'jobs'}${notLoaded > 0 ? `, including ${notLoaded} not loaded on this page` : ''}?\n\n` +
+      `They move to Shortlisted. Your agent handles supported platforms on its next apply run; ` +
+      `you open the remaining application pages yourself. Nothing is applied right now.${agent ? ` ${agent} loaded item(s) use the agent.` : ''}`
     if (!window.confirm(message)) return
-    void decide(decidePayload(items.map((i) => i.opportunityId), []))
+    setBusy(true)
+    void api<DecideResult>('/api/v1/approvals/decide-all', { method: 'POST', body: JSON.stringify({ approve: true, campaignId: campaignId || null }) })
+      .then((result) => onDecided({ result, error: undefined }))
+      .catch((error: Error) => onDecided({ result: EMPTY_RESULT, error }))
+      .finally(() => setBusy(false))
   }
 
   if (items.length === 0) return <EmptyQueue campaignId={campaignId} campaign={campaign} jobCampaigns={jobCampaigns} />
@@ -230,7 +234,7 @@ function Queue({
             Reject selected
           </button>
           <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={approveAll}>
-            Approve all {items.length}
+            Approve all {total}
           </button>
         </div>
         {count === 0 && (

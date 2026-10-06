@@ -8,14 +8,14 @@ import type {
   WorkMode,
 } from '../../lib/types'
 
-export type SupportedMode = Extract<OpportunityMode, 'Job' | 'Customer'>
+export type SupportedMode = OpportunityMode
 
 export const MODES: { mode: OpportunityMode; label: string; description: string; supported: boolean }[] = [
   { mode: 'Job', label: 'Jobs', description: 'Postings that fit your experience', supported: true },
   { mode: 'Customer', label: 'Customers', description: 'Companies with a problem you solve', supported: true },
-  { mode: 'Partner', label: 'Partners', description: 'Companies to build or resell with', supported: false },
-  { mode: 'Investor', label: 'Investors', description: 'Funds that back your stage', supported: false },
-  { mode: 'Freelance', label: 'Freelance', description: 'Projects that need your services', supported: false },
+  { mode: 'Partner', label: 'Partners', description: 'Companies to build or resell with', supported: true },
+  { mode: 'Investor', label: 'Investors', description: 'Funds that back your stage', supported: true },
+  { mode: 'Freelance', label: 'Freelance', description: 'Projects that need your services', supported: true },
 ]
 
 export const MODE_LABELS: Record<OpportunityMode, string> = {
@@ -27,7 +27,7 @@ export const MODE_LABELS: Record<OpportunityMode, string> = {
 }
 
 export function isSupportedMode(mode: OpportunityMode): mode is SupportedMode {
-  return mode === 'Job' || mode === 'Customer'
+  return MODES.some((item) => item.mode === mode && item.supported)
 }
 
 /** A sensible starting mode for the profile the user picked; they can still change it before saving. */
@@ -76,6 +76,9 @@ export function emptyCriteria(): CampaignCriteria {
 const MODE_FIELDS: Record<SupportedMode, (keyof CampaignCriteria)[]> = {
   Job: ['keywords', 'requiredSkills', 'preferredSkills', 'candidateYears', 'locations', 'workModes', 'excludeKeywords', 'excludeOrganizations', 'excludeStaffingAgencies', 'maxPostingAgeDays'],
   Customer: ['keywords', 'industries', 'problems', 'locations', 'signals', 'excludeKeywords', 'excludeOrganizations'],
+  Partner: ['keywords', 'industries', 'problems', 'locations', 'signals', 'excludeKeywords', 'excludeOrganizations'],
+  Investor: ['keywords', 'industries', 'problems', 'locations', 'signals', 'excludeKeywords', 'excludeOrganizations'],
+  Freelance: ['keywords', 'industries', 'problems', 'locations', 'signals', 'excludeKeywords', 'excludeOrganizations'],
 }
 
 /** Fills gaps in a criteria object from the server (older rows may miss newer lists) and drops other modes' fields. */
@@ -176,11 +179,29 @@ export const WEIGHT_DEFS: Record<SupportedMode, WeightDef[]> = {
     { key: 'signal', label: 'Published signals', needs: 'signals' },
     { key: 'contactPath', label: 'Contact path', needs: 'nothing — always scored' },
   ],
+  Partner: [
+    { key: 'industry', label: 'Industry', needs: 'industries' }, { key: 'problem', label: 'Partnership fit', needs: 'problems' },
+    { key: 'geography', label: 'Geography', needs: 'locations' }, { key: 'signal', label: 'Published signals', needs: 'signals' },
+    { key: 'contactPath', label: 'Contact path', needs: 'nothing — always scored' },
+  ],
+  Investor: [
+    { key: 'industry', label: 'Investment focus', needs: 'industries' }, { key: 'problem', label: 'Thesis fit', needs: 'problems' },
+    { key: 'geography', label: 'Geography', needs: 'locations' }, { key: 'signal', label: 'Published signals', needs: 'signals' },
+    { key: 'contactPath', label: 'Contact path', needs: 'nothing — always scored' },
+  ],
+  Freelance: [
+    { key: 'industry', label: 'Project category', needs: 'industries' }, { key: 'problem', label: 'Need you solve', needs: 'problems' },
+    { key: 'geography', label: 'Geography', needs: 'locations' }, { key: 'signal', label: 'Project signals', needs: 'signals' },
+    { key: 'contactPath', label: 'Contact path', needs: 'nothing — always scored' },
+  ],
 }
 
 export const DEFAULT_WEIGHTS: Record<SupportedMode, Record<string, number>> = {
   Job: { mandatorySkills: 40, experience: 20, location: 20, preferredSkills: 20 },
   Customer: { industry: 25, problem: 30, geography: 15, signal: 20, contactPath: 10 },
+  Partner: { industry: 25, problem: 30, geography: 15, signal: 20, contactPath: 10 },
+  Investor: { industry: 25, problem: 30, geography: 15, signal: 20, contactPath: 10 },
+  Freelance: { industry: 25, problem: 30, geography: 15, signal: 20, contactPath: 10 },
 }
 
 export function clampWeight(value: number): number {
@@ -412,6 +433,9 @@ export const SOURCE_STATUS_LABELS: Record<SourceStatus, { text: string; tone: st
 export const CSV_COLUMNS: Record<SupportedMode, { required: string[]; optional: string[] }> = {
   Job: { required: ['title', 'company'], optional: ['location', 'url', 'description', 'id'] },
   Customer: { required: ['name'], optional: ['website', 'country', 'industry', 'description'] },
+  Partner: { required: ['name'], optional: ['website', 'country', 'industry', 'description'] },
+  Investor: { required: ['name'], optional: ['website', 'country', 'industry', 'description'] },
+  Freelance: { required: ['name'], optional: ['website', 'country', 'industry', 'description'] },
 }
 
 export const PASTE_MAX_CHARS = 50_000
@@ -516,7 +540,7 @@ export function draftProblems(draft: CampaignDraft, profileId: string, mode?: Su
 
 /* ---- Campaigns list (design round 3) ---- */
 
-export type CampaignModeFilter = 'all' | 'Job' | 'Customer'
+export type CampaignModeFilter = 'all' | OpportunityMode
 
 export function filterCampaigns<T extends { mode: OpportunityMode }>(campaigns: T[], filter: CampaignModeFilter): T[] {
   return filter === 'all' ? campaigns : campaigns.filter((c) => c.mode === filter)
@@ -527,6 +551,9 @@ export function campaignFilterCounts(campaigns: { mode: OpportunityMode }[]): Re
     all: campaigns.length,
     Job: campaigns.filter((c) => c.mode === 'Job').length,
     Customer: campaigns.filter((c) => c.mode === 'Customer').length,
+    Partner: campaigns.filter((c) => c.mode === 'Partner').length,
+    Investor: campaigns.filter((c) => c.mode === 'Investor').length,
+    Freelance: campaigns.filter((c) => c.mode === 'Freelance').length,
   }
 }
 

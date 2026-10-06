@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthCardHeader, AuthLayout, Divider, GoogleButton, PasswordField } from './AuthLayout'
 import { AUTH_PATHS, MIN_PASSWORD } from './authModel'
-import { useAuth } from './AuthProvider'
+import { useAuth } from './AuthContext'
 
 /** Design AuthSignUp: name, work email, password with strength, and consent stating what is stored. */
 export function SignUpPage() {

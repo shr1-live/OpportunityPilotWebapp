@@ -32,12 +32,14 @@ export const STATUSES = Object.keys(STATUS_LABELS) as OpportunityStatus[]
 
 /** Statuses a user may pick by hand. Suggested is set by research only (it can be shown, not chosen). */
 export function settableStatuses(current: OpportunityStatus): OpportunityStatus[] {
+  if (current === 'Applied') return ['Applied']
   return STATUSES.filter((s) => s !== 'Suggested' || s === current)
 }
 
 export const PLATFORM_LABELS: Record<JobPlatform, string> = {
   LinkedIn: 'LinkedIn',
   Naukri: 'Naukri',
+  Instahyre: 'InstaHyre',
   Greenhouse: 'Greenhouse',
   Lever: 'Lever',
   Adzuna: 'Adzuna',
@@ -56,15 +58,15 @@ export function platformLabel(platform: JobPlatform | null | undefined): string 
   return PLATFORM_LABELS[platform] ?? platform
 }
 
-/** The local agent applies only on LinkedIn and Naukri; everywhere else the user applies via the application page. */
+/** The local agent applies only on supported signed-in platforms; everywhere else the user opens the application page. */
 export function appliesViaForPlatform(platform: JobPlatform | null | undefined): AppliesVia {
-  return platform === 'LinkedIn' || platform === 'Naukri' ? 'Agent' : 'You'
+  return platform === 'LinkedIn' || platform === 'Naukri' || platform === 'Instahyre' ? 'Agent' : 'You'
 }
 
 /** "Applies via: …" wording for the approval queue and detail page. */
 export function appliesViaLabel(via: AppliesVia, platform: JobPlatform | null | undefined): string {
   if (via === 'Agent') {
-    const where = platform === 'LinkedIn' || platform === 'Naukri' ? platform : 'LinkedIn/Naukri'
+    const where = platform === 'LinkedIn' || platform === 'Naukri' || platform === 'Instahyre' ? platform : 'LinkedIn/Naukri/InstaHyre'
     return `your agent (${where})`
   }
   return 'you (opens the application page)'
@@ -72,7 +74,7 @@ export function appliesViaLabel(via: AppliesVia, platform: JobPlatform | null | 
 
 /** Open job boards found by research: the agent never applies there, the user opens applyUrl and marks it applied. */
 export function isUserApplyBoard(platform: JobPlatform | null | undefined): boolean {
-  return platform !== null && platform !== undefined && platform !== 'LinkedIn' && platform !== 'Naukri' && platform !== 'Other'
+  return platform !== null && platform !== undefined && platform !== 'LinkedIn' && platform !== 'Naukri' && platform !== 'Instahyre' && platform !== 'Other'
 }
 
 /** Unknown is its own answer, never folded into "not met": it scores 0 but lowers coverage instead. */
@@ -157,11 +159,12 @@ export function quickActions(status: OpportunityStatus): { label: string; to: Op
   }
 }
 
-/** The local agent applies only to shortlisted LinkedIn / Naukri jobs, on its next apply run. */
-export function agentApplyPlatform(o: Pick<OpportunitySummary, 'mode' | 'platform' | 'status'>): 'linkedin' | 'naukri' | null {
+/** The local agent applies only to shortlisted supported-platform jobs, on its next apply run. */
+export function agentApplyPlatform(o: Pick<OpportunitySummary, 'mode' | 'platform' | 'status'>): 'linkedin' | 'naukri' | 'instahyre' | null {
   if (o.mode !== 'Job' || o.status !== 'Shortlisted') return null
   if (o.platform === 'LinkedIn') return 'linkedin'
   if (o.platform === 'Naukri') return 'naukri'
+  if (o.platform === 'Instahyre') return 'instahyre'
   return null
 }
 

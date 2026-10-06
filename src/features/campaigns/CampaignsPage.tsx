@@ -35,7 +35,7 @@ export function CampaignsPage() {
         actions={
           campaigns.data && campaigns.data.length > 0 ? (
             <div className="chips" role="group" aria-label="Show campaigns by mode">
-              {(['all', 'Job', 'Customer'] as const).map((f) => (
+              {(['all', 'Job', 'Customer', 'Partner', 'Investor', 'Freelance'] as const).map((f) => (
                 <button key={f} type="button" className={`chip ${filter === f ? 'chip-on' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>
                   {f === 'all' ? 'All' : MODE_LABELS[f]} {counts[f]}
                 </button>
@@ -180,11 +180,11 @@ export function CampaignsPage() {
           </section>
           <section className="panel">
             <header className="panel-head">
-              <h3 className="eyebrow">Customers campaigns stop at the shortlist</h3>
+              <h3 className="eyebrow">Business campaigns continue into outreach</h3>
             </header>
             <div className="panel-body">
               <p className="muted-small">
-                A Customers campaign scores companies the same way, but the acting steps are not built. It ends with a shortlist
+                Customer, Partner, Investor, and Freelance campaigns use evidence-based company/project scoring, then continue into reviewed drafts and follow-ups.
                 you can read and export.
               </p>
               <p className="flow-chips">
