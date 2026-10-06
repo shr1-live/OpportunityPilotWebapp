@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import type { Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useShell } from '../shell/ShellContext'
+import { SampleRunCard } from './SampleRunCard'
 
 /** Every figure here comes from the API. Entities that do not exist in this build are not counted. */
 export function OverviewPage() {
@@ -31,6 +32,8 @@ export function OverviewPage() {
       />
 
       {overview.error && <ErrorNotice error={overview.error} onRetry={overview.reload} />}
+
+      <SampleRunCard />
 
       <ol className="steps plain-list">
         <li className={`card step ${hasProfile ? 'step-done' : ''}`}>
