@@ -135,3 +135,9 @@ There is no user-role concept yet: every signed-in user sees the same navigation
 - **Validation:** none.
 - **Status:** built
 - **TODOs:** Remove its use from a route when the real screen is built.
+
+### Update 2026-10-06 — design round 3: Sources & integrations, Settings, How it works
+
+- **Sources & integrations:** header shows counts (Ready / Not configured / Not built yet); capabilities are cards in a grid per category, each with ✓ can / — cannot lists and, where the app itself can act, one action (`CARD_ACTIONS`: Manage boards → Campaigns, Set up the agent → Applications, Add to a campaign). No action for things only server configuration can change.
+- **Settings:** two columns. Left: Account (signed in as, sign-in method, **Workspace** select — the same per-browser preference as the rail switcher, time zone from the browser) and Display (theme System/Light/Dark). Right: "Rules that cannot be switched off" (five product guarantees, each "Always on") and "This deployment" (web host, API URL, environment, database with a "temporary" badge in demo mode, AI mode, idle behaviour) with Sign out. Default profile, date format and time-zone override from the design are **not** offered: nothing would store them (no dead controls).
+- **How it works** (`/how-it-works`, rail Set up → How it works, `src/features/guide/`): the pipeline in nine steps (what happens, where you see it, with links), "How to check each source worked" (what you add, the event-log line written when it worked — wording taken from the API's research runner — and what it needs), "What it does not do", and the sample-run card (Candidate) or a Customers-campaign prompt (Sales). Static text; no figures.
