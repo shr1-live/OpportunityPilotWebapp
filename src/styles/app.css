@@ -748,7 +748,6 @@ p { margin: 0; }
 }
 .theme-toggle:hover { color: var(--op-ink); border-color: var(--op-field-border); }
 .theme-choices { display: flex; flex-wrap: wrap; gap: var(--op-space-2); border: 0; padding: 0; margin: 0; }
-.theme-choices legend { margin-bottom: var(--op-space-2); }
 .theme-choice {
   position: relative;
   display: inline-flex; align-items: center; gap: var(--op-space-2); padding: 8px 14px; cursor: pointer;
