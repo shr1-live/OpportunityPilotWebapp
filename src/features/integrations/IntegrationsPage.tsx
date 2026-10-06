@@ -1,6 +1,7 @@
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { StatusBadge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { LoadingState } from '../../components/States'
 import type { Capabilities, Capability } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 
@@ -26,7 +27,7 @@ export function IntegrationsPage() {
       />
 
       {caps.error && <ErrorNotice error={caps.error} onRetry={caps.reload} />}
-      {caps.loading && !caps.data && <p className="muted-small">Loading capabilities…</p>}
+      {caps.loading && !caps.data && <LoadingState label="Loading capabilities…" waking={caps.waking} rows={5} />}
 
       {caps.data && (
         <>

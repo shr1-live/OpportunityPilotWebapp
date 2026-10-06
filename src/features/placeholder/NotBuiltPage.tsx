@@ -1,27 +1,25 @@
-import { Link } from 'react-router-dom'
+import { NotBuiltState } from '../../components/States'
 import { PageHeader } from '../../components/PageHeader'
 
 interface Props {
   heading: string
   milestone: string
   description: string
+  willDo: string[]
+  today: { label: string; to: string; primary?: boolean }[]
 }
 
 /** Honest placeholder for a screen whose milestone has not been implemented. No sample data, no dead buttons. */
-export function NotBuiltPage({ heading, milestone, description }: Props) {
+export function NotBuiltPage({ heading, milestone, description, willDo, today }: Props) {
   return (
-    <div className="page">
+    <div className="page stack-5">
       <PageHeader title={heading} subtitle={description} />
-      <div className="empty">
-        <div className="empty-title">Not built yet — milestone {milestone}</div>
-        <p className="empty-text">
-          This screen is part of the plan but not implemented in this build, so nothing here is simulated. The designs
-          are in <code>opportunitypilot-ui</code>. You can set up a profile now; it will be used once this arrives.
-        </p>
-        <Link className="btn btn-secondary" to="/profiles">
-          Go to profiles
-        </Link>
-      </div>
+      <NotBuiltState
+        title={`${heading} is not built yet — milestone ${milestone}.`}
+        note="Nothing below is simulated."
+        willDo={willDo}
+        today={today}
+      />
     </div>
   )
 }

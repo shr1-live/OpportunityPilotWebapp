@@ -20,6 +20,7 @@ import { ProfilesPage } from './features/profiles/ProfilesPage'
 import { ResearchProgressPage } from './features/research/ResearchProgressPage'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { AppShell } from './features/shell/AppShell'
+import { EmptyState } from './components/States'
 
 const SIGNED_OUT_SCREENS = {
   signin: SignInPage,
@@ -60,12 +61,16 @@ function AuthGate() {
 function NotFound() {
   return (
     <div className="page">
-      <div className="empty">
-        <div className="empty-title">There is no page at this address</div>
-        <Link className="btn btn-secondary" to="/">
-          Go to overview
-        </Link>
-      </div>
+      <EmptyState
+        title="There is no page at this address"
+        actions={
+          <Link className="btn btn-secondary" to="/">
+            Go to overview
+          </Link>
+        }
+      >
+        The link may be old, or the item may belong to another account.
+      </EmptyState>
     </div>
   )
 }
@@ -93,6 +98,15 @@ const router = createBrowserRouter([
             heading="Outreach"
             milestone="M5"
             description="Drafts per opportunity. Every version needs your approval before it can be sent."
+            willDo={[
+              'Draft a cover note or email per opportunity from your confirmed profile facts',
+              'Bind your approval to one version — editing it clears the approval',
+              'Send only approved versions, one at a time, never in bulk',
+            ]}
+            today={[
+              { label: 'Review shortlisted opportunities', to: '/opportunities', primary: true },
+              { label: 'Confirm your profile claims', to: '/profiles' },
+            ]}
           />
         ),
       },
@@ -104,6 +118,15 @@ const router = createBrowserRouter([
             heading="Follow-ups"
             milestone="M7"
             description="Reminders grouped by due date, with opt-outs and suppression respected."
+            willDo={[
+              'Group next actions by due date, in your time zone',
+              'Mark delivered only when a provider confirms it',
+              'Respect opt-outs before any draft is written',
+            ]}
+            today={[
+              { label: 'See what needs you', to: '/applications', primary: true },
+              { label: 'Open approvals', to: '/approvals' },
+            ]}
           />
         ),
       },

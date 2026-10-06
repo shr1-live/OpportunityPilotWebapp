@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
+import { LoadingState } from '../../components/States'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
 import { api } from '../../lib/api'
@@ -40,10 +41,19 @@ export function OpportunityDetailPage() {
   if (loaded.error && !o)
     return (
       <div className="page">
-        <ErrorNotice error={loaded.error} onRetry={loaded.reload} />
+        <ErrorNotice
+          error={loaded.error}
+          onRetry={loaded.reload}
+          what="this opportunity"
+          secondary={
+            <Link className="btn btn-secondary btn-sm" to="/opportunities">
+              Back to opportunities
+            </Link>
+          }
+        />
       </div>
     )
-  if (!o) return <div className="page muted-small">Loading opportunity…</div>
+  if (!o) return <div className="page"><LoadingState label="Loading opportunity…" waking={loaded.waking} rows={6} stats={3} /></div>
 
   return <Detail o={o} onUpdated={setUpdated} />
 }

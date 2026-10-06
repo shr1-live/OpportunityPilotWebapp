@@ -3,6 +3,7 @@ import { useBlocker, useLocation, useNavigate, useParams, useSearchParams } from
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
+import { LoadingState } from '../../components/States'
 import { api, ApiError } from '../../lib/api'
 import type { Campaign, ProfileSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
@@ -38,7 +39,7 @@ function ExistingCampaign({ id }: { id: string }) {
         <ErrorNotice error={campaign.error} onRetry={campaign.reload} />
       </div>
     )
-  if (!campaign.data) return <div className="page muted-small">Loading campaign…</div>
+  if (!campaign.data) return <div className="page"><LoadingState label="Loading campaign…" waking={campaign.waking} rows={5} /></div>
   // Keyed by version: reloading after a conflict replaces the draft with the latest saved copy.
   return <Builder key={campaign.data.version} existing={campaign.data} onReload={campaign.reload} />
 }
