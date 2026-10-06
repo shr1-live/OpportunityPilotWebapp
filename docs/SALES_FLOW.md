@@ -1,8 +1,8 @@
 # Sales flow — the app as a sales assistant
 
-The Sales team uses the app to find business opportunities (companies with a problem the product solves; later freelance projects and tenders/RFPs), prepare proposals and emails, approve them in a batch, send, and follow up. Today only **Customer**-mode research is built: profile (Product / Business / Services) → Customer campaign → research run → opportunities → shortlist / mark contacted. Everything after that is `not built`.
+The Sales team uses the app to find business opportunities (companies with a problem the product solves; later freelance projects and tenders/RFPs), prepare proposals and emails, approve them in a batch, send, and follow up. Customer-mode research and the first manual sales project/bid/approve API are built; the project screens, provider discovery/placement, tender feeds, proposal/email drafts, sending, and follow-up UI remain pending.
 
-Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. The campaign builder, research run and opportunity screens are the same components as the Candidate flow; their full entries are in `docs/CANDIDATE_FLOW.md` and only Customer differences are listed here. Contracts: built — `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`; planned — `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` (API not built). Gap IDs refer to `docs/open-questions.md`.
+Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. The campaign builder, research run and opportunity screens are the same components as the Candidate flow; their full entries are in `docs/CANDIDATE_FLOW.md` and only Customer differences are listed here. Contracts: built — `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`; planned — `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` and `../OpportunityPilotWebApi/docs/SALES_CONTRACT.md` (manual sales API slice built; provider, drafts and UI remain). Gap IDs refer to `docs/open-questions.md`.
 
 ---
 
@@ -83,31 +83,31 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 
 ### Proposal drafts — Proposals for projects, tenders and companies
 
-- **Route:** none yet
-- **Component:** none yet
-- **What it shows:** (planned, `../HANDOFF.md` 2026-10-05) A proposal drafted from the opportunity's evidence and the Product/Services profile, with unknowns as `[placeholders]`, claim basis, version and approval state. Upwork proposals are drafted for a human to send (Upwork bans automated submission); tenders need a digital signature and stay manual.
-- **Actions:** (planned) generate, edit, approve (batch), copy or hand off.
-- **State (reads):** (planned) no contract — `M4_M5_CONTRACT.md` has no Proposal channel.
-- **State (writes):** (planned) no contract.
-- **Navigation out:** (planned) opportunity detail, outreach inbox.
-- **Validation:** (planned) unknown until the contract exists; must never invent figures, contacts or credentials.
-- **Status:** not built
-- **TODOs:** Write the contract (OQ-FE-002). Decide approval model (OQ-FE-001).
+- **Route:** `/proposals`; editing occurs at `/projects/:id`.
+- **Component:** `src/features/sales/SalesProposalsPage.tsx`, `SalesProjectDetailPage.tsx`, pure helpers in `salesModel.ts`.
+- **What it shows:** Current manual bid drafts and approved versions across sales projects. Each row shows project, proposal excerpt, exact version, amount, currency, delivery window and approval state. A warning states that nothing is submitted from this screen.
+- **Actions:** Open a project; create or edit a bid; approve the exact current version. Editing clears approval through the API.
+- **State (reads):** `GET /api/v1/sales/projects`, `GET /api/v1/sales/projects/:id`.
+- **State (writes):** `POST /api/v1/sales/projects/:id/bid`, `PUT /api/v1/sales/bids/:id`, `POST /api/v1/sales/bids/:id/approve`.
+- **Navigation out:** `/projects`, `/projects/:id`.
+- **Validation:** Amount > 0, three-letter uppercase currency, delivery 1–3650 days, non-empty proposal; the API remains authoritative and returns 409 for stale versions.
+- **Status:** first manual bid/proposal slice built
+- **TODOs:** Evidence-backed generated sales proposal drafts, tender handoff, provider placement and batch approval remain (OQ-FE-001/OQ-FE-002).
 
 ---
 
 ### Freelancer.com bids — Find projects and place bids
 
-- **Route:** none yet
-- **Component:** none yet
+- **Route:** `/projects`, `/projects/:id`, `/proposals`, `/bids`.
+- **Component:** `src/features/sales/SalesProjectsPage.tsx`, `SalesProjectDetailPage.tsx`, `SalesProposalsPage.tsx`, `SalesBidsPage.tsx`.
 - **What it shows:** (planned) Freelancer.com projects found through the official API, scored like other opportunities, with a prepared bid (amount, delivery time, proposal text) per project.
 - **Actions:** (planned) review prepared bids, approve a batch, place approved bids through the Freelancer.com API.
-- **State (reads):** (planned) no contract; would need a Freelance campaign mode (disabled until M7) and a Freelancer.com source.
-- **State (writes):** (planned) no contract; bid placement happens server-side with a key that never reaches the browser.
+- **State (reads):** `GET /api/v1/sales/projects` and `GET /api/v1/sales/projects/:id`; Freelance campaign mode remains disabled.
+- **State (writes):** (implemented API first slice) manual project creation and bid create/edit/approve; bid placement remains server-side and is not implemented.
 - **Navigation out:** (planned) opportunity detail, approval batch.
 - **Validation:** (planned) no bid is placed without approval; amounts come from the user, never invented.
-- **Status:** not built
-- **TODOs:** Contract and API (OQ-FE-002); Freelance mode (OQ-FE-032); approval model (OQ-FE-001); credentials stay in server configuration (`CLAUDE.md` security rules).
+- **Status:** first manual project/bid UI slice built
+- **TODOs:** Freelancer provider discovery/placement and Freelance mode (OQ-FE-032); provider-backed project ingestion; credentials stay in server configuration (`CLAUDE.md` security rules).
 
 ---
 

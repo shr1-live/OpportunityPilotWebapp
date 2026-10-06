@@ -78,7 +78,7 @@ const SETUP_GROUP = NAV_GROUPS[NAV_GROUPS.length - 1]
 
 /**
  * The Sales rail (design WorkspaceSwitcher): genuinely different destinations, not a filter. Companies are the
- * opportunities a Customer campaign finds; projects, proposals and bids wait for the sales API (N5).
+ * opportunities a Customer campaign finds; proposals and placed-bid reporting still wait for later N5 slices.
  */
 export const SALES_NAV_GROUPS: NavGroup[] = [
   NAV_GROUPS[0],
@@ -87,7 +87,7 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     label: 'Find',
     items: [
       { to: '/campaigns', label: 'Campaigns', icon: 'campaigns', count: { key: 'campaigns', tone: 'muted', srLabel: 'campaigns' } },
-      { to: '/projects', label: 'Projects & tenders', icon: 'projects', notBuilt: true },
+      { to: '/projects', label: 'Projects & tenders', icon: 'projects' },
       { to: '/opportunities', label: 'Companies', icon: 'opportunities' },
     ],
   },
@@ -102,7 +102,7 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     id: 'act',
     label: 'Act',
     items: [
-      { to: '/proposals', label: 'Proposals & bids', icon: 'applications', notBuilt: true },
+      { to: '/proposals', label: 'Proposals & bids', icon: 'applications' },
       { to: '/outreach', label: 'Outreach', icon: 'outreach', notBuilt: true },
     ],
   },
@@ -110,7 +110,7 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     id: 'track',
     label: 'Track',
     items: [
-      { to: '/bids', label: 'Bids sent', icon: 'bids', notBuilt: true },
+      { to: '/bids', label: 'Bids sent', icon: 'bids' },
       { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps', notBuilt: true },
     ],
   },

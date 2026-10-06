@@ -4,7 +4,7 @@ import { AuthCardHeader, AuthLayout, Divider, GoogleButton, PasswordField } from
 import { AUTH_PATHS, MIN_PASSWORD } from './authModel'
 import { useAuth } from './AuthProvider'
 
-/** Design AuthSignUp: name, work email (taken-email error inline), password with strength, consent stating what is stored. */
+/** Design AuthSignUp: name, work email, password with strength, and consent stating what is stored. */
 export function SignUpPage() {
   const { mode, signUp, googleSignIn } = useAuth()
   const navigate = useNavigate()
@@ -13,7 +13,6 @@ export function SignUpPage() {
   const [password, setPassword] = useState('')
   const [agreed, setAgreed] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [taken, setTaken] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (mode !== 'supabase') {
@@ -38,7 +37,6 @@ export function SignUpPage() {
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
-    setTaken(false)
     if (password.length < MIN_PASSWORD) {
       setError(`Use at least ${MIN_PASSWORD} characters.`)
       return
@@ -46,8 +44,7 @@ export function SignUpPage() {
     setBusy(true)
     try {
       const result = await signUp(name.trim(), email.trim(), password)
-      if (result === 'email-taken') setTaken(true)
-      else if (result === 'verify-email') navigate(`${AUTH_PATHS.verify}?email=${encodeURIComponent(email.trim())}`)
+      if (result === 'verify-email') navigate(`${AUTH_PATHS.verify}?email=${encodeURIComponent(email.trim())}`)
       // 'signed-in': the session arrives through onAuthStateChange and the app opens.
     } catch (err) {
       setError((err as Error).message)
@@ -89,18 +86,8 @@ export function SignUpPage() {
             autoComplete="email"
             required
             value={email}
-            aria-invalid={taken}
-            aria-describedby={taken ? 'email-taken' : undefined}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              setTaken(false)
-            }}
+            onChange={(e) => setEmail(e.target.value)}
           />
-          {taken && (
-            <p id="email-taken" className="field-error">
-              An account already exists for this email. <Link to={AUTH_PATHS.signin}>Sign in instead</Link>
-            </p>
-          )}
         </div>
         <PasswordField id="password" label="Password" value={password} onChange={setPassword} autoComplete="new-password" showStrength />
         <label className="checkbox-row">

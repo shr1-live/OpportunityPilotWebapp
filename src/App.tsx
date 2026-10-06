@@ -19,6 +19,10 @@ import { NotBuiltPage } from './features/placeholder/NotBuiltPage'
 import { ProfilesPage } from './features/profiles/ProfilesPage'
 import { ResearchProgressPage } from './features/research/ResearchProgressPage'
 import { SettingsPage } from './features/settings/SettingsPage'
+import { SalesProjectDetailPage } from './features/sales/SalesProjectDetailPage'
+import { SalesProjectsPage } from './features/sales/SalesProjectsPage'
+import { SalesProposalsPage } from './features/sales/SalesProposalsPage'
+import { SalesBidsPage } from './features/sales/SalesBidsPage'
 import { AppShell } from './features/shell/AppShell'
 import { EmptyState } from './components/States'
 import { HowItWorksPage } from './features/guide/HowItWorksPage'
@@ -134,59 +138,18 @@ const router = createBrowserRouter([
       {
         path: 'projects',
         handle: { title: 'Projects & tenders' },
-        element: (
-          <NotBuiltPage
-            heading="Projects & tenders"
-            milestone="N5 (sales pipeline)"
-            description="Open projects and tenders to bid on, with budget, bids so far, the client's record and your fit."
-            willDo={[
-              'List open projects and public tenders from sources whose terms allow reading them',
-              'Score each brief requirement by requirement, with the evidence',
-              'Show the competition: bid range, median bid and how many are interviewing',
-            ]}
-            today={[
-              { label: 'Find companies with a Customers campaign', to: '/campaigns/new', primary: true },
-              { label: 'Write a Services profile', to: '/profiles/new' },
-            ]}
-          />
-        ),
+        element: <SalesProjectsPage />,
       },
+      { path: 'projects/:id', element: <SalesProjectDetailPage />, handle: { title: 'Project detail' } },
       {
         path: 'proposals',
         handle: { title: 'Proposals & bids' },
-        element: (
-          <NotBuiltPage
-            heading="Proposals & bids"
-            milestone="N5 (sales pipeline)"
-            description="Draft a proposal per project: cover letter, rate, timeline and milestones, with every claim's basis listed."
-            willDo={[
-              'Draft from your confirmed profile facts only — every claim shows its basis',
-              'Bind approval to one version; changing the rate clears it',
-              'Hand off to the source to submit: copy the final text and open the brief',
-            ]}
-            today={[
-              { label: 'Confirm your profile claims', to: '/profiles', primary: true },
-              { label: 'Review shortlisted companies', to: '/opportunities' },
-            ]}
-          />
-        ),
+        element: <SalesProposalsPage />,
       },
       {
         path: 'bids',
         handle: { title: 'Bids sent' },
-        element: (
-          <NotBuiltPage
-            heading="Bids sent"
-            milestone="N5 (sales pipeline)"
-            description="Everything submitted and what came back."
-            willDo={[
-              'Win rate counted on decided bids only',
-              'Median reply time, and how many went silent',
-              'Broken down by source and budget band',
-            ]}
-            today={[{ label: 'Open approvals', to: '/approvals', primary: true }]}
-          />
-        ),
+        element: <SalesBidsPage />,
       },
       { path: 'how-it-works', element: <HowItWorksPage />, handle: { title: 'How it works' } },
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },

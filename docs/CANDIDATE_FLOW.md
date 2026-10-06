@@ -179,13 +179,13 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 - **Route:** none yet (planned as a section of `/opportunities/:id`)
 - **Component:** none yet (planned in `src/features/opportunities/` or a new `src/features/drafts/`)
 - **What it shows:** (planned, `M4_M5_CONTRACT.md` channel `CoverNote`) A generated cover note for the job: greeting, role, matched required skills, the profile's own offer sentence, availability, with `[placeholders]` for unknowns; the basis of each claim (Profile / Evidence); version, approval state, source (Template or Gemini + fallback reason). AI text on the AI surface.
-- **Actions:** (planned) Generate → `POST /api/v1/opportunities/:id/drafts { channel: 'CoverNote' }`; edit → `PUT /api/v1/drafts/:id` (clears approval); approve → `POST /api/v1/drafts/:id/approve { version }`; the agent fills the approved note into cover-letter fields (agent side not specified).
-- **State (reads):** (planned) `GET /api/v1/opportunities/:id/drafts`, `GET /api/v1/drafts/:id`.
-- **State (writes):** (planned) the POST/PUT calls above, `POST /api/v1/drafts/:id/revoke-approval`, `DELETE /api/v1/drafts/:id`.
+- **Actions:** Generate → `POST /api/v1/opportunities/:id/drafts { channel: 'CoverNote' }`; edit and save → `PUT /api/v1/drafts/:id` (clears approval); approve → `POST /api/v1/drafts/:id/approve { version }`; revoke approval or delete. The agent fills the approved note only into cover-letter-like free-text fields.
+- **State (reads):** `GET /api/v1/opportunities/:id/drafts`.
+- **State (writes):** the POST/PUT calls above, `POST /api/v1/drafts/:id/revoke-approval`, `DELETE /api/v1/drafts/:id`.
 - **Navigation out:** (planned) none beyond the detail page.
-- **Validation:** (planned) Approve disabled when the body is empty or the version is stale (409); every disabled control states its blocker (`sendBlockers`).
-- **Status:** not built
-- **TODOs:** API M5 not built (OQ-FE-008). Approval model open (OQ-FE-001). Agent cover-letter filling unspecified.
+- **Validation:** Approve disabled when the body is empty, has unsaved edits, or the API reports a stale version (409); every disabled control states its blocker (`sendBlockers`). Editing an approved note requires saving before it can be approved again.
+- **Status:** built locally — browser verification pending
+- **TODOs:** Gemini and other draft channels remain API work (OQ-BE-006/OQ-BE-007). Sending remains blocked until Gmail (M6). Full live LinkedIn/Naukri selector verification remains OQ-BE-001.
 
 ### Update 2026-10-05 — MVP research rules
 - **Builder step 2 (Job)**: hard filters gain "Exclude staffing agencies" (checkbox → `criteria.excludeStaffingAgencies`) and "Only postings from the last N days" (1–365, empty = off → `criteria.maxPostingAgeDays`). Both shown in the step-4 review.

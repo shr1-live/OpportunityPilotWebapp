@@ -26,7 +26,7 @@ export function VerifyEmailPage() {
       await resendVerification(email)
       setSentAt(Date.now())
       setNow(Date.now())
-      setMessage({ kind: 'info', text: 'Sent again. Use the newest email — earlier links still work until they expire.' })
+      setMessage({ kind: 'info', text: 'Sent again. For safety, use the link in the newest email.' })
     } catch (err) {
       setMessage({ kind: 'error', text: (err as Error).message })
     }
@@ -49,7 +49,7 @@ export function VerifyEmailPage() {
         <ul className="auth-list">
           <li>It can take a minute.</li>
           <li>Check spam; the sender is a Supabase address, not our domain.</li>
-          <li>The link expires in 60 minutes.</li>
+          <li>Use the newest link before the expiry shown by your email provider.</li>
         </ul>
       </div>
       {message && (

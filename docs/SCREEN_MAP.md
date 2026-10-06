@@ -27,7 +27,8 @@ Last updated: 2026-10-06 (design round 3).
 | `/applications` | `src/features/applications/ApplicationsPage.tsx` (+ `AgentSetup.tsx`, `HowItWorks.tsx`) | `docs/CANDIDATE_FLOW.md` → Applications | built |
 | `/outreach` | `src/features/placeholder/NotBuiltPage.tsx` (M5 placeholder) | `docs/SALES_FLOW.md` → Outreach — Inbox and draft editor | not built |
 | `/follow-ups` | `src/features/placeholder/NotBuiltPage.tsx` (M7 placeholder) | `docs/SALES_FLOW.md` → Follow-ups | not built |
-| `/projects`, `/proposals`, `/bids` (Sales rail) | `src/features/placeholder/NotBuiltPage.tsx` | `TASKS.md` R11 / N5 | not built — honest placeholder |
+| `/projects`, `/projects/:id` (Sales rail) | `src/features/sales/SalesProjectsPage.tsx`, `SalesProjectDetailPage.tsx` | `TASKS.md` R11 / N5 | manual project list + bid draft/approval built; provider ingestion and placement remain |
+| `/proposals`, `/bids` (Sales rail) | `src/features/sales/SalesProposalsPage.tsx`, `SalesBidsPage.tsx` | `docs/SALES_FLOW.md` → Proposal drafts / Freelancer.com bids | manual proposal review and provider-confirmed bid tracking built; placement remains pending |
 | `/how-it-works` | `src/features/guide/HowItWorksPage.tsx` | `docs/SHARED_FLOW.md` → Update 2026-10-06 | built |
 | — (section of `/opportunities/:id`) | — | `docs/CANDIDATE_FLOW.md` → Cover notes | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Proposal drafts | not built |

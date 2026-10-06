@@ -360,6 +360,77 @@ export interface OpportunityDetail extends OpportunitySummary {
   activities: OpportunityActivity[]
 }
 
+// ---------- Outreach drafts (OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md) ----------
+
+export type DraftChannel = 'Email' | 'CoverNote' | 'LinkedInMessage' | 'ContactForm'
+export type DraftState = 'Draft' | 'Approved'
+export type DraftSource = 'Gemini' | 'Template'
+
+export interface DraftClaim {
+  text: string
+  basis: 'Profile' | 'Evidence'
+  evidenceId: string | null
+}
+
+export interface OutreachDraft {
+  id: string
+  opportunityId: string
+  channel: DraftChannel
+  recipient: string | null
+  recipientVerified: boolean
+  subject: string | null
+  body: string
+  version: number
+  state: DraftState
+  approvedVersion: number | null
+  approvedAt: string | null
+  source: DraftSource
+  fallbackReason: string | null
+  claims: DraftClaim[]
+  sendReady: boolean
+  sendBlockers: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ---------- Sales pipeline (OpportunityPilotWebApi/docs/SALES_CONTRACT.md) ----------
+
+export type SalesProjectSource = 'Freelancer' | 'TenderFeed' | 'PublicUrl' | 'Manual'
+export type SalesProjectState = 'New' | 'Shortlisted' | 'BidPrepared' | 'BidApproved' | 'BidPlaced' | 'ManualHandoff' | 'Dismissed'
+export type SalesBidState = 'Draft' | 'Approved' | 'Placed' | 'Failed'
+
+export interface SalesBid {
+  id: string
+  projectId: string
+  amount: number
+  currency: string
+  deliveryDays: number
+  proposal: string
+  version: number
+  state: SalesBidState
+  approvedVersion: number | null
+  approvedAt: string | null
+  hasValidApproval: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SalesProject {
+  id: string
+  source: SalesProjectSource
+  externalId: string | null
+  title: string
+  buyer: string | null
+  description: string | null
+  url: string | null
+  deadlineUtc: string | null
+  state: SalesProjectState
+  version: number
+  bids: SalesBid[]
+  createdAt: string
+  updatedAt: string
+}
+
 // ---------- Approval queue (docs/CANDIDATE_PHASE1_CONTRACT.md §2 in OpportunityPilotWebApi) ----------
 
 /** Agent: the local agent applies (LinkedIn / Naukri). You: the user opens applyUrl and applies. */

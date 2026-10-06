@@ -771,6 +771,12 @@ p { margin: 0; }
 .stack-5 > * + * { margin-top: 20px; }
 .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--op-muted); }
 .notice-success { background: var(--op-green-tint); color: var(--op-on-green-tint); border-color: var(--op-line); }
+
+.cover-note-panel .panel-body { background: var(--op-ai-bg); color: var(--op-ai-ink); }
+.cover-note-meta { display: flex; align-items: center; gap: var(--op-space-2); flex-wrap: wrap; }
+.cover-note-panel textarea { width: 100%; min-height: 16rem; background: var(--op-surface); }
+.cover-note-claims { display: grid; gap: var(--op-space-2); margin-top: var(--op-space-2); }
+.cover-note-claims li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--op-space-2); align-items: start; }
 .checkbox-row { display: flex; gap: var(--op-space-2); align-items: flex-start; font-size: var(--op-text-body); cursor: pointer; }
 .checkbox-row input { margin-top: 3px; accent-color: var(--op-primary); }
 

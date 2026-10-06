@@ -43,14 +43,6 @@ export function passwordStrength(password: string): PasswordStrength {
   return { score, label: (['Weak', 'Fair', 'Good', 'Strong'] as const)[score - 1] }
 }
 
-/**
- * Supabase answers a sign-up for an address that already has an account with a user whose identities list is
- * empty (and no error), so the email is not leaked to an attacker; the form can still tell the honest user.
- */
-export function signUpEmailTaken(user: { identities?: unknown[] | null } | null | undefined): boolean {
-  return Boolean(user && Array.isArray(user.identities) && user.identities.length === 0)
-}
-
 export const RESEND_COOLDOWN_SECONDS = 60
 
 /** Seconds left before "Resend" is allowed again. */
@@ -66,6 +58,18 @@ export function formatCountdown(seconds: number): string {
 
 export const ONBOARDED_KEY = 'op.onboarded'
 export const KEEP_SIGNED_IN_KEY = 'op.keepSignedIn'
+
+export interface StoredGuestSession {
+  token: string
+  expiresAt: string
+}
+
+/** Guest credentials are usable only while their server-issued expiry is still in the future. */
+export function activeGuestToken(session: StoredGuestSession | null, nowMs = Date.now()): string | null {
+  if (!session?.token) return null
+  const expiresAt = Date.parse(session.expiresAt)
+  return Number.isFinite(expiresAt) && expiresAt > nowMs ? session.token : null
+}
 
 export function readFlag(key: string, fallback: boolean): boolean {
   try {
