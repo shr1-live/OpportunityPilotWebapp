@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSummary, confirmationState, isFullyConfirmed } from './profileFields'
+import { buildSummary, confirmationState, createFields, FIELDS as ALL_FIELDS, isFullyConfirmed, isWideField, joinTags, splitTags } from './profileFields'
 
 describe('profile confirmation', () => {
   it('is not confirmed when no claims are filled in', () => {
@@ -29,5 +29,23 @@ describe('summary', () => {
       confirmations: {},
     })
     expect(summary).toBe('What you offer: Backend work\nSkills: C#\nAvailability and terms: Rate: [YOUR RATE]')
+  })
+})
+
+
+describe('round-3 profile editor', () => {
+  it('round-trips skills between text and chips', () => {
+    expect(splitTags('C#, .NET 8,\nDocker , ')).toEqual(['C#', '.NET 8', 'Docker'])
+    expect(joinTags(['C#', 'Docker'])).toBe('C#, Docker')
+    expect(splitTags(undefined)).toEqual([])
+  })
+
+  it('creates with the offer and non-claim fields only; claims come after saving', () => {
+    expect(createFields('Candidate').map((f) => f.key)).toEqual(['offer', 'availability'])
+    expect(createFields('Candidate').some((f) => f.confirmable)).toBe(false)
+  })
+
+  it('makes the offer full width', () => {
+    expect(isWideField(ALL_FIELDS.Candidate[0])).toBe(true)
   })
 })

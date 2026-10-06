@@ -869,3 +869,68 @@ p { margin: 0; }
   .onboarding-steps li + li { padding-left: 0; }
   .onboarding-steps li + li::after { display: none; }
 }
+
+/* ---- Profiles, round 3 (designs Profiles + ProfileNew): list beside a full-width editor, sticky save bar ---- */
+.profiles2 {
+  display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: calc(100vh - 60px);
+  margin: calc(-1 * var(--op-space-4)) calc(-1 * var(--op-space-5));
+}
+.profiles2-list-hidden { grid-template-columns: minmax(0, 1fr); }
+.profiles2-list { display: flex; flex-direction: column; border-right: 1px solid var(--op-line); background: var(--op-surface); min-width: 0; }
+.profiles2-list-head { display: flex; align-items: center; gap: 8px; padding: 14px 12px; border-bottom: 1px solid var(--op-hair); }
+.profiles2-list-body { flex: 1; padding: 10px; overflow-y: auto; }
+.profiles2-empty {
+  display: flex; flex-direction: column; gap: 4px; text-align: center; padding: 16px 12px; font-size: var(--op-text-meta);
+  border: 1px dashed var(--op-line); border-radius: 8px; color: var(--op-muted);
+}
+.profiles2-empty strong { color: var(--op-ink); }
+.profiles2-hide {
+  border: 0; border-top: 1px solid var(--op-hair); background: none; padding: 12px; text-align: left; cursor: pointer;
+  color: var(--op-muted); font-size: var(--op-text-meta);
+}
+.profiles2-hide:hover { color: var(--op-ink); }
+.profiles2-show { margin: 12px 0 0 26px; }
+.profiles2-main { min-width: 0; display: flex; flex-direction: column; }
+.profiles2-form { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.profiles2-head { padding: 22px 26px 0; border-bottom: 1px solid var(--op-line); background: var(--op-surface); }
+.profiles2-head .editor-title { margin: 0; }
+.profiles2-head > p { margin: 4px 0 0; }
+.profiles2-pad { flex: 1; padding: 20px 26px 28px; }
+.profiles2-narrow { max-width: 760px; }
+.editor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 20px; max-width: 1000px; }
+.grid-wide { grid-column: 1 / -1; }
+.type-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; max-width: 1000px; }
+.type-radio {
+  display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; vertical-align: -2px;
+  border: 1.5px solid var(--op-field-border); background: var(--op-surface);
+}
+.type-option-active .type-radio { border-color: var(--op-primary); box-shadow: inset 0 0 0 3px var(--op-surface), inset 0 0 0 8px var(--op-primary); }
+.confirm-chip {
+  border: 1px solid transparent; border-radius: 6px; padding: 2px 8px; font-size: var(--op-text-micro); font-weight: 600; cursor: pointer;
+  background: var(--op-amber-tint); color: var(--op-on-amber-tint);
+}
+.confirm-chip-on { background: transparent; color: var(--op-on-green-tint); }
+.confirm-chip:hover { border-color: currentColor; }
+.field > .row.wrap > .confirm-chip { margin-left: auto; }
+.claim-row { display: flex; flex-direction: column; gap: 8px; }
+.claim-text { margin: 0; white-space: pre-wrap; color: var(--op-muted); }
+.tabs { display: flex; gap: 4px; margin-top: 14px; overflow-x: auto; }
+.tab {
+  border: 0; background: none; cursor: pointer; padding: 10px 14px; font-weight: 500; color: var(--op-muted);
+  border-bottom: 2px solid transparent; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.tab:hover { color: var(--op-ink); }
+.tab-active { color: var(--op-ink); font-weight: 600; border-bottom-color: var(--op-primary); }
+.tab-count { font-size: 11px; padding: 0 6px; border-radius: 6px; background: var(--op-amber-tint); color: var(--op-on-amber-tint); font-weight: 600; }
+.save-bar {
+  position: sticky; bottom: 0; z-index: 2; display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 12px 26px; background: var(--op-surface); border-top: 1px solid var(--op-line); box-shadow: var(--op-shadow-sticky);
+}
+
+@media (max-width: 860px) {
+  .profiles2 { grid-template-columns: minmax(0, 1fr); margin: calc(-1 * var(--op-space-4)); }
+  .profiles2-list { border-right: 0; border-bottom: 1px solid var(--op-line); }
+  .profiles2-list-body { max-height: 220px; }
+  .editor-grid, .type-row { grid-template-columns: minmax(0, 1fr); }
+  .profiles2-head, .profiles2-pad, .save-bar { padding-left: 16px; padding-right: 16px; }
+}

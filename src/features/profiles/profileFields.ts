@@ -83,3 +83,39 @@ export function buildSummary(type: ProfileType, data: ProfileData): string {
     .map(([label, v]) => `${label}: ${v}`)
     .join('\n')
 }
+
+/* ---- Round-3 editor layout ---- */
+
+/** Full-width fields; the rest sit two to a row in the editor grid. */
+export function isWideField(f: FieldDef): boolean {
+  return f.key === 'offer' || f.rows >= 4
+}
+
+/** Skills are edited as chips but stored as the comma-separated text campaigns already read. */
+export function isTagField(f: FieldDef): boolean {
+  return f.key === 'skills'
+}
+
+export function splitTags(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+export function joinTags(tags: string[]): string {
+  return tags.join(', ')
+}
+
+/** Fields shown on the create form: the offer plus the non-claim fields. Claims come after the first save. */
+export function createFields(type: ProfileType): FieldDef[] {
+  return FIELDS[type].filter((f) => !f.confirmable)
+}
+
+/** Order and wording of the type cards on the create form (design ProfileNew). */
+export const NEW_PROFILE_TYPES: { type: ProfileType; label: string; description: string }[] = [
+  { type: 'Candidate', label: 'Candidate', description: 'Your experience — scores job postings' },
+  { type: 'Services', label: 'Services', description: 'What you deliver — scores projects and tenders' },
+  { type: 'Product', label: 'Product', description: 'Something you sell — scores companies' },
+  { type: 'Business', label: 'Business', description: 'Your company — for partner and investor work' },
+]
