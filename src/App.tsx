@@ -1,8 +1,14 @@
-import { createBrowserRouter, Link, RouterProvider } from 'react-router-dom'
+import { useState } from 'react'
+import { createBrowserRouter, Link, Navigate, RouterProvider, useLocation, useNavigate } from 'react-router-dom'
 import { ApplicationsPage } from './features/applications/ApplicationsPage'
 import { ApprovalQueuePage } from './features/approvals/ApprovalQueuePage'
 import { AuthProvider, useAuth } from './features/auth/AuthProvider'
+import { authScreenFor, isAuthOnlyPath, ONBOARDED_KEY, readFlag } from './features/auth/authModel'
+import { OnboardingPage } from './features/auth/OnboardingPage'
+import { NewPasswordPage, ResetPasswordPage } from './features/auth/ResetPasswordPage'
 import { SignInPage } from './features/auth/SignInPage'
+import { SignUpPage } from './features/auth/SignUpPage'
+import { VerifyEmailPage } from './features/auth/VerifyEmailPage'
 import { CampaignBuilder } from './features/campaigns/CampaignBuilder'
 import { CampaignsPage } from './features/campaigns/CampaignsPage'
 import { IntegrationsPage } from './features/integrations/IntegrationsPage'
@@ -15,11 +21,39 @@ import { ResearchProgressPage } from './features/research/ResearchProgressPage'
 import { SettingsPage } from './features/settings/SettingsPage'
 import { AppShell } from './features/shell/AppShell'
 
-/** Signed-out users see the sign-in screen at whatever URL they opened, so deep links survive sign-in. */
+const SIGNED_OUT_SCREENS = {
+  signin: SignInPage,
+  signup: SignUpPage,
+  verify: VerifyEmailPage,
+  reset: ResetPasswordPage,
+  'new-password': NewPasswordPage,
+}
+
+/**
+ * Signed-out visitors see an account screen; any non-account URL shows sign-in, so deep links survive sign-in.
+ * A password-reset link opens "Choose a new password" first. New browsers see onboarding once.
+ */
 function AuthGate() {
-  const { ready, user } = useAuth()
+  const { ready, user, recovering } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [onboarded, setOnboarded] = useState(() => readFlag(ONBOARDED_KEY, false))
   if (!ready) return <div className="boot" role="status">Checking your session…</div>
-  if (!user) return <SignInPage />
+  if (recovering) return <NewPasswordPage />
+  if (!user) {
+    const Screen = SIGNED_OUT_SCREENS[authScreenFor(location.pathname)]
+    return <Screen />
+  }
+  if (isAuthOnlyPath(location.pathname)) return <Navigate to="/" replace />
+  if (!onboarded)
+    return (
+      <OnboardingPage
+        onDone={(path) => {
+          setOnboarded(true)
+          navigate(path)
+        }}
+      />
+    )
   return <AppShell />
 }
 

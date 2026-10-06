@@ -1,0 +1,85 @@
+/** Pure helpers for the account screens (design round 3: AuthSignIn/SignUp/Verify/Reset/Onboarding). */
+
+export type AuthScreen = 'signin' | 'signup' | 'verify' | 'reset' | 'new-password'
+
+export const AUTH_PATHS: Record<AuthScreen, string> = {
+  signin: '/signin',
+  signup: '/signup',
+  verify: '/verify',
+  reset: '/reset',
+  'new-password': '/reset/new',
+}
+
+/** Which account screen a signed-out visitor sees at this URL. Any other URL shows sign-in (deep links survive). */
+export function authScreenFor(pathname: string): AuthScreen {
+  const path = pathname.replace(/\/+$/, '') || '/'
+  if (path === AUTH_PATHS.signup) return 'signup'
+  if (path === AUTH_PATHS.verify) return 'verify'
+  if (path === AUTH_PATHS['new-password']) return 'new-password'
+  if (path === AUTH_PATHS.reset) return 'reset'
+  return 'signin'
+}
+
+/** True for URLs that only make sense while signed out; after sign-in they go to Overview. */
+export function isAuthOnlyPath(pathname: string): boolean {
+  const path = pathname.replace(/\/+$/, '')
+  return Object.values(AUTH_PATHS).includes(path)
+}
+
+export const MIN_PASSWORD = 12
+
+export interface PasswordStrength {
+  /** 0 = too short … 4 = strong */
+  score: 0 | 1 | 2 | 3 | 4
+  label: 'Too short' | 'Weak' | 'Fair' | 'Good' | 'Strong'
+}
+
+/** A simple, explainable meter: length first, then variety of character kinds. */
+export function passwordStrength(password: string): PasswordStrength {
+  if (password.length < MIN_PASSWORD) return { score: 0, label: 'Too short' }
+  const kinds = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(password)).length
+  const longBonus = password.length >= 16 ? 1 : 0
+  const score = Math.min(4, Math.max(1, kinds - 1 + longBonus)) as 1 | 2 | 3 | 4
+  return { score, label: (['Weak', 'Fair', 'Good', 'Strong'] as const)[score - 1] }
+}
+
+/**
+ * Supabase answers a sign-up for an address that already has an account with a user whose identities list is
+ * empty (and no error), so the email is not leaked to an attacker; the form can still tell the honest user.
+ */
+export function signUpEmailTaken(user: { identities?: unknown[] | null } | null | undefined): boolean {
+  return Boolean(user && Array.isArray(user.identities) && user.identities.length === 0)
+}
+
+export const RESEND_COOLDOWN_SECONDS = 60
+
+/** Seconds left before "Resend" is allowed again. */
+export function resendSecondsLeft(sentAtMs: number, nowMs: number, cooldown = RESEND_COOLDOWN_SECONDS): number {
+  return Math.max(0, Math.ceil(cooldown - (nowMs - sentAtMs) / 1000))
+}
+
+export function formatCountdown(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+/* ---- Stored per-browser flags ---- */
+
+export const ONBOARDED_KEY = 'op.onboarded'
+export const KEEP_SIGNED_IN_KEY = 'op.keepSignedIn'
+
+export function readFlag(key: string, fallback: boolean): boolean {
+  try {
+    const v = localStorage.getItem(key)
+    return v === null ? fallback : v === '1'
+  } catch {
+    return fallback
+  }
+}
+
+export function writeFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, value ? '1' : '0')
+  } catch {
+    // Storage blocked: the choice lasts for this page view only.
+  }
+}

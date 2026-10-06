@@ -6,7 +6,9 @@ Last updated: 2026-10-05.
 
 | Route | Component | Flow doc → entry | Status |
 |---|---|---|---|
-| any URL, signed out | `src/features/auth/SignInPage.tsx` | `docs/SHARED_FLOW.md` → Sign-in | built |
+| any URL, signed out | `src/features/auth/SignInPage.tsx` | `docs/SHARED_FLOW.md` → Accounts | built |
+| `/signup`, `/verify`, `/reset`, `/reset/new` (signed out) | `src/features/auth/SignUpPage.tsx`, `VerifyEmailPage.tsx`, `ResetPasswordPage.tsx` | `docs/SHARED_FLOW.md` → Accounts | built |
+| first signed-in visit | `src/features/auth/OnboardingPage.tsx` | `docs/SHARED_FLOW.md` → Accounts | built |
 | (wraps every signed-in route) | `src/features/shell/AppShell.tsx` | `docs/SHARED_FLOW.md` → Shell | built |
 | `/` | `src/features/overview/OverviewPage.tsx` | `docs/SHARED_FLOW.md` → Overview | built |
 | `/profiles`, `/profiles/new`, `/profiles/:id` | `src/features/profiles/ProfilesPage.tsx` | `docs/SHARED_FLOW.md` → Profiles | built |
