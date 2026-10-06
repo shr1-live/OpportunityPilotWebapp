@@ -2,103 +2,134 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useBlocker, useNavigate, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { TagInput } from '../../components/TagInput'
 import { api, ApiError } from '../../lib/api'
 import type { Profile, ProfileData, ProfileSummary, ProfileType } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import {
   buildSummary,
   confirmationState,
+  createFields,
   emptyData,
   FIELDS,
   isFullyConfirmed,
+  isTagField,
+  isWideField,
+  joinTags,
+  NEW_PROFILE_TYPES,
   normalizeData,
   PROFILE_TYPES,
+  splitTags,
+  type FieldDef,
 } from './profileFields'
 
 const dateFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+const LIST_HIDDEN_KEY = 'op.profilesListHidden'
 
+function readListHidden(): boolean {
+  try {
+    return localStorage.getItem(LIST_HIDDEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/** Design round 3 (Profiles, ProfileNew): a profile list beside a full-width editor. */
 export function ProfilesPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const list = useApi<ProfileSummary[]>('/api/v1/profiles')
   const creating = id === 'new'
+  const [listHidden, setListHidden] = useState(readListHidden)
 
   // With no selection, open the most recent profile, or the create form when there are none.
   useEffect(() => {
     if (!id && list.data) navigate(list.data.length ? `/profiles/${list.data[0].id}` : '/profiles/new', { replace: true })
   }, [id, list.data, navigate])
 
-  return (
-    <div className="page profiles">
-      <aside className="profiles-list">
-        <div className="row">
-          <h2 className="section-heading">Profiles</h2>
-          <div className="grow" />
-          <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/profiles/new')}>
-            New
-          </button>
-        </div>
-        <p className="muted-small">
-          A campaign judges fit against one profile. Keep them separate rather than merging everything into one.
-        </p>
-        {list.error && <ErrorNotice error={list.error} onRetry={list.reload} />}
-        {list.loading && !list.data && <p className="muted-small">Loading profiles…</p>}
-        <ul className="stack-2 plain-list">
-          {list.data?.map((p) => (
-            <li key={p.id}>
-              <button
-                type="button"
-                className={`profile-card ${p.id === id ? 'profile-card-active' : ''}`}
-                aria-current={p.id === id ? 'true' : undefined}
-                onClick={() => navigate(`/profiles/${p.id}`)}
-              >
-                <span className="row">
-                  <span className="profile-card-name">{p.name}</span>
-                  <Badge>{p.type}</Badge>
-                </span>
-                <span className="profile-card-meta">
-                  v{p.version} · {dateFmt.format(new Date(p.updatedAt))} ·{' '}
-                  {p.confirmedAt ? 'confirmed' : 'awaiting confirmation'}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
+  function toggleList() {
+    setListHidden((h) => {
+      try {
+        localStorage.setItem(LIST_HIDDEN_KEY, h ? '0' : '1')
+      } catch {
+        /* not stored */
+      }
+      return !h
+    })
+  }
 
-      {creating ? (
-        <ProfileEditor key="new" onSaved={(p) => { list.reload(); navigate(`/profiles/${p.id}`, { replace: true }) }} />
-      ) : id ? (
-        <ExistingProfile key={id} id={id} onSaved={list.reload} />
-      ) : null}
+  return (
+    <div className={`profiles2 ${listHidden ? 'profiles2-list-hidden' : ''}`}>
+      {!listHidden && (
+        <aside className="profiles2-list" aria-label="Profiles">
+          <div className="profiles2-list-head">
+            <span className="eyebrow">Profiles · {list.data?.length ?? '—'}</span>
+            <div className="grow" />
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => navigate('/profiles/new')}>
+              + New
+            </button>
+          </div>
+          <div className="profiles2-list-body">
+            {list.error && <ErrorNotice error={list.error} onRetry={list.reload} />}
+            {list.loading && !list.data && <p className="muted-small">Loading profiles…</p>}
+            {list.data?.length === 0 && (
+              <div className="profiles2-empty">
+                <strong>No profiles yet</strong>
+                <span>This is your first. A campaign scores every result against one profile.</span>
+              </div>
+            )}
+            <ul className="plain-list stack-2">
+              {list.data?.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className={`profile-card ${p.id === id ? 'profile-card-active' : ''}`}
+                    aria-current={p.id === id ? 'true' : undefined}
+                    onClick={() => navigate(`/profiles/${p.id}`)}
+                  >
+                    <span className="row">
+                      <span className="profile-card-name">{p.name}</span>
+                      <Badge>{p.type}</Badge>
+                    </span>
+                    <span className="profile-card-meta">
+                      v{p.version} · {dateFmt.format(new Date(p.updatedAt))} · {p.confirmedAt ? 'confirmed' : 'claims to confirm'}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <button type="button" className="profiles2-hide" onClick={toggleList}>
+            ‹ Hide this list
+          </button>
+        </aside>
+      )}
+
+      <div className="profiles2-main">
+        {listHidden && (
+          <button type="button" className="profiles2-show btn-link small" onClick={toggleList}>
+            › Show profiles list
+          </button>
+        )}
+        {creating ? (
+          <NewProfile key="new" onSaved={(p) => { list.reload(); navigate(`/profiles/${p.id}`, { replace: true }) }} onCancel={() => navigate(list.data?.[0] ? `/profiles/${list.data[0].id}` : '/')} />
+        ) : id ? (
+          <ExistingProfile key={id} id={id} onSaved={list.reload} />
+        ) : null}
+      </div>
     </div>
   )
 }
 
 function ExistingProfile({ id, onSaved }: { id: string; onSaved: () => void }) {
   const profile = useApi<Profile>(`/api/v1/profiles/${id}`)
-  if (profile.error) return <div className="profiles-editor"><ErrorNotice error={profile.error} onRetry={profile.reload} /></div>
-  if (!profile.data) return <div className="profiles-editor muted-small">Loading profile…</div>
+  if (profile.error) return <div className="profiles2-pad"><ErrorNotice error={profile.error} onRetry={profile.reload} /></div>
+  if (!profile.data) return <div className="profiles2-pad muted-small">Loading profile…</div>
   return <ProfileEditor key={`${id}-${profile.data.version}`} existing={profile.data} onSaved={() => { onSaved(); profile.reload() }} />
 }
 
-function ProfileEditor({ existing, onSaved }: { existing?: Profile; onSaved: (p: Profile) => void }) {
-  const [type, setType] = useState<ProfileType>(existing?.type ?? 'Candidate')
-  const [name, setName] = useState(existing?.name ?? '')
-  const [data, setData] = useState<ProfileData>(() => (existing ? normalizeData(existing.data) : emptyData()))
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<Error>()
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
-  const [justSaved, setJustSaved] = useState(false)
-  // Set synchronously on a successful save so the redirect that follows is not treated as leaving unsaved work.
-  const savedRef = useRef(false)
-
-  const initial = useMemo(
-    () => JSON.stringify({ type: existing?.type ?? 'Candidate', name: existing?.name ?? '', data: existing ? normalizeData(existing.data) : emptyData() }),
-    [existing],
-  )
-  const dirty = JSON.stringify({ type, name, data }) !== initial
-
+/** Leave-without-saving guard shared by both forms. */
+function useUnsavedGuard(dirty: boolean, savedRef: React.RefObject<boolean>) {
   const blocker = useBlocker(({ currentLocation, nextLocation }) => dirty && !savedRef.current && currentLocation.pathname !== nextLocation.pathname)
   useEffect(() => {
     if (blocker.state === 'blocked') {
@@ -112,6 +143,194 @@ function ProfileEditor({ existing, onSaved }: { existing?: Profile; onSaved: (p:
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [dirty])
+}
+
+function saveError(error: Error) {
+  return error instanceof ApiError && error.status === 409
+    ? new Error(`${error.message} Your edits are still here — copy anything you need, then reload.`)
+    : error
+}
+
+function cleanData(type: ProfileType, data: ProfileData, keys: FieldDef[] = FIELDS[type]): ProfileData {
+  return {
+    fields: Object.fromEntries(keys.map((f) => [f.key, data.fields[f.key] ?? ''])),
+    confirmations: Object.fromEntries(keys.filter((f) => f.confirmable).map((f) => [f.key, data.confirmations[f.key] === true])),
+  }
+}
+
+/** One field in the editor grid: textarea or skill chips, with the inline Confirmed / Confirm chip for claims. */
+function FieldInput({
+  f,
+  data,
+  setField,
+  setConfirmed,
+  placeholder,
+}: {
+  f: FieldDef
+  data: ProfileData
+  setField: (k: string, v: string) => void
+  setConfirmed?: (k: string, v: boolean) => void
+  placeholder?: string
+}) {
+  const value = data.fields[f.key] ?? ''
+  const confirmed = data.confirmations[f.key] === true
+  const chip =
+    f.confirmable && setConfirmed && value.trim() ? (
+      <button
+        type="button"
+        className={`confirm-chip ${confirmed ? 'confirm-chip-on' : ''}`}
+        aria-pressed={confirmed}
+        onClick={() => setConfirmed(f.key, !confirmed)}
+        title={confirmed ? 'Confirmed by you. Click to withdraw.' : 'Confirm this is accurate. Nothing is strengthened or embellished for you.'}
+      >
+        {confirmed ? '✓ Confirmed' : '⚠ Confirm'}
+      </button>
+    ) : null
+
+  if (isTagField(f)) {
+    return (
+      <div className={isWideField(f) ? 'grid-wide' : undefined}>
+        <TagInput
+          id={`f-${f.key}`}
+          label={f.label}
+          values={splitTags(value)}
+          onChange={(tags) => setField(f.key, joinTags(tags))}
+          placeholder="Add a skill and press Enter"
+          hint="Each one can become a scored criterion in a campaign."
+          badge={chip}
+        />
+      </div>
+    )
+  }
+  return (
+    <div className={`field ${isWideField(f) ? 'grid-wide' : ''}`}>
+      <div className="row">
+        <label htmlFor={`f-${f.key}`}>{f.label}</label>
+        <div className="grow" />
+        {chip}
+      </div>
+      {f.rows <= 1 ? (
+        <input id={`f-${f.key}`} value={value} placeholder={placeholder} onChange={(e) => setField(f.key, e.target.value)} />
+      ) : (
+        <textarea id={`f-${f.key}`} rows={f.rows} value={value} placeholder={placeholder} onChange={(e) => setField(f.key, e.target.value)} />
+      )}
+      {f.hint && <p className="hint">{f.hint}</p>}
+    </div>
+  )
+}
+
+/** Design ProfileNew: type as one row of cards, then the few fields needed to start. Claims come after saving. */
+function NewProfile({ onSaved, onCancel }: { onSaved: (p: Profile) => void; onCancel: () => void }) {
+  const [type, setType] = useState<ProfileType>('Candidate')
+  const [name, setName] = useState('')
+  const [data, setData] = useState<ProfileData>(emptyData)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<Error>()
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const savedRef = useRef(false)
+  const dirty = name.trim() !== '' || Object.values(data.fields).some((v) => v.trim())
+  useUnsavedGuard(dirty, savedRef)
+  const fields = createFields(type)
+  const setField = (key: string, value: string) => setData((d) => ({ ...d, fields: { ...d.fields, [key]: value } }))
+  const offerMissing = !data.fields.offer?.trim()
+
+  async function create() {
+    setSaving(true)
+    setError(undefined)
+    setFieldErrors({})
+    try {
+      const saved = await api<Profile>('/api/v1/profiles', {
+        method: 'POST',
+        body: JSON.stringify({ type, name: name.trim(), data: cleanData(type, data), confirmed: false }),
+      })
+      savedRef.current = true
+      onSaved(saved)
+    } catch (e) {
+      setSaving(false)
+      if (e instanceof ApiError && e.fieldErrors) setFieldErrors(e.fieldErrors)
+      setError(e as Error)
+    }
+  }
+
+  return (
+    <form className="profiles2-form" onSubmit={(e) => { e.preventDefault(); void create() }}>
+      <div className="profiles2-pad stack-4">
+        <header>
+          <h2 className="editor-title">New profile</h2>
+          <p className="muted-small">Not saved yet. Three fields are enough to start — you can deepen it later.</p>
+        </header>
+        {error && <ErrorNotice error={saveError(error)} />}
+        <fieldset className="field">
+          <legend>
+            Profile type <span className="muted-small">decides which campaigns can use it</span>
+          </legend>
+          <div className="type-row">
+            {NEW_PROFILE_TYPES.map((t) => (
+              <label key={t.type} className={`type-option ${type === t.type ? 'type-option-active' : ''}`}>
+                <input type="radio" name="ptype" value={t.type} checked={type === t.type} onChange={() => setType(t.type)} />
+                <span className="type-option-label">
+                  <span className="type-radio" aria-hidden="true" />
+                  {t.label}
+                </span>
+                <span className="muted-small">{t.description}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="editor-grid">
+          <div className="field grid-wide">
+            <label htmlFor="pname">Profile name *</label>
+            <input id="pname" required value={name} maxLength={200} onChange={(e) => setName(e.target.value)} placeholder="e.g. .NET full-stack — 5 years" />
+            <p className="hint">Only you see this. Name it for the kind of work, not the company.</p>
+            {fieldErrors.name && <p className="field-error">{fieldErrors.name.join(' ')}</p>}
+          </div>
+          {fields.map((f) => (
+            <FieldInput
+              key={f.key}
+              f={f.key === 'offer' ? { ...f, label: `${f.label} *` } : f}
+              data={data}
+              setField={setField}
+              placeholder={f.key === 'offer' ? 'Backend and integration work in .NET: order and warehouse systems, Azure migrations…' : '[YOUR RANGE], e.g. Available mid-October'}
+            />
+          ))}
+          {fieldErrors.data && <p className="field-error grid-wide">{fieldErrors.data.join(' ')}</p>}
+          <div className="notice notice-neutral grid-wide">
+            <strong>{FIELDS[type].filter((f) => f.confirmable).map((f) => f.label).join(' and ')} come next.</strong> Once this is
+            saved you can add them and confirm each claim. Nothing is ever written for you, and a claim you have not
+            confirmed does not raise a score.
+          </div>
+        </div>
+      </div>
+      <div className="save-bar">
+        <span className="muted-small">Saved as version 1.</span>
+        <div className="grow" />
+        <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={saving || !name.trim() || offerMissing}>
+          {saving ? 'Creating…' : 'Create profile'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+type Tab = 'details' | 'claims' | 'summary' | 'versions'
+
+/** Design Profiles: header with claim count, tabs (Details · Claims · Summary · Versions), sticky save bar. */
+function ProfileEditor({ existing, onSaved }: { existing: Profile; onSaved: (p: Profile) => void }) {
+  const type = existing.type
+  const [name, setName] = useState(existing.name)
+  const [data, setData] = useState<ProfileData>(() => normalizeData(existing.data))
+  const [tab, setTab] = useState<Tab>('details')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<Error>()
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const savedRef = useRef(false)
+
+  const initial = useMemo(() => JSON.stringify({ name: existing.name, data: normalizeData(existing.data) }), [existing])
+  const dirty = JSON.stringify({ name, data }) !== initial
+  useUnsavedGuard(dirty, savedRef)
 
   const setField = (key: string, value: string) =>
     setData((d) => ({
@@ -119,34 +338,24 @@ function ProfileEditor({ existing, onSaved }: { existing?: Profile; onSaved: (p:
       // Editing a claim clears its confirmation: the new wording has not been confirmed.
       confirmations: { ...d.confirmations, [key]: false },
     }))
-  const setConfirmed = (key: string, value: boolean) =>
-    setData((d) => ({ ...d, confirmations: { ...d.confirmations, [key]: value } }))
+  const setConfirmed = (key: string, value: boolean) => setData((d) => ({ ...d, confirmations: { ...d.confirmations, [key]: value } }))
 
   const fields = FIELDS[type]
   const confirmed = isFullyConfirmed(type, data)
   const state = confirmationState(type, data)
   const summary = buildSummary(type, data)
+  const typeInfo = PROFILE_TYPES.find((t) => t.type === type)
 
   async function save() {
     setSaving(true)
     setError(undefined)
     setFieldErrors({})
-    const cleaned: ProfileData = {
-      fields: Object.fromEntries(fields.map((f) => [f.key, data.fields[f.key] ?? ''])),
-      confirmations: Object.fromEntries(fields.filter((f) => f.confirmable).map((f) => [f.key, data.confirmations[f.key] === true])),
-    }
     try {
-      const saved = existing
-        ? await api<Profile>(`/api/v1/profiles/${existing.id}`, {
-            method: 'PUT',
-            body: JSON.stringify({ name, data: cleaned, confirmed, expectedVersion: existing.version }),
-          })
-        : await api<Profile>('/api/v1/profiles', {
-            method: 'POST',
-            body: JSON.stringify({ type, name, data: cleaned, confirmed }),
-          })
+      const saved = await api<Profile>(`/api/v1/profiles/${existing.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, data: cleanData(type, data), confirmed, expectedVersion: existing.version }),
+      })
       savedRef.current = true
-      setJustSaved(true)
       setSaving(false)
       onSaved(saved)
     } catch (e) {
@@ -157,118 +366,149 @@ function ProfileEditor({ existing, onSaved }: { existing?: Profile; onSaved: (p:
   }
 
   const discard = () => {
-    const i = JSON.parse(initial) as { type: ProfileType; name: string; data: ProfileData }
-    setType(i.type)
+    const i = JSON.parse(initial) as { name: string; data: ProfileData }
     setName(i.name)
     setData(i.data)
     setError(undefined)
   }
 
+  const TABS: { key: Tab; label: string; count?: string | number }[] = [
+    { key: 'details', label: 'Details' },
+    { key: 'claims', label: 'Claims', count: state.awaiting.length || undefined },
+    { key: 'summary', label: 'Summary' },
+    { key: 'versions', label: 'Versions', count: `v${existing.version}` },
+  ]
+
   return (
-    <div className="profiles-editor">
-      <div className="row wrap">
-        <div>
-          <div className="row">
-            <h2 className="editor-title">{existing ? existing.name : 'New profile'}</h2>
-            {existing && <Badge>{existing.type}</Badge>}
-          </div>
-          <p className="muted-small">
-            {existing
-              ? `Version ${existing.version} · saved ${dateFmt.format(new Date(existing.updatedAt))}`
-              : 'Not saved yet'}
-            {justSaved && !dirty && ' · Saved'}
-          </p>
+    <div className="profiles2-form">
+      <div className="profiles2-head">
+        <div className="row wrap">
+          <h2 className="editor-title">{existing.name}</h2>
+          <Badge>{type}</Badge>
+          {state.awaiting.length > 0 && (
+            <span className="badge badge-warning">
+              {state.awaiting.length} {state.awaiting.length === 1 ? 'claim' : 'claims'} to confirm
+            </span>
+          )}
         </div>
+        <p className="muted-small">
+          Version {existing.version} · saved {dateFmt.format(new Date(existing.updatedAt))}
+          {dirty && <span className="text-warning"> · unsaved changes</span>}
+        </p>
+        <div className="tabs" role="tablist" aria-label="Profile sections">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              id={`tab-${t.key}`}
+              aria-selected={tab === t.key}
+              aria-controls={`panel-${t.key}`}
+              className={`tab ${tab === t.key ? 'tab-active' : ''}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+              {t.count !== undefined && <span className="tab-count">{t.count}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="profiles2-pad stack-4" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {error && <ErrorNotice error={saveError(error)} />}
+
+        {tab === 'details' && (
+          <div className="editor-grid">
+            <div className="field">
+              <label htmlFor="pname">Profile name *</label>
+              <input id="pname" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} />
+              <p className="hint">Only you see this. Name it for the kind of work, not the company.</p>
+              {fieldErrors.name && <p className="field-error">{fieldErrors.name.join(' ')}</p>}
+            </div>
+            <div className="field">
+              <label htmlFor="ptype">Profile type</label>
+              <input id="ptype" value={`${type} — ${typeInfo?.description ?? ''}`} readOnly disabled />
+              <p className="hint">Fixed once created: campaigns rely on it. Create another profile for a different type.</p>
+            </div>
+            {fields.map((f) => (
+              <FieldInput key={f.key} f={f} data={data} setField={setField} setConfirmed={setConfirmed} />
+            ))}
+            {fieldErrors.data && <p className="field-error grid-wide">{fieldErrors.data.join(' ')}</p>}
+          </div>
+        )}
+
+        {tab === 'claims' && (
+          <section className="stack-3 profiles2-narrow">
+            <p className="muted">
+              Claims are statements about you that a campaign may score or quote. Each must be confirmed by you; an
+              unconfirmed claim never raises a score. This version will be saved as{' '}
+              <strong>{confirmed ? 'confirmed' : 'not confirmed'}</strong>.
+            </p>
+            <ul className="plain-list stack-2">
+              {fields
+                .filter((f) => f.confirmable)
+                .map((f) => {
+                  const v = data.fields[f.key]?.trim()
+                  const ok = data.confirmations[f.key] === true
+                  return (
+                    <li key={f.key} className="card claim-row">
+                      <div className="row">
+                        <strong>{f.label}</strong>
+                        <div className="grow" />
+                        {v ? (
+                          <button type="button" className={`confirm-chip ${ok ? 'confirm-chip-on' : ''}`} aria-pressed={ok} onClick={() => setConfirmed(f.key, !ok)}>
+                            {ok ? '✓ Confirmed' : '⚠ Confirm'}
+                          </button>
+                        ) : (
+                          <span className="muted-small">Not provided — stays missing, never filled in</span>
+                        )}
+                      </div>
+                      {v && <p className="claim-text">{v}</p>}
+                    </li>
+                  )
+                })}
+            </ul>
+          </section>
+        )}
+
+        {tab === 'summary' && (
+          <section className="stack-3 profiles2-narrow">
+            <p className="muted">
+              Your own words, joined together — nothing is reworded. When AI features arrive, this is the context sent to
+              Gemini; nothing else from your account is.
+            </p>
+            {summary ? <p className="summary">{summary}</p> : <p className="muted-small">Fill in the fields to build the summary.</p>}
+          </section>
+        )}
+
+        {tab === 'versions' && (
+          <section className="stack-3 profiles2-narrow">
+            <div className="card">
+              <div className="row">
+                <strong>Version {existing.version}</strong>
+                <span className="badge badge-success">Current</span>
+                <div className="grow" />
+                <span className="muted-small">saved {dateFmt.format(new Date(existing.updatedAt))}</span>
+              </div>
+              <p className="muted-small">{existing.confirmedAt ? 'Confirmed by you.' : 'Has claims that are not confirmed yet.'}</p>
+            </div>
+            <p className="muted-small">
+              Each save raises the version number. This build stores only the current version, so earlier versions are not
+              listed here yet (OQ-FE-042).
+            </p>
+          </section>
+        )}
+      </div>
+
+      <div className="save-bar">
+        <span className="muted-small">ⓘ Saving writes version {existing.version + 1}. Editing a claim clears its confirmation.</span>
         <div className="grow" />
         <button type="button" className="btn btn-secondary" onClick={discard} disabled={!dirty || saving}>
           Discard changes
         </button>
         <button type="button" className="btn btn-primary" onClick={() => void save()} disabled={!dirty || saving || !name.trim()}>
-          {saving ? 'Saving…' : existing ? `Save version ${existing.version + 1}` : 'Create profile'}
+          {saving ? 'Saving…' : `Save as version ${existing.version + 1}`}
         </button>
-      </div>
-
-      {error && (
-        <ErrorNotice
-          error={
-            error instanceof ApiError && error.status === 409
-              ? new Error(`${error.message} Your edits are still here — copy anything you need, then reload.`)
-              : error
-          }
-        />
-      )}
-
-      <div className="editor-body">
-        <section className="card editor-form stack-4">
-          {!existing && (
-            <fieldset className="field">
-              <legend>Profile type</legend>
-              <div className="type-grid">
-                {PROFILE_TYPES.map((t) => (
-                  <label key={t.type} className={`type-option ${type === t.type ? 'type-option-active' : ''}`}>
-                    <input type="radio" name="ptype" value={t.type} checked={type === t.type} onChange={() => setType(t.type)} />
-                    <span className="type-option-label">{t.label}</span>
-                    <span className="muted-small">{t.description}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          )}
-
-          <div className="field">
-            <label htmlFor="pname">Name</label>
-            <input id="pname" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} placeholder="e.g. .NET full-stack — contract work" />
-            {fieldErrors.name && <p className="field-error">{fieldErrors.name.join(' ')}</p>}
-          </div>
-
-          {fields.map((f) => (
-            <div className="field" key={f.key}>
-              <label htmlFor={`f-${f.key}`}>{f.label}</label>
-              <textarea id={`f-${f.key}`} rows={f.rows} value={data.fields[f.key] ?? ''} onChange={(e) => setField(f.key, e.target.value)} />
-              {f.hint && <p className="hint">{f.hint}</p>}
-              {f.confirmable && data.fields[f.key]?.trim() && (
-                <label className="confirm">
-                  <input type="checkbox" checked={data.confirmations[f.key] === true} onChange={(e) => setConfirmed(f.key, e.target.checked)} />
-                  I confirm this is accurate. Nothing here is strengthened or embellished for me.
-                </label>
-              )}
-            </div>
-          ))}
-          {fieldErrors.data && <p className="field-error">{fieldErrors.data.join(' ')}</p>}
-        </section>
-
-        <aside className="editor-side stack-4">
-          <section className="card">
-            <div className="row">
-              <h3 className="section-heading">Summary used by campaigns</h3>
-              <div className="grow" />
-              <Badge>From your fields</Badge>
-            </div>
-            {summary ? <p className="summary">{summary}</p> : <p className="muted-small">Fill in the fields to build the summary.</p>}
-            <p className="hint">
-              Your own words, joined together — nothing is reworded. When AI features arrive, this is the context sent to
-              Gemini; nothing else from your account is.
-            </p>
-          </section>
-
-          <section className="card">
-            <h3 className="section-heading">What is confirmed</h3>
-            <ul className="plain-list stack-2 small">
-              <li>
-                <strong className="text-success">Confirmed by you</strong> — {state.confirmed.length ? state.confirmed.join(', ') : 'nothing yet'}
-              </li>
-              <li>
-                <strong className="text-warning">Awaiting confirmation</strong> — {state.awaiting.length ? state.awaiting.join(', ') : 'none'}
-              </li>
-              {state.missing.length > 0 && (
-                <li className="muted-small">Not provided: {state.missing.join(', ')}. Missing facts stay missing rather than being filled in.</li>
-              )}
-            </ul>
-            <p className="hint">
-              This version will be saved as <strong>{confirmed ? 'confirmed' : 'not confirmed'}</strong>.
-            </p>
-          </section>
-        </aside>
       </div>
     </div>
   )
