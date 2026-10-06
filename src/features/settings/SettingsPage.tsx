@@ -2,6 +2,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { config } from '../../lib/config'
 import { useAuth } from '../auth/AuthProvider'
 import { useShell } from '../shell/ShellContext'
+import { ThemeChoiceGroup } from '../shell/ThemeToggle'
 
 const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 const AUTH_LABEL = { supabase: 'Supabase', dev: 'Development sign-in (local only)', guest: 'Guest (demo mode)' }
@@ -17,6 +18,12 @@ export function SettingsPage() {
         title="Settings"
         subtitle="Account and deployment facts. Editable research defaults arrive with campaigns (M2)."
       />
+
+      <section className="card stack-3">
+        <h3 className="section-heading">Appearance</h3>
+        <p className="muted-small">Saved in this browser. System follows your device's light or dark setting.</p>
+        <ThemeChoiceGroup />
+      </section>
 
       <section className="card stack-3">
         <h3 className="section-heading">Account</h3>

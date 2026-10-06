@@ -6,6 +6,7 @@ import type { Capabilities, Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useAuth } from '../auth/AuthProvider'
 import { ShellContext } from './ShellContext'
+import { ThemeToggle } from './ThemeToggle'
 import {
   aiModeLabel,
   API_STATUS_LABELS,
@@ -383,6 +384,7 @@ export function AppShell() {
                 {aiMode.text}
               </span>
             )}
+            <ThemeToggle />
             <div className="account" ref={menuRef}>
               <button
                 ref={avatarRef}
