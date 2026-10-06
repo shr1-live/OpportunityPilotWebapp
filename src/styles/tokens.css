@@ -1,98 +1,113 @@
-/* OpportunityPilot — design tokens (redesign, Oct 2026)
- * Replaces src/styles/tokens.css. Contrast ratios below are measured against
- * the surface each token is used on, not assumed. The chart palette was
- * checked with a six-check validator (see --op-c1..c4 below), not eyeballed.
+/* OpportunityPilot — design tokens, light + dark (Oct 2026)
+ * Replaces src/styles/tokens.css.
+ *
+ * Dark is a SELECTED palette, not an inversion. Surfaces get lighter as they come
+ * forward, the action colour is brightened so it still clears 4.5:1, and the chart
+ * hues were re-run through a validator against the dark surface rather than reused.
+ * Contrast figures in the comments are measured, not assumed.
+ *
+ * Switching: set data-theme="light" | "dark" on <html>. With nothing set, the system
+ * preference wins. See the no-flash snippet at the bottom of this file.
  */
 
 :root {
-  /* ---- surfaces ------------------------------------------------------- */
-  --op-bg: #f4f6f9;            /* app canvas */
-  --op-surface: #ffffff;       /* panels, tables */
-  --op-panel-head: #fbfcfd;    /* panel header strip, table head, footers */
-  --op-nav: #101e30;           /* left rail */
-  --op-nav-active: #1b2f49;    /* rail active item */
+  color-scheme: light;
+
+  /* surfaces */
+  --op-bg: #f4f6f9;
+  --op-surface: #ffffff;
+  --op-panel-head: #fbfcfd;
+  --op-raised: #ffffff;
+  --op-nav: #101e30;
+  --op-nav-active: #1b2f49;
   --op-nav-border: #22364f;
+  --op-nav-ink: #a2b4c8;        /* 7.3:1 on --op-nav */
+  --op-nav-label: #6b8099;
 
-  /* ---- ink ------------------------------------------------------------ */
-  --op-ink: #16253a;           /* body + headings */
-  --op-muted: #5a6b80;         /* labels, secondary — 5.6:1 on white */
-  --op-faint: #8395a8;         /* eyebrows, axis ticks — 3.3:1, NEVER body text */
-  --op-nav-ink: #a2b4c8;       /* rail inactive — 7.3:1 on --op-nav */
-  --op-nav-label: #6b8099;     /* rail group labels */
+  /* ink */
+  --op-ink: #16253a;            /* 13.9:1 on surface */
+  --op-muted: #5a6b80;          /* 6.0:1  on surface */
+  --op-faint: #8395a8;          /* 3.4:1  — axis ticks and eyebrow labels ONLY, never body */
 
-  /* ---- lines ---------------------------------------------------------- */
-  --op-line: #dfe5ec;          /* panel border */
-  --op-hair: #eef2f6;          /* row divider, panel head divider */
-  --op-field-border: #c9d4e0;  /* inputs, secondary buttons */
+  /* lines */
+  --op-line: #dfe5ec;
+  --op-hair: #eef2f6;
+  --op-field-border: #c9d4e0;
+  --op-field-bg: #ffffff;
 
-  /* ---- action --------------------------------------------------------- */
-  --op-primary: #087f72;       /* 4.9:1 on white; white text on it passes */
+  /* action */
+  --op-primary: #087f72;        /* 4.9:1 on surface; white text on it passes */
+  --op-on-primary: #ffffff;
   --op-primary-hover: #06685e;
   --op-primary-tint: #e9f4f2;
-  --op-primary-tint-strong: #f3fbf9;
+  --op-primary-tint-border: #bfe3dd;
   --op-on-primary-tint: #065f55;
+  --op-focus: #087f72;
 
-  /* ---- status: always paired with words, never colour alone ----------- */
-  --op-success: #13603a;  --op-success-tint: #e6f3ea;
-  --op-warning: #7a4f00;  --op-warning-tint: #fbf1dc;
-  --op-warning-banner: #fdf7e8; --op-warning-banner-border: #f0dfb4;
-  --op-danger:  #8f2129;  --op-danger-tint:  #fbeaec;
-  --op-neutral-tint: #edf1f6; --op-on-neutral-tint: #3b4d63;
-  --op-indigo-tint: #e8eefa;  --op-on-indigo-tint: #27478a;
+  /* status — always paired with words, never colour alone */
+  --op-neutral-tint: #edf1f6;  --op-on-neutral-tint: #3b4d63;
+  --op-teal-tint:    #e4f2f0;  --op-on-teal-tint:    #065f55;
+  --op-green-tint:   #e6f3ea;  --op-on-green-tint:   #13603a;
+  --op-amber-tint:   #fbf1dc;  --op-on-amber-tint:   #7a4f00;
+  --op-danger-tint:  #fbeaec;  --op-on-danger-tint:  #8f2129;
+  --op-indigo-tint:  #e8eefa;  --op-on-indigo-tint:  #27478a;
 
-  /* ---- generated text: must never share styling with evidence --------- */
-  --op-ai-surface: #f5f3fa;
+  /* banners */
+  --op-banner-bg: #fdf7e8;
+  --op-banner-border: #f0dfb4;
+  --op-banner-ink: #6f4a00;
+  --op-banner-icon: #8a5a00;
+
+  /* generated text — must never share styling with source evidence */
+  --op-ai-bg: #f5f3fa;
   --op-ai-border: #ddd6ee;
   --op-ai-ink: #2f2a4d;
   --op-ai-badge: #4b3f86;
 
-  /* ---- workspace accents ---------------------------------------------- */
+  /* workspace accents */
   --op-ws-candidate: #00897c;
   --op-ws-sales: #3159a8;
 
-  /* ---- chart palette --------------------------------------------------
-   * Categorical, fixed order, never cycled. Validated against #ffffff:
-   *   lightness band PASS · chroma floor PASS
-   *   CVD separation PASS (worst adjacent pair ΔE 10.4, protan)
-   *   normal-vision floor PASS (19.3) · contrast ≥3:1 PASS
-   * A 5th series folds into "Other" or becomes small multiples. */
-  --op-c1: #00897c;   /* teal   — primary series, candidate */
-  --op-c2: #a66400;   /* amber  */
-  --op-c3: #3159a8;   /* indigo — sales */
-  --op-c4: #9b3a6a;   /* plum   */
+  /* chart — categorical, fixed order, never cycled.
+     Validated against #ffffff: lightness band, chroma floor, CVD separation
+     (worst adjacent pair dE 10.4 protan), normal-vision floor (19.3), contrast >= 3:1. */
+  --op-c1: #00897c;
+  --op-c2: #a66400;
+  --op-c3: #3159a8;
+  --op-c4: #9b3a6a;
+  --op-chart-track: #f1f4f8;
+  --op-chart-grid: #eef2f6;
+  --op-skeleton: #e9eef4;
+  --op-overlay: rgba(16, 30, 48, 0.46);
 
-  /* Sequential: one hue, light → dark. Never a rainbow. */
+  /* sequential — one hue, light to dark. Never a rainbow. */
   --op-seq-1: #d9ece9;
   --op-seq-2: #aedad4;
   --op-seq-3: #7fc5bc;
   --op-seq-4: #1c9589;
   --op-seq-5: #04776c;
 
-  --op-chart-grid: #eef2f6;
-  --op-chart-track: #f1f4f8;   /* the unfilled part of a bar */
-
-  /* ---- shape ---------------------------------------------------------- */
-  --op-radius: 8px;            /* panels */
-  --op-radius-control: 7px;    /* buttons, inputs */
+  /* shape */
+  --op-radius: 8px;
+  --op-radius-control: 7px;
   --op-radius-chip: 5px;
 
-  /* ---- type ----------------------------------------------------------- */
+  /* type */
   --op-font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --op-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  --op-text-page: 19px;        /* 600 / -0.02em  — page heading in content */
-  --op-text-screen: 15.5px;    /* 600            — top bar title */
-  --op-text-metric: 25px;      /* 600 / -0.025em / tabular */
+  --op-text-page: 19px;
+  --op-text-screen: 15.5px;
+  --op-text-metric: 25px;
   --op-text-body: 12.5px;
   --op-text-meta: 11.5px;
   --op-text-micro: 10.5px;
-  --op-text-label: 10.5px;     /* 700 / 0.09em / uppercase — panel labels */
+  --op-text-label: 10.5px;
 
-  /* ---- spacing, 4 / 8 ------------------------------------------------- */
+  /* spacing, 4 / 8 */
   --op-space-1: 4px;  --op-space-2: 8px;  --op-space-3: 12px;
   --op-space-4: 16px; --op-space-5: 20px; --op-space-6: 24px;
 
-  /* ---- layout --------------------------------------------------------- */
+  /* layout */
   --op-nav-width: 236px;
   --op-nav-width-collapsed: 60px;
   --op-nav-drawer-breakpoint: 860px;
@@ -101,31 +116,193 @@
   --op-row-height: 36px;
 }
 
-/* Numbers compared down a column are always tabular. */
-.op-numeric,
-.op-metric,
-td.op-num { font-variant-numeric: tabular-nums; }
+/* ---------------------------------------------------------------- dark ---
+ * Same token names, re-declared. No component ever knows which scheme it is in.
+ */
 
-/* A bar's data end is rounded, its baseline end is square. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --op-bg: #0d1520;
+  --op-surface: #141f2e;
+  --op-panel-head: #182537;
+  --op-raised: #1a2739;
+  --op-nav: #0a1019;
+  --op-nav-active: #1d2f49;
+  --op-nav-border: #22364f;
+  --op-nav-ink: #a9bacd;
+  --op-nav-label: #7389a3;
+
+  --op-ink: #e6edf5;            /* 12.6:1 on surface */
+  --op-muted: #9aabbf;          /* 7.1:1  on surface */
+  --op-faint: #8298b0;          /* 5.6:1  — clears body text in dark, unlike light */
+
+  --op-line: #26344a;
+  --op-hair: #1e2b3d;
+  --op-field-border: #33425a;
+  --op-field-bg: #0f1927;
+
+  --op-primary: #2fb5a4;        /* 6.6:1 on surface */
+  --op-on-primary: #06231f;     /* dark ink on a bright button, not white */
+  --op-primary-hover: #4ac6b6;
+  --op-primary-tint: #10322e;
+  --op-primary-tint-border: #1d5750;
+  --op-on-primary-tint: #7fd9cc;
+  --op-focus: #4ac6b6;
+
+  --op-neutral-tint: #1e2b3d;  --op-on-neutral-tint: #b3c2d2;
+  --op-teal-tint:    #10322e;  --op-on-teal-tint:    #7fd9cc;
+  --op-green-tint:   #11301f;  --op-on-green-tint:   #72d6a0;
+  --op-amber-tint:   #33260f;  --op-on-amber-tint:   #e4ae55;
+  --op-danger-tint:  #36181c;  --op-on-danger-tint:  #f2929a;
+  --op-indigo-tint:  #1a2742;  --op-on-indigo-tint:  #97b1f2;
+
+  --op-banner-bg: #2b2210;
+  --op-banner-border: #4a3a16;
+  --op-banner-ink: #e8c37a;
+  --op-banner-icon: #e2ad52;
+
+  --op-ai-bg: #1e1b2e;
+  --op-ai-border: #342d52;
+  --op-ai-ink: #cfc8ea;
+  --op-ai-badge: #8a7ad0;
+
+  /* re-validated against #141f2e: all six checks pass,
+     worst adjacent pair dE 9.2 protan / 17.7 normal vision */
+  --op-c1: #1fa392;
+  --op-c2: #c08324;
+  --op-c3: #5b80d4;
+  --op-c4: #c46a99;
+  --op-chart-track: #1c2839;
+  --op-chart-grid: #1e2b3d;
+  --op-skeleton: #1e2b3d;
+  --op-overlay: rgba(3, 8, 14, 0.62);
+
+  --op-seq-1: #11332f;
+  --op-seq-2: #15534a;
+  --op-seq-3: #1a7568;
+  --op-seq-4: #1fa392;
+  --op-seq-5: #4ac6b6;
+}
+
+/* System preference, only when the user has not chosen explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --op-bg: #0d1520;
+    --op-surface: #141f2e;
+    --op-panel-head: #182537;
+    --op-raised: #1a2739;
+    --op-nav: #0a1019;
+    --op-nav-active: #1d2f49;
+    --op-nav-border: #22364f;
+    --op-nav-ink: #a9bacd;
+    --op-nav-label: #7389a3;
+
+    --op-ink: #e6edf5;
+    --op-muted: #9aabbf;
+    --op-faint: #8298b0;
+
+    --op-line: #26344a;
+    --op-hair: #1e2b3d;
+    --op-field-border: #33425a;
+    --op-field-bg: #0f1927;
+
+    --op-primary: #2fb5a4;
+    --op-on-primary: #06231f;
+    --op-primary-hover: #4ac6b6;
+    --op-primary-tint: #10322e;
+    --op-primary-tint-border: #1d5750;
+    --op-on-primary-tint: #7fd9cc;
+    --op-focus: #4ac6b6;
+
+    --op-neutral-tint: #1e2b3d;  --op-on-neutral-tint: #b3c2d2;
+    --op-teal-tint:    #10322e;  --op-on-teal-tint:    #7fd9cc;
+    --op-green-tint:   #11301f;  --op-on-green-tint:   #72d6a0;
+    --op-amber-tint:   #33260f;  --op-on-amber-tint:   #e4ae55;
+    --op-danger-tint:  #36181c;  --op-on-danger-tint:  #f2929a;
+    --op-indigo-tint:  #1a2742;  --op-on-indigo-tint:  #97b1f2;
+
+    --op-banner-bg: #2b2210;
+    --op-banner-border: #4a3a16;
+    --op-banner-ink: #e8c37a;
+    --op-banner-icon: #e2ad52;
+
+    --op-ai-bg: #1e1b2e;
+    --op-ai-border: #342d52;
+    --op-ai-ink: #cfc8ea;
+    --op-ai-badge: #8a7ad0;
+
+    --op-c1: #1fa392;
+    --op-c2: #c08324;
+    --op-c3: #5b80d4;
+    --op-c4: #c46a99;
+    --op-chart-track: #1c2839;
+    --op-chart-grid: #1e2b3d;
+    --op-skeleton: #1e2b3d;
+    --op-overlay: rgba(3, 8, 14, 0.62);
+
+    --op-seq-1: #11332f;
+    --op-seq-2: #15534a;
+    --op-seq-3: #1a7568;
+    --op-seq-4: #1fa392;
+    --op-seq-5: #4ac6b6;
+  }
+}
+
+/* ------------------------------------------------------------- basics --- */
+body {
+  margin: 0;
+  font-family: var(--op-font);
+  color: var(--op-ink);
+  background: var(--op-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--op-focus);
+  outline-offset: 2px;
+}
+
+.op-numeric, .op-metric, td.op-num { font-variant-numeric: tabular-nums; }
 .op-bar-fill { border-radius: 0 4px 4px 0; }
 
-/* Any horizontal scroll container must be position: relative — a lesson
- * already paid for in this codebase. */
+/* Any horizontal scroll container must be positioned — a lesson already paid for. */
 .table-scroll { position: relative; overflow-x: auto; }
 
-/* Single-column mobile grids need minmax(0, 1fr) or wide cells overflow. */
 @media (max-width: 860px) {
   .stat-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
+
+/* ----------------------------------------------------------------------
+ * No-flash theme boot. Put this INLINE in index.html <head>, before any CSS,
+ * so a dark-mode user never sees a white flash:
+ *
+ * <script>
+ *   (function () {
+ *     try {
+ *       var t = localStorage.getItem("op-theme");
+ *       if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+ *     } catch (e) {}
+ *   })();
+ * </script>
+ *
+ * The toggle then writes localStorage and sets the same attribute. Leaving it
+ * unset is a valid third state: "follow the system".
+ * ------------------------------------------------------------------- */
 
 /* =====================================================================
  * Everything above this line is ../opportunitypilot-ui/tokens.css
- * (design v2), copied verbatim. Do not edit it here; change the design
- * source first, then copy.
+ * (design rounds 3 + 4, light + dark), copied verbatim. Do not edit it
+ * here; change the design source first, then copy.
  * ===================================================================== */
 
 /* ---- App additions: values the v2 artboards use that its tokens.css
@@ -165,10 +342,32 @@ td.op-num { font-variant-numeric: tabular-nums; }
   --op-space-8: 32px;
 }
 
-/* ---- Legacy aliases — TEMPORARY. Old token names (design v1) mapped to
- * v2 values so pages not yet restyled keep working. R2–R4 replace these
- * names in app.css as each page is restyled; delete this block when no
- * rule uses them. Tracked in OQ-FE-041. ------------------------------- */
+/* App additions, dark values. The rail is dark in both schemes, so rail tokens keep their values. */
+:root[data-theme="dark"] {
+  --op-warning-icon: #e2ad52;
+  --op-danger-border: #5a2a30;
+  --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.5);
+  --op-shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45);
+  --op-shadow-sticky: 0 -4px 12px rgb(0 0 0 / 0.35);
+  --op-scrim: rgb(3 8 14 / 0.62);
+  --op-primary-wash: rgb(47 181 164 / 0.18);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --op-warning-icon: #e2ad52;
+    --op-danger-border: #5a2a30;
+    --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.5);
+    --op-shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45);
+    --op-shadow-sticky: 0 -4px 12px rgb(0 0 0 / 0.35);
+    --op-scrim: rgb(3 8 14 / 0.62);
+    --op-primary-wash: rgb(47 181 164 / 0.18);
+  }
+}
+
+/* ---- Legacy aliases — TEMPORARY. Old token names (design v1 and v2) mapped to
+ * round-3 tokens so pages not yet restyled keep working, in light and dark.
+ * Every alias points at a token that has a dark value. R13 removes this block
+ * once no rule uses these names (OQ-FE-041). ----------------------------- */
 :root {
   --op-background: var(--op-bg);
   --op-surface-muted: var(--op-panel-head);
@@ -180,10 +379,18 @@ td.op-num { font-variant-numeric: tabular-nums; }
   --op-border: var(--op-line);
   --op-border-strong: var(--op-field-border);
   --op-border-subtle: var(--op-hair);
-  --op-on-success-tint: var(--op-success);
-  --op-warning-border: var(--op-warning-banner-border);
-  --op-on-warning-tint: var(--op-warning);
-  --op-on-danger-tint: var(--op-danger);
+  --op-success: var(--op-on-green-tint);
+  --op-warning: var(--op-on-amber-tint);
+  --op-danger: var(--op-on-danger-tint);
+  --op-on-success-tint: var(--op-on-green-tint);
+  --op-on-warning-tint: var(--op-on-amber-tint);
+  --op-warning-banner: var(--op-banner-bg);
+  --op-warning-banner-border: var(--op-banner-border);
+  --op-warning-border: var(--op-banner-border);
+  --op-success-tint: var(--op-green-tint);
+  --op-warning-tint: var(--op-amber-tint);
+  --op-primary-tint-strong: var(--op-primary-tint);
+  --op-ai-surface: var(--op-ai-bg);
   --op-ai-text: var(--op-ai-ink);
   --op-text-section: 13px;
   --op-text-table: var(--op-text-body);
