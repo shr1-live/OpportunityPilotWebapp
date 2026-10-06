@@ -43,7 +43,7 @@ export function ThemeChoiceGroup() {
   const [choice, setChoice] = useTheme()
   return (
     <fieldset className="theme-choices">
-      <legend className="muted-small">Appearance</legend>
+      <legend className="sr-only">Theme</legend>
       {THEME_CHOICES.map((c) => (
         <label key={c} className={`theme-choice ${c === choice ? 'theme-choice-on' : ''}`}>
           <input type="radio" name="theme" value={c} checked={c === choice} onChange={() => setChoice(c)} />
