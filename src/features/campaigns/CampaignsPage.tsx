@@ -1,47 +1,75 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { PageHeader } from '../../components/PageHeader'
-import { LoadingState } from '../../components/States'
+import { EmptyState, LoadingState } from '../../components/States'
 import type { CampaignSummary, ProfileSummary } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { formatWhen } from '../applications/applicationStatus'
 import { JOB_STATE_LABELS } from '../research/researchModel'
-import { MODE_LABELS } from './campaignModel'
+import { campaignFilterCounts, filterCampaigns, isRunning, MODE_LABELS, type CampaignModeFilter } from './campaignModel'
 
 const FLOW = [
   { title: 'Goal and mode', text: 'Pick a profile, choose Jobs or Customers and describe what you are after.' },
   { title: 'Filters', text: 'Enter the skills, places, industries and exclusions a match must meet.' },
-  { title: 'Sources', text: 'Paste postings, add public URLs or feeds, or import a CSV.' },
+  { title: 'Sources', text: 'Greenhouse or Lever boards, public URLs, feeds, a CSV or pasted text.' },
   { title: 'Review and run', text: 'Check the summary and queue a research run. Saving never runs it.' },
 ]
 
+/** Design round 3 `Campaigns`: mode chips, one row per campaign with its latest run and next action. */
 export function CampaignsPage() {
   const campaigns = useApi<CampaignSummary[]>('/api/v1/campaigns')
   const profiles = useApi<ProfileSummary[]>('/api/v1/profiles')
+  const [filter, setFilter] = useState<CampaignModeFilter>('all')
   const noProfiles = profiles.data?.length === 0
+  const counts = campaignFilterCounts(campaigns.data ?? [])
+  const rows = filterCampaigns(campaigns.data ?? [], filter)
+  const running = (campaigns.data ?? []).filter(isRunning).length
 
   return (
-    <div className="page stack-6">
+    <div className="page page-wide stack-4">
       <PageHeader
         title="Campaigns"
-        subtitle="A campaign is one search: a profile, a mode, your criteria and the sources to read. Each run ranks what it finds against those criteria."
+        subtitle="A campaign is one search: a mode, the criteria it scores against, and the sources it reads."
         actions={
-          <Link className="btn btn-primary" to="/campaigns/new">
-            New campaign
-          </Link>
+          campaigns.data && campaigns.data.length > 0 ? (
+            <div className="chips" role="group" aria-label="Show campaigns by mode">
+              {(['all', 'Job', 'Customer'] as const).map((f) => (
+                <button key={f} type="button" className={`chip ${filter === f ? 'chip-on' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>
+                  {f === 'all' ? 'All' : MODE_LABELS[f]} {counts[f]}
+                </button>
+              ))}
+            </div>
+          ) : undefined
         }
       />
 
-      {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
+      {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} what="your campaigns" />}
       {campaigns.loading && !campaigns.data && <LoadingState label="Loading campaigns…" waking={campaigns.waking} rows={3} />}
 
       {campaigns.data && campaigns.data.length === 0 && (
-        <div className="empty">
-          <div className="empty-title">No campaigns yet</div>
-          <p className="empty-text">
-            Nothing is researched until you build a campaign and queue a run. It takes four steps:
-          </p>
+        <EmptyState
+          icon="◎"
+          title="No campaigns yet"
+          actions={
+            noProfiles ? (
+              <Link className="btn btn-primary btn-sm" to="/profiles/new">
+                Add a profile first
+              </Link>
+            ) : (
+              <>
+                <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+                  New campaign
+                </Link>
+                <Link className="btn btn-secondary btn-sm" to="/">
+                  Try a sample run
+                </Link>
+              </>
+            )
+          }
+        >
+          <p>Nothing is researched until you build a campaign and queue a run. It takes four steps:</p>
           <ol className="flow-steps">
             {FLOW.map((s) => (
               <li key={s.title}>
@@ -49,26 +77,22 @@ export function CampaignsPage() {
               </li>
             ))}
           </ol>
-          {noProfiles ? (
-            <>
-              <p className="empty-text">A campaign judges fit against one of your profiles, so add a profile first.</p>
-              <Link className="btn btn-primary" to="/profiles/new">
-                Add a profile
-              </Link>
-            </>
-          ) : (
-            <Link className="btn btn-primary" to="/campaigns/new">
-              New campaign
-            </Link>
-          )}
-        </div>
+          {noProfiles && <p>A campaign judges fit against one of your profiles, so add a profile first.</p>}
+        </EmptyState>
       )}
 
       {campaigns.data && campaigns.data.length > 0 && (
-        <section className="card table-card" aria-labelledby="campaigns-heading">
-          <h3 id="campaigns-heading" className="sr-only">
-            Your campaigns
-          </h3>
+        <section className="panel" aria-labelledby="campaigns-heading">
+          <header className="panel-head">
+            <h3 id="campaigns-heading" className="eyebrow">
+              {filter === 'all' ? 'All campaigns' : `${MODE_LABELS[filter]} campaigns`}
+              {running > 0 && ` · ${running} running`}
+            </h3>
+            <div className="grow" />
+            <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+              + New campaign
+            </Link>
+          </header>
           <div className="table-scroll" role="region" aria-labelledby="campaigns-heading" tabIndex={0}>
             <table className="table">
               <caption className="sr-only">Your campaigns, newest first.</caption>
@@ -76,59 +100,100 @@ export function CampaignsPage() {
                 <tr>
                   <th scope="col">Campaign</th>
                   <th scope="col">Mode</th>
-                  <th scope="col">Sources</th>
-                  <th scope="col">Opportunities</th>
+                  <th scope="col" className="op-num">Sources</th>
+                  <th scope="col" className="op-num">Found</th>
+                  <th scope="col">Suggest at</th>
                   <th scope="col">Last run</th>
-                  <th scope="col">Updated</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">
+                    <span className="sr-only">Next step</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {campaigns.data.map((c) => (
-                  <tr key={c.id}>
-                    <td className="table-role">
-                      <Link to={`/campaigns/${c.id}/edit`}>{c.name}</Link>
-                      {c.goal && <div className="muted-small clamp-2">{c.goal}</div>}
-                    </td>
-                    <td>
-                      <Badge>{MODE_LABELS[c.mode] ?? c.mode}</Badge>
-                    </td>
-                    <td className="op-numeric">
-                      <Link to={`/campaigns/${c.id}/edit?step=3`}>
-                        {c.sourceCount}
-                        <span className="sr-only"> sources for {c.name}</span>
-                      </Link>
-                    </td>
-                    <td className="op-numeric">
-                      <Link to={`/campaigns/${c.id}/opportunities`}>
-                        {c.opportunityCount}
-                        <span className="sr-only"> opportunities in {c.name}</span>
-                      </Link>
-                    </td>
-                    <td>
-                      {c.lastJob ? (
-                        <Link to={`/research/${c.lastJob.id}`} className="row wrap">
-                          <Badge tone={JOB_STATE_LABELS[c.lastJob.state]?.tone}>
-                            {JOB_STATE_LABELS[c.lastJob.state]?.text ?? c.lastJob.state}
-                          </Badge>
-                          {c.lastJob.finishedAt && (
-                            <time className="muted-small" dateTime={c.lastJob.finishedAt}>
-                              {formatWhen(c.lastJob.finishedAt)}
-                            </time>
-                          )}
+                {rows.map((c) => {
+                  const state = c.lastJob ? JOB_STATE_LABELS[c.lastJob.state] : undefined
+                  return (
+                    <tr key={c.id}>
+                      <td className="table-role">
+                        <Link to={`/campaigns/${c.id}/edit`}>{c.name}</Link>
+                        {c.goal && <div className="muted-small clamp-2">{c.goal}</div>}
+                      </td>
+                      <td>
+                        <Badge tone={c.mode === 'Job' ? 'success' : 'primary'}>{MODE_LABELS[c.mode] ?? c.mode}</Badge>
+                      </td>
+                      <td className="op-num">
+                        <Link to={`/campaigns/${c.id}/edit?step=3`}>
+                          {c.sourceCount}
+                          <span className="sr-only"> sources for {c.name}</span>
                         </Link>
-                      ) : (
-                        <span className="muted-small">Never run</span>
-                      )}
-                    </td>
-                    <td className="table-when op-numeric">
-                      <time dateTime={c.updatedAt}>{formatWhen(c.updatedAt)}</time>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="op-num">
+                        <Link to={`/campaigns/${c.id}/opportunities`}>
+                          {c.opportunityCount}
+                          <span className="sr-only"> opportunities in {c.name}</span>
+                        </Link>
+                      </td>
+                      <td className="muted-small">{c.mode === 'Job' ? (c.autoSuggestMinScore ?? 'off') : '—'}</td>
+                      <td className="table-when muted-small">
+                        {c.lastJob ? (
+                          c.lastJob.finishedAt ? <time dateTime={c.lastJob.finishedAt}>{formatWhen(c.lastJob.finishedAt)}</time> : 'In progress'
+                        ) : (
+                          'Never run'
+                        )}
+                      </td>
+                      <td>
+                        {c.lastJob ? <Badge tone={state?.tone}>{state?.text ?? c.lastJob.state}</Badge> : <Badge>Not run</Badge>}
+                      </td>
+                      <td>
+                        {c.lastJob && isRunning(c) ? (
+                          <Link to={`/research/${c.lastJob.id}`}>Progress</Link>
+                        ) : (
+                          <Link to={`/campaigns/${c.id}/edit?step=4`}>Run now</Link>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         </section>
+      )}
+
+      {campaigns.data && campaigns.data.length > 0 && (
+        <div className="panel-grid-2">
+          <section className="panel">
+            <header className="panel-head">
+              <h3 className="eyebrow">Jobs campaigns feed Approvals</h3>
+            </header>
+            <div className="panel-body">
+              <p className="muted-small">
+                A Jobs campaign with a suggest threshold puts everything scoring at or above it into the approval queue. You approve
+                a batch; approved jobs become shortlisted and the agent (or you) applies.
+              </p>
+              <p className="flow-chips">
+                <span className="chip">Run</span>›<span className="chip chip-warn">Suggested</span>›<span className="chip chip-ok">You approve</span>›
+                <span className="chip">Applied</span>
+              </p>
+            </div>
+          </section>
+          <section className="panel">
+            <header className="panel-head">
+              <h3 className="eyebrow">Customers campaigns stop at the shortlist</h3>
+            </header>
+            <div className="panel-body">
+              <p className="muted-small">
+                A Customers campaign scores companies the same way, but the acting steps are not built. It ends with a shortlist
+                you can read and export.
+              </p>
+              <p className="flow-chips">
+                <span className="chip">Run</span>›<span className="chip">Qualified</span>›<span className="chip chip-ok">You shortlist</span>›
+                <span className="chip chip-off">Contact — not built yet</span>
+              </p>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   )

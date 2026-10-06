@@ -1072,3 +1072,43 @@ p { margin: 0; }
   .funnel li { grid-template-columns: 100px 40px minmax(0, 1fr); }
   .funnel-prev { display: none; }
 }
+
+/* ---- Campaigns list, round 3 ---- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 7px; font-size: var(--op-text-meta);
+  border: 1px solid var(--op-line); background: var(--op-surface); color: var(--op-ink); cursor: pointer;
+}
+.chip-on { border-color: var(--op-primary); background: var(--op-primary-tint); color: var(--op-on-primary-tint); font-weight: 600; }
+.flow-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--op-faint); }
+.flow-chips .chip { cursor: default; background: var(--op-panel-head); font-size: 11px; }
+.chip-warn { background: var(--op-amber-tint) !important; color: var(--op-on-amber-tint); border-color: transparent; }
+.chip-ok { background: var(--op-green-tint) !important; color: var(--op-on-green-tint); border-color: transparent; }
+.chip-off { color: var(--op-muted); }
+.panel .table-scroll .table th { white-space: nowrap; }
+.table .op-num { text-align: right; }
+
+/* ---- Campaign builder, round 3: compact stepper, step content as panels in a grid, sticky save bar ---- */
+.builder .stepper-kicker { display: none; }
+.builder .stepper-item { padding: 8px 12px; }
+.builder .stepper-done .stepper-num { background: transparent; color: var(--op-primary); font-weight: 700; }
+.builder-stage > .builder-body > .stack-4,
+.builder-stage > .stack-6 > section,
+.builder-stage > .stack-6 > dl {
+  background: var(--op-surface); border: 1px solid var(--op-line); border-radius: 10px; padding: 16px 18px;
+}
+.builder-stage > .stack-6 {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; align-items: start;
+}
+.builder-stage > .stack-6 > * { margin-top: 0; min-width: 0; }
+.builder-stage > .stack-6 > .run-grid, .builder-stage > .stack-6 > .hint { grid-column: 1 / -1; }
+.builder-stage > .stack-6 > dl.review-list { grid-column: 1 / -1; }
+.builder-body { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 14px; }
+.builder-side .panel-body { gap: 10px; }
+.mode-steps { list-style: none; margin: 0; counter-reset: ms; }
+.mode-steps li { counter-increment: ms; display: grid; grid-template-columns: 26px 1fr; column-gap: 8px; }
+.mode-steps li::before {
+  content: counter(ms); grid-row: span 2; display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--op-neutral-tint); color: var(--op-on-neutral-tint); font-size: 11px; font-weight: 700;
+}
+.builder-footer.save-bar { border-radius: 10px; border: 1px solid var(--op-line); }

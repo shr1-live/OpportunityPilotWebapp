@@ -477,3 +477,24 @@ export function draftProblems(draft: CampaignDraft, profileId: string, mode?: Su
   if (suggest) problems.push(suggest)
   return problems
 }
+
+/* ---- Campaigns list (design round 3) ---- */
+
+export type CampaignModeFilter = 'all' | 'Job' | 'Customer'
+
+export function filterCampaigns<T extends { mode: OpportunityMode }>(campaigns: T[], filter: CampaignModeFilter): T[] {
+  return filter === 'all' ? campaigns : campaigns.filter((c) => c.mode === filter)
+}
+
+export function campaignFilterCounts(campaigns: { mode: OpportunityMode }[]): Record<CampaignModeFilter, number> {
+  return {
+    all: campaigns.length,
+    Job: campaigns.filter((c) => c.mode === 'Job').length,
+    Customer: campaigns.filter((c) => c.mode === 'Customer').length,
+  }
+}
+
+/** The latest run is still queued or running, so the row offers "Progress" instead of "Run now". */
+export function isRunning(c: { lastJob: { state: string } | null }): boolean {
+  return c.lastJob?.state === 'Queued' || c.lastJob?.state === 'Running'
+}

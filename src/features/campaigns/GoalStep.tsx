@@ -26,6 +26,20 @@ interface Props {
   onEditCriteria: () => void
 }
 
+const JOB_STEPS = [
+  ['Read every source you add', 'Postings are de-duplicated before anything is scored.'],
+  ['Score against your criteria', 'Hard filters exclude. Scored criteria give points. Unknown never passes.'],
+  ['Suggest what clears the threshold', 'Those land in Approvals, not in your inbox.'],
+  ['Apply only after you approve', 'LinkedIn and Naukri go through the local agent; the rest you open and apply yourself.'],
+]
+
+const CUSTOMER_STEPS = [
+  ['Read every source you add', 'CSV rows, public pages, feeds or pasted lists — de-duplicated first.'],
+  ['Score against your criteria', 'Industries, problems and buying signals, each with the sentence that matched.'],
+  ['Shortlist with the evidence', 'You pick which companies to keep; nothing is contacted.'],
+  ['Contact — not built yet', 'Proposals and email have no API yet, so the builder does not offer them.'],
+]
+
 export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, fieldErrors, onEditCriteria }: Props) {
   const lines = criteriaSummary(mode, draft.criteria)
   const profile = profiles.data?.find((p) => p.id === profileId)
@@ -143,7 +157,22 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
         </div>
       </div>
 
-      <aside className="builder-side card-muted stack-3" aria-labelledby="criteria-panel-heading">
+      <aside className="builder-side stack-4" aria-labelledby="criteria-panel-heading">
+        <section className="panel">
+          <header className="panel-head">
+            <h4 className="eyebrow">What this mode will do</h4>
+          </header>
+          <ol className="mode-steps panel-body">
+            {(mode === 'Job' ? JOB_STEPS : CUSTOMER_STEPS).map(([t, d]) => (
+              <li key={t}>
+                <strong>{t}</strong>
+                <span className="muted-small">{d}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+        <section className="panel">
+        <div className="panel-body">
         <div className="row wrap">
           <h4 id="criteria-panel-heading" className="section-heading">
             Criteria
@@ -170,6 +199,8 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
           {lines.length ? 'Edit criteria' : 'Enter criteria'}
         </button>
         <p className="hint">A criteria match is a research shortlist, not confirmed interest.</p>
+        </div>
+        </section>
       </aside>
     </div>
   )

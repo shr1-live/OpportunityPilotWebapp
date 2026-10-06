@@ -24,11 +24,12 @@ interface Props {
   draft: CampaignDraft
   mode: SupportedMode
   profile: ProfileSummary | undefined
+  profileLoading?: boolean
   dirty: boolean
   onEdit: (step: number) => void
 }
 
-export function ReviewStep({ campaign, draft, mode, profile, dirty, onEdit }: Props) {
+export function ReviewStep({ campaign, draft, mode, profile, profileLoading, dirty, onEdit }: Props) {
   const navigate = useNavigate()
   const sources = useApi<Source[]>(`/api/v1/campaigns/${campaign.id}/sources`)
   const jobs = useApi<ResearchJob[]>(`/api/v1/campaigns/${campaign.id}/research-jobs`)
@@ -68,7 +69,7 @@ export function ReviewStep({ campaign, draft, mode, profile, dirty, onEdit }: Pr
       <dl className="review-list">
         <div>
           <dt>Profile</dt>
-          <dd>{profile ? `${profile.name} (${profile.type})` : <span className="muted-small">Profile not found</span>}</dd>
+          <dd>{profile ? `${profile.name} (${profile.type})` : <span className="muted-small">{profileLoading ? 'Loading…' : 'Profile not found'}</span>}</dd>
           <dd className="review-edit muted-small">Fixed</dd>
         </div>
         <div>

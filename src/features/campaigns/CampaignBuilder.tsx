@@ -150,7 +150,7 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
   const conflict = error instanceof ApiError && error.status === 409
 
   return (
-    <div className="page stack-4">
+    <div className="page page-wide stack-4 builder">
       <PageHeader
         title={saved ? saved.name : 'New campaign'}
         badges={saved && <Badge>{MODE_LABELS[saved.mode]}</Badge>}
@@ -181,7 +181,7 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
                   onClick={() => goTo(n)}
                 >
                   <span className="stepper-num" aria-hidden="true">
-                    {n}
+                    {n < step ? '✓' : n}
                   </span>
                   <span className="stepper-text">
                     <span className="stepper-kicker">Step {n}</span>
@@ -214,8 +214,8 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
         </div>
       )}
 
-      <section className="card stack-4" aria-labelledby="builder-step-heading">
-        <h3 id="builder-step-heading" ref={headingRef} tabIndex={-1} className="section-heading builder-heading">
+      <section className="builder-stage" aria-labelledby="builder-step-heading">
+        <h3 id="builder-step-heading" ref={headingRef} tabIndex={-1} className="sr-only builder-heading">
           Step {step} · {STEPS[step - 1]}
         </h3>
         {step === 1 && (
@@ -233,18 +233,18 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
         {step === 2 && <FiltersStep draft={draft} setDraft={setDraft} mode={mode} fieldErrors={fieldErrors} />}
         {step === 3 && saved && <SourcesStep campaign={saved} />}
         {step === 4 && saved && (
-          <ReviewStep campaign={saved} draft={draft} mode={mode} profile={profile} dirty={changed} onEdit={goTo} />
+          <ReviewStep campaign={saved} draft={draft} mode={mode} profile={profile} profileLoading={!profiles.data} dirty={changed} onEdit={goTo} />
         )}
       </section>
 
-      <div className="builder-footer card">
+      <div className="builder-footer save-bar">
         {step > 1 && (
           <button type="button" className="btn btn-secondary" onClick={() => goTo(step - 1)}>
             Back
           </button>
         )}
         <p className="muted-small grow">
-          Saving a campaign does not run it.
+          Saving is not running. A run is queued only on step 4.
           {problems.length > 0 && needsSave && <span> To save: {problems.join(' ')}</span>}
         </p>
         <button
