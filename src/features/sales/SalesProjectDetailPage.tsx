@@ -8,7 +8,7 @@ import { api } from '../../lib/api'
 import type { SalesBid, SalesProject } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
-import { isBidFormValid, salesBidStateLabel, salesProjectStateLabel } from './salesModel'
+import { isBidFormValid, salesBidStateLabel, salesProjectStateLabel, salesProviderEvidence } from './salesModel'
 
 const EMPTY_BID = { amount: '', currency: 'USD', deliveryDays: '7', proposal: '' }
 
@@ -20,6 +20,7 @@ export function SalesProjectDetailPage() {
   const [editing, setEditing] = useState<SalesBid>()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()
+  const [notice, setNotice] = useState('')
 
   const formValid = isBidFormValid(form.amount, form.currency, form.deliveryDays, form.proposal)
 
@@ -86,6 +87,36 @@ export function SalesProjectDetailPage() {
     }
   }
 
+  async function startHandoff(bid: SalesBid) {
+    setBusy(true); setError(undefined); setNotice('')
+    try {
+      await api<SalesProject>(`/api/v1/sales/bids/${bid.id}/handoff`, { method: 'POST' })
+      setNotice('Manual handoff prepared. Open the provider, submit there, then confirm placement here.')
+      project.reload()
+    } catch (caught) { setError(caught as Error) }
+    finally { setBusy(false) }
+  }
+
+  async function copyProposal(bid: SalesBid) {
+    setError(undefined); setNotice('')
+    try {
+      await navigator.clipboard.writeText(bid.proposal)
+      setNotice(`Approved proposal version ${bid.version} copied. No provider action was performed.`)
+    } catch (caught) { setError(caught as Error) }
+  }
+
+  async function confirmPlacement(bid: SalesBid) {
+    setBusy(true); setError(undefined); setNotice('')
+    try {
+      await api<SalesProject>(`/api/v1/sales/bids/${bid.id}/confirm-placement`, {
+        method: 'POST', body: JSON.stringify({ version: bid.version, confirmed: true }),
+      })
+      setNotice('Bid placement recorded from your explicit manual confirmation.')
+      project.reload()
+    } catch (caught) { setError(caught as Error) }
+    finally { setBusy(false) }
+  }
+
   if (project.loading && !project.data) {
     return <div className="page"><LoadingState label="Loading project…" waking={project.waking} /></div>
   }
@@ -100,6 +131,7 @@ export function SalesProjectDetailPage() {
 
   const current = project.data
   const sourceUrl = safeHref(current.url)
+  const provider = salesProviderEvidence(current)
 
   return (
     <div className="page page-wide stack-4">
@@ -109,6 +141,7 @@ export function SalesProjectDetailPage() {
         badges={<Badge>{salesProjectStateLabel(current.state)}</Badge>}
         actions={<Link className="btn btn-secondary" to="/projects">Back to projects</Link>}
       />
+      {notice ? <p className="notice" role="status" aria-live="polite">{notice}</p> : null}
       {error ? <ErrorNotice error={error} onRetry={() => setError(undefined)} what="the bid" /> : null}
       <div className="panel-grid-2">
         <section className="panel stack-3">
@@ -116,6 +149,10 @@ export function SalesProjectDetailPage() {
           <div className="panel-body stack-2">
             <p>{current.description || 'No brief was entered.'}</p>
             {sourceUrl ? <a href={sourceUrl} target="_blank" rel="noopener noreferrer">Open source page<span className="sr-only"> (opens in a new tab)</span></a> : null}
+            {current.externalId ? <p className="muted-small">Provider ID: <code>{current.externalId}</code></p> : null}
+            {provider.connectsCost !== undefined && provider.connectsCost !== null ? <p><strong>{provider.connectsCost} Connects</strong> required at the time of import.</p> : null}
+            {provider.budget ? <p>Budget/rate: {provider.budget}</p> : null}
+            {provider.experienceLevel ? <p>Experience level: {provider.experienceLevel}</p> : null}
             <p className="muted-small">This manual slice never invents an amount, timeline, or claim.</p>
           </div>
         </section>
@@ -152,7 +189,7 @@ export function SalesProjectDetailPage() {
                   <td>{bid.amount.toLocaleString()} {bid.currency}</td>
                   <td>{bid.deliveryDays} days</td>
                   <td><Badge tone={bid.hasValidApproval ? 'success' : 'neutral'}>{salesBidStateLabel(bid.state)}</Badge></td>
-                  <td><div className="row wrap"><button className="btn btn-secondary btn-sm" type="button" disabled={busy} onClick={() => editBid(bid)}>Edit</button>{!bid.hasValidApproval && bid.state === 'Draft' ? <button className="btn btn-secondary btn-sm" type="button" disabled={busy} onClick={() => approveBid(bid.id, bid.version)}>Approve version {bid.version}</button> : null}</div></td>
+                  <td><div className="row wrap"><button className="btn btn-secondary btn-sm" type="button" disabled={busy || bid.state === 'Placed'} onClick={() => editBid(bid)}>Edit</button>{!bid.hasValidApproval && bid.state === 'Draft' ? <button className="btn btn-secondary btn-sm" type="button" disabled={busy} onClick={() => approveBid(bid.id, bid.version)}>Approve version {bid.version}</button> : null}{bid.hasValidApproval ? <><button className="btn btn-secondary btn-sm" type="button" disabled={busy} onClick={() => copyProposal(bid)}>Copy approved proposal</button><button className="btn btn-primary btn-sm" type="button" disabled={busy} onClick={() => startHandoff(bid)}>Prepare handoff</button></> : null}{current.state === 'ManualHandoff' && bid.hasValidApproval ? <button className="btn btn-primary btn-sm" type="button" disabled={busy} onClick={() => confirmPlacement(bid)}>Confirm placed manually</button> : null}</div></td>
                 </tr>
               ))}</tbody>
             </table>

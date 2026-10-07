@@ -258,7 +258,7 @@ describe('campaigns list', () => {
   it('filters and counts by mode', () => {
     expect(filterCampaigns(list, 'Job')).toHaveLength(2)
     expect(filterCampaigns(list, 'all')).toHaveLength(3)
-    expect(campaignFilterCounts(list)).toEqual({ all: 3, Job: 2, Customer: 1 })
+    expect(campaignFilterCounts(list)).toEqual({ all: 3, Job: 2, Customer: 1, Freelance: 0, Investor: 0, Partner: 0 })
   })
   it('knows when the latest run is still going', () => {
     expect(list.map(isRunning)).toEqual([true, false, false])

@@ -57,9 +57,9 @@ describe('NAV_GROUPS', () => {
     expect(NAV_GROUPS.map((g) => g.label)).toEqual([null, 'Find', 'Decide', 'Act', 'Track', 'Set up'])
   })
 
-  it('marks only the placeholder screens as not built', () => {
+  it('has no placeholder screens marked as not built', () => {
     const notBuilt = NAV_GROUPS.flatMap((g) => g.items).filter((i) => i.notBuilt).map((i) => i.to)
-    expect(notBuilt).toEqual(['/outreach', '/follow-ups'])
+    expect(notBuilt).toEqual([])
   })
 })
 
@@ -162,12 +162,12 @@ describe('workspace rails', () => {
     expect(navGroupsFor('candidate')).toBe(NAV_GROUPS)
   })
 
-  it('marks the sales destinations without an API as not built', () => {
+  it('marks all sales destinations as built', () => {
     const notBuilt = navGroupsFor('sales').flatMap((g) => g.items).filter((i) => i.notBuilt).map((i) => i.to)
-    expect(notBuilt).toEqual(expect.arrayContaining(['/outreach', '/follow-ups']))
-    expect(notBuilt).not.toContain('/projects')
-    expect(notBuilt).not.toContain('/proposals')
-    expect(notBuilt).not.toContain('/bids')
+    expect(notBuilt).toEqual([])
+    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/projects')
+    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/proposals')
+    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/bids')
   })
 
   it('finds the Sales group for sales-only paths', () => {

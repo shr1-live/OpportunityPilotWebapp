@@ -390,6 +390,8 @@ export interface OutreachDraft {
   channel: DraftChannel
   recipient: string | null
   recipientVerified: boolean
+  recipientSource: 'Evidence' | 'UserEntered'
+  recipientEvidenceId: string | null
   subject: string | null
   body: string
   version: number
@@ -415,6 +417,8 @@ export interface DraftListItem {
   channel: DraftChannel
   recipient: string | null
   recipientVerified: boolean
+  recipientSource: 'Evidence' | 'UserEntered'
+  recipientEvidenceId: string | null
   state: DraftState
   version: number
   updatedAt: string
@@ -442,7 +446,7 @@ export interface Suppression { id: string; recipient: string; reason: string; cr
 
 // ---------- Sales pipeline (OpportunityPilotWebApi/docs/SALES_CONTRACT.md) ----------
 
-export type SalesProjectSource = 'Freelancer' | 'TenderFeed' | 'PublicUrl' | 'Manual'
+export type SalesProjectSource = 'Upwork' | 'Freelancer' | 'TenderFeed' | 'PublicUrl' | 'Manual'
 export type SalesProjectState = 'New' | 'Shortlisted' | 'BidPrepared' | 'BidApproved' | 'BidPlaced' | 'ManualHandoff' | 'Dismissed'
 export type SalesBidState = 'Draft' | 'Approved' | 'Placed' | 'Failed'
 
@@ -471,6 +475,7 @@ export interface SalesProject {
   description: string | null
   url: string | null
   deadlineUtc: string | null
+  evidenceJson: string
   state: SalesProjectState
   version: number
   bids: SalesBid[]

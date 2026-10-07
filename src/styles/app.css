@@ -946,8 +946,15 @@ p { margin: 0; }
   .profiles2 { grid-template-columns: minmax(0, 1fr); margin: calc(-1 * var(--op-space-4)); }
   .profiles2-list { border-right: 0; border-bottom: 1px solid var(--op-line); }
   .profiles2-list-body { max-height: 220px; }
-  .editor-grid, .type-row { grid-template-columns: minmax(0, 1fr); }
+  .editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .type-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .type-row .type-option { padding: 10px; }
+  .type-row .muted-small { font-size: var(--op-text-micro); line-height: 1.35; }
   .profiles2-head, .profiles2-pad, .save-bar { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (max-width: 340px) {
+  .type-row { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---- Shared states (design round 3 `States`): fill the width, say what is true, offer the next action ---- */

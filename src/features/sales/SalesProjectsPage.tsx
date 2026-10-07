@@ -14,26 +14,37 @@ export function SalesProjectsPage() {
   const [source, setSource] = useState<SalesProjectSource | ''>('')
   const [state, setState] = useState<SalesProjectState | ''>('')
   const [showCreate, setShowCreate] = useState(false)
+  const [createSource, setCreateSource] = useState<SalesProjectSource>('Upwork')
+  const [externalId, setExternalId] = useState('')
   const [title, setTitle] = useState('')
   const [buyer, setBuyer] = useState('')
   const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
+  const [connectsCost, setConnectsCost] = useState('')
+  const [experienceLevel, setExperienceLevel] = useState('')
+  const [budget, setBudget] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<Error>()
 
   const visible = (projects.data ?? []).filter((p) => (!source || p.source === source) && (!state || p.state === state))
 
+  const externalIdRequired = createSource !== 'Manual'
+
   async function createProject() {
-    if (!title.trim()) return
+    if (!title.trim() || (externalIdRequired && !externalId.trim())) return
     setSaving(true)
     setSaveError(undefined)
     try {
       await api<SalesProject>('/api/v1/sales/projects', {
         method: 'POST',
-        body: JSON.stringify({ source: 'Manual', externalId: null, title: title.trim(), buyer: buyer.trim() || null,
-          description: description.trim() || null, url: url.trim() || null, deadlineUtc: null, evidenceJson: '[]' }),
+        body: JSON.stringify({ source: createSource, externalId: externalId.trim() || null, title: title.trim(), buyer: buyer.trim() || null,
+          description: description.trim() || null, url: url.trim() || null, deadlineUtc: null,
+          evidenceJson: JSON.stringify({ provider: createSource, connectsCost: connectsCost ? Number(connectsCost) : null,
+            experienceLevel: experienceLevel.trim() || null, budget: budget.trim() || null,
+            importedManually: true, observedAt: new Date().toISOString() }) }),
       })
-      setTitle(''); setBuyer(''); setDescription(''); setUrl(''); setShowCreate(false)
+      setExternalId(''); setTitle(''); setBuyer(''); setDescription(''); setUrl(''); setConnectsCost('');
+      setExperienceLevel(''); setBudget(''); setShowCreate(false)
       projects.reload()
     } catch (e) { setSaveError(e as Error) }
     finally { setSaving(false) }
@@ -43,27 +54,35 @@ export function SalesProjectsPage() {
     <div className="page page-wide stack-4">
       <PageHeader
         title="Projects & tenders"
-        subtitle="Review owner-scoped sales projects and prepare bids only from facts you provide. External discovery is not connected yet."
+        subtitle="Import source-linked provider work, review the evidence, then approve an exact bid before any handoff."
         actions={<button className="btn btn-primary" type="button" onClick={() => setShowCreate((v) => !v)}>{showCreate ? 'Close' : '+ Add project'}</button>}
       />
 
       {showCreate && <section className="panel stack-3" aria-labelledby="new-sales-project">
-        <header className="panel-head"><h3 id="new-sales-project" className="eyebrow">Manual project</h3></header>
+        <header className="panel-head"><h3 id="new-sales-project" className="eyebrow">Assisted provider import</h3></header>
         <div className="panel-body stack-3">
           <div className="panel-grid-2">
+            <label className="field"><span>Source</span><select value={createSource} onChange={(e) => setCreateSource(e.target.value as SalesProjectSource)}>{SALES_PROJECT_SOURCES.map((value) => <option value={value} key={value}>{salesProjectSourceLabel(value)}</option>)}</select></label>
+            <label className="field"><span>Provider project ID {externalIdRequired && <b aria-hidden="true">*</b>}</span><input value={externalId} onChange={(e) => setExternalId(e.target.value)} maxLength={200} placeholder="Copy the stable Upwork job ID" /></label>
             <label className="field"><span>Title <b aria-hidden="true">*</b></span><input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={300} autoFocus /></label>
             <label className="field"><span>Buyer or organisation</span><input value={buyer} onChange={(e) => setBuyer(e.target.value)} maxLength={300} /></label>
           </div>
           <label className="field"><span>Brief</span><textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={8000} /></label>
           <label className="field"><span>Source URL</span><input type="url" value={url} onChange={(e) => setUrl(e.target.value)} maxLength={1000} placeholder="https://…" /></label>
+          {createSource === 'Upwork' && <div className="panel-grid-2">
+            <label className="field"><span>Connects required</span><input type="number" min="0" step="1" value={connectsCost} onChange={(e) => setConnectsCost(e.target.value)} placeholder="Copy the visible cost" /></label>
+            <label className="field"><span>Experience level</span><input value={experienceLevel} onChange={(e) => setExperienceLevel(e.target.value)} placeholder="Entry, Intermediate, Expert" /></label>
+            <label className="field"><span>Budget or rate</span><input value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="$500 fixed or $20–$40/hr" /></label>
+          </div>}
+          <p className="muted-small">Copy only visible project facts. OpportunityPilot never stores the provider login or claims the bid was submitted.</p>
           {saveError && <ErrorNotice error={saveError} onRetry={() => setSaveError(undefined)} what="the project" />}
-          <div className="row"><button className="btn btn-primary" type="button" disabled={saving || !title.trim()} onClick={createProject}>{saving ? 'Saving…' : 'Save project'}</button></div>
+          <div className="row"><button className="btn btn-primary" type="button" disabled={saving || !title.trim() || (externalIdRequired && !externalId.trim())} onClick={createProject}>{saving ? 'Saving…' : 'Import project'}</button></div>
         </div>
       </section>}
 
       {projects.error && <ErrorNotice error={projects.error} onRetry={projects.reload} what="sales projects" />}
       {projects.loading && !projects.data && <LoadingState label="Loading sales projects…" waking={projects.waking} rows={4} />}
-      {projects.data && projects.data.length === 0 && <EmptyState icon="◇" title="No sales projects yet"><p>Add a project manually to prepare its first bid. Provider discovery will be added in a later N5 slice.</p></EmptyState>}
+      {projects.data && projects.data.length === 0 && <EmptyState icon="◇" title="No sales projects yet"><p>Import one Upwork test project from visible facts, or add a manual project, to prepare the first exact-version bid.</p></EmptyState>}
       {projects.data && projects.data.length > 0 && <>
         <section className="panel" aria-labelledby="sales-filters">
           <header className="panel-head"><h3 id="sales-filters" className="eyebrow">Filter projects</h3><div className="grow" /></header>
