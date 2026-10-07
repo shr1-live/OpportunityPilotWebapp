@@ -42,6 +42,8 @@ export function ProfilesPage() {
   const list = useApi<ProfileSummary[]>('/api/v1/profiles')
   const creating = id === 'new'
   const [listHidden, setListHidden] = useState(readListHidden)
+  const firstProfile = list.data?.length === 0
+  const effectiveListHidden = listHidden || firstProfile
 
   // With no selection, open the most recent profile, or the create form when there are none.
   useEffect(() => {
@@ -60,8 +62,8 @@ export function ProfilesPage() {
   }
 
   return (
-    <div className={`profiles2 ${listHidden ? 'profiles2-list-hidden' : ''}`}>
-      {!listHidden && (
+    <div className={`profiles2 ${effectiveListHidden ? 'profiles2-list-hidden' : ''}`}>
+      {!effectiveListHidden && (
         <aside className="profiles2-list" aria-label="Profiles">
           <div className="profiles2-list-head">
             <span className="eyebrow">Profiles · {list.data?.length ?? '—'}</span>
@@ -107,7 +109,7 @@ export function ProfilesPage() {
       )}
 
       <div className="profiles2-main">
-        {listHidden && (
+        {listHidden && !firstProfile && (
           <button type="button" className="profiles2-show btn-link small" onClick={toggleList}>
             › Show profiles list
           </button>

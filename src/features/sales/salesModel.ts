@@ -5,7 +5,7 @@ export interface SalesBidRow {
   bid: SalesBid
 }
 
-export const SALES_PROJECT_SOURCES: SalesProjectSource[] = ['Manual', 'Freelancer', 'TenderFeed', 'PublicUrl']
+export const SALES_PROJECT_SOURCES: SalesProjectSource[] = ['Upwork', 'Manual', 'Freelancer', 'TenderFeed', 'PublicUrl']
 export const SALES_PROJECT_STATES: SalesProjectState[] = [
   'New',
   'Shortlisted',
@@ -27,10 +27,30 @@ const PROJECT_STATE_LABELS: Record<SalesProjectState, string> = {
 }
 
 const SOURCE_LABELS: Record<SalesProjectSource, string> = {
+  Upwork: 'Upwork',
   Manual: 'Manual',
   Freelancer: 'Freelancer.com',
   TenderFeed: 'Tender feed',
   PublicUrl: 'Public URL',
+}
+
+export interface SalesProviderEvidence {
+  provider?: string
+  connectsCost?: number | null
+  experienceLevel?: string | null
+  budget?: string | null
+  publishedAt?: string | null
+  importedManually?: boolean
+  observedAt?: string
+}
+
+export function salesProviderEvidence(project: SalesProject): SalesProviderEvidence {
+  try {
+    const value: unknown = JSON.parse(project.evidenceJson)
+    return value && typeof value === 'object' && !Array.isArray(value) ? value as SalesProviderEvidence : {}
+  } catch {
+    return {}
+  }
 }
 
 const BID_STATE_LABELS: Record<SalesBidState, string> = {

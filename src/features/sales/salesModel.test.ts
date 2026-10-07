@@ -30,6 +30,7 @@ function project(id: string, bids: SalesBid[]): SalesProject {
     description: null,
     url: null,
     deadlineUtc: null,
+    evidenceJson: '[]',
     state: 'New',
     version: 1,
     bids,

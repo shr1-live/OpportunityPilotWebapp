@@ -19,7 +19,7 @@ export function SalesProposalsPage() {
         actions={<Link className="btn btn-primary" to="/projects">Open projects</Link>}
       />
       <p className="notice notice-warning">
-        <strong>Nothing is submitted from this screen.</strong> Freelancer placement and tender handoff are still pending N5 work.
+        <strong>Nothing is submitted from this screen.</strong> Approved Upwork bids use a copy/open handoff until an official API or MCP connection is configured. You confirm placement only after submitting on the provider.
       </p>
       {projects.error ? <ErrorNotice error={projects.error} onRetry={projects.reload} what="proposal drafts" /> : null}
       {projects.loading && !projects.data ? <LoadingState label="Loading proposal drafts…" waking={projects.waking} rows={4} /> : null}

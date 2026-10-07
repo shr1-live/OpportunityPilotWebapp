@@ -138,7 +138,7 @@ describe('platforms and who applies', () => {
 
   it('words the applies-via line for the approval queue', () => {
     expect(appliesViaLabel('Agent', 'Naukri')).toBe('your agent (Naukri)')
-    expect(appliesViaLabel('Agent', null)).toBe('your agent (LinkedIn/Naukri)')
+    expect(appliesViaLabel('Agent', null)).toBe('your agent (LinkedIn/Naukri/InstaHyre)')
     expect(appliesViaLabel('You', 'Greenhouse')).toBe('you (opens the application page)')
   })
 

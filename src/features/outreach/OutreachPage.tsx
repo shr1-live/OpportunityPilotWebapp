@@ -110,7 +110,7 @@ export function OutreachPage() {
       <section className="panel"><header className="panel-head"><h2 className="eyebrow">Editor</h2></header>
         {!selected ? <div className="panel-body muted">Select a draft to review it.</div> : <div className="panel-body stack-3">
           <div className="row wrap"><Badge>{selected.channel}</Badge><Badge tone={selected.state === 'Approved' ? 'success' : 'warning'}>{selected.state} · v{selected.version}</Badge><Link to={`/opportunities/${selected.opportunityId}`}>Open opportunity</Link></div>
-          <label className="field"><span>Recipient</span><input value={recipient} onChange={(e) => setRecipient(e.target.value)} maxLength={320} /><small>{selected.recipientVerified ? 'Verified from stored evidence.' : 'User-entered recipient · not verified.'}</small></label>
+          <label className="field"><span>Recipient</span><input value={recipient} onChange={(e) => setRecipient(e.target.value)} maxLength={320} /><small>{selected.recipientVerified ? `Verified from stored evidence${selected.recipientEvidenceId ? ` · ${selected.recipientEvidenceId}` : ''}.` : 'User-entered recipient · not verified.'}</small></label>
           {selected.channel === 'Email' && <label className="field"><span>Subject</span><input value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={300} /></label>}
           <label className="field"><span>Message</span><textarea rows={14} value={body} onChange={(e) => setBody(e.target.value)} maxLength={10000} /></label>
           {selected.sendBlockers.length > 0 && <ul className="hint-list">{selected.sendBlockers.map((x) => <li key={x}>{x}</li>)}</ul>}
