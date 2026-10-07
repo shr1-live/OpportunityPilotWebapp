@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState, LoadingState } from '../../components/States'
@@ -29,6 +29,7 @@ export function WellfoundPage() {
   const [fundingStage, setFundingStage] = useState('')
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<Error>()
+  const autoSyncAttempted = useRef(false)
 
   const jobsPath = useMemo(() => {
     const q = new URLSearchParams({ workspace: ws, take: '100' })
@@ -51,12 +52,24 @@ export function WellfoundPage() {
     jobs.reload(); kpis.reload(); applications.reload(); activities.reload()
   }
 
-  async function loadDemo() {
+  async function syncPublic() {
     setBusy(true); setActionError(undefined)
-    try { await api('/api/v1/wellfound/demo/load', { method: 'POST' }); reloadAll() }
+    try { await api('/api/v1/wellfound/public/sync', { method: 'POST' }); reloadAll() }
     catch (e) { setActionError(e as Error) }
     finally { setBusy(false) }
   }
+
+  useEffect(() => {
+    if (autoSyncAttempted.current || !jobs.data || jobs.loading) return
+    if (jobs.data.length === 0 || jobs.data.every((job) => job.isDemo)) {
+      autoSyncAttempted.current = true
+      void api('/api/v1/wellfound/public/sync', { method: 'POST' })
+        .then(() => reloadAll())
+        .catch((error) => setActionError(error as Error))
+    }
+    // This one-shot migration is intentionally keyed only to the first loaded job collection.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [jobs.data, jobs.loading])
 
   async function changeJob(job: WellfoundJob, state: WellfoundJobState) {
     setActionError(undefined)
@@ -78,11 +91,11 @@ export function WellfoundPage() {
 
   return <div className="page page-wide stack-4">
     <PageHeader title={`Wellfound · ${ws}`} subtitle={workspace === 'sales'
-      ? 'Review recruiter-owned roles and applicants. Demo decisions update only OpportunityPilot; live actions wait for OAuth and confirmation.'
-      : 'Explore startup roles with salary, equity, funding and evidence-backed match signals. Live marketplace discovery waits for an approved source.'}
-      actions={<button className="btn btn-primary" type="button" disabled={busy} onClick={loadDemo}>{busy ? 'Loading…' : 'Load demo listings'}</button>} />
+      ? 'Research current public hiring signals. Recruiter-owned roles and applicants appear after Wellfound OAuth.'
+      : 'Explore current public Wellfound roles and keep local decisions linked to the original posting.'}
+      actions={<button className="btn btn-primary" type="button" disabled={busy} onClick={syncPublic}>{busy ? 'Refreshing…' : 'Refresh live jobs'}</button>} />
 
-    {status.data && <section className="notice notice-neutral row wrap"><Badge tone="warning">Demo ready · MCP not connected</Badge><span className="grow">{status.data.detail}</span><a href="https://help.wellfound.com/article/1219-connect-wellfound-to-your-ai-assistant" target="_blank" rel="noreferrer">Connection requirements</a></section>}
+    {status.data && <section className="notice notice-neutral row wrap"><Badge tone="success">Public jobs live</Badge><Badge tone="warning">Recruit MCP not connected</Badge><span className="grow">{status.data.detail}</span><a href="https://help.wellfound.com/article/1219-connect-wellfound-to-your-ai-assistant" target="_blank" rel="noreferrer">Recruit connection requirements</a></section>}
     {actionError && <ErrorNotice error={actionError} onRetry={() => setActionError(undefined)} what="the Wellfound action" />}
 
     {kpis.data && <div className="kpi-strip kpi-strip-5">
@@ -116,11 +129,11 @@ export function WellfoundPage() {
 
     {(jobs.loading || applications.loading) && !jobs.data && <LoadingState label="Loading Wellfound workspace…" rows={4} />}
     {jobs.error && <ErrorNotice error={jobs.error} onRetry={jobs.reload} what="Wellfound jobs" />}
-    {noData && <EmptyState icon="◇" title="No Wellfound records yet" actions={<button className="btn btn-primary btn-sm" onClick={loadDemo}>Load labelled demo data</button>}>Live sync becomes available after Wellfound OAuth. Demo data lets you test every filter, decision and KPI now.</EmptyState>}
+    {noData && <EmptyState icon="◇" title="No public Wellfound jobs yet" actions={<button className="btn btn-primary btn-sm" onClick={syncPublic}>Fetch live public jobs</button>}>Refresh the anonymous public Wellfound jobs page. Recruiter-owned jobs and applicants remain OAuth-only.</EmptyState>}
 
     {jobs.data && jobs.data.length > 0 && <section className="wellfound-grid" aria-label="Wellfound jobs">
       {jobs.data.map((job) => <article className="card wellfound-card stack-3" key={job.id}>
-        <div className="row wrap"><Badge tone={job.isDemo ? 'warning' : 'success'}>{job.isDemo ? 'Demo listing' : 'Provider synced'}</Badge><Badge>{job.scope === 'RecruiterOwned' ? 'Recruiter role' : workspace === 'sales' ? 'Hiring signal' : 'Candidate role'}</Badge>{job.matchScore !== null && <Badge tone="primary">{job.matchScore}% match</Badge>}<span className="grow" /><Badge>{job.state}</Badge></div>
+        <div className="row wrap"><Badge tone={job.isDemo ? 'warning' : 'success'}>{job.isDemo ? 'Legacy demo' : job.scope === 'RecruiterOwned' ? 'OAuth synced' : 'Live public listing'}</Badge><Badge>{job.scope === 'RecruiterOwned' ? 'Recruiter role' : workspace === 'sales' ? 'Hiring signal' : 'Candidate role'}</Badge>{job.matchScore !== null && <Badge tone="primary">{job.matchScore}% match</Badge>}<span className="grow" /><Badge>{job.state}</Badge></div>
         <div><h3>{job.title}</h3><p className="muted-small">{job.companyName} · {job.fundingStage || 'Funding unknown'} · {job.employeeCount || 'Size unknown'}</p></div>
         <div className="row wrap"><Badge>{job.remoteType || 'Work mode unknown'}</Badge><Badge>{job.location || 'Location unknown'}</Badge>{job.visaSponsorship === true && <Badge tone="success">Visa sponsorship</Badge>}</div>
         <div className="wellfound-comp"><span><small>Salary</small><strong>{money(job.salaryMin, job.currency)} – {money(job.salaryMax, job.currency)}</strong></span><span><small>Equity</small><strong>{job.equityMin ?? '—'}% – {job.equityMax ?? '—'}%</strong></span></div>
@@ -133,6 +146,8 @@ export function WellfoundPage() {
       <header className="panel-head"><div><h3 className="eyebrow">Applicant review</h3><p className="muted-small">Demo actions are local only. Live accept/reject will require a fresh MCP confirmation.</p></div></header>
       <div className="table-scroll"><table className="table"><thead><tr><th>Candidate</th><th>Role</th><th>Fit</th><th>State</th><th>Decision</th></tr></thead><tbody>{applications.data.map((item) => <tr key={item.id}><td className="table-role">{item.candidateName}<div className="muted-small">{item.isDemo ? 'Demo applicant' : 'Provider applicant'}</div></td><td>{item.jobTitle}</td><td className="op-num">{item.fitScore ?? '—'}%</td><td><Badge>{item.state}</Badge></td><td><div className="row wrap"><button className="btn btn-primary btn-sm" onClick={() => changeApplication(item, 'Shortlisted')}>Shortlist</button><button className="btn btn-secondary btn-sm" onClick={() => changeApplication(item, 'Reviewing')}>Review</button><button className="btn btn-ghost btn-sm" onClick={() => changeApplication(item, 'Rejected')}>Not a fit</button></div></td></tr>)}</tbody></table></div>
     </section>}
+
+    {workspace === 'sales' && applications.data?.length === 0 && <section className="notice notice-neutral"><strong>Recruiter applicants are not connected.</strong> Public hiring signals above are live; private jobs and applicants require Wellfound Recruit OAuth.</section>}
 
     {activities.data && activities.data.length > 0 && <section className="panel"><header className="panel-head"><h3 className="eyebrow">Wellfound activity</h3><span className="muted-small">{activities.data.length} recent events</span></header><ul className="state-list panel-body">{activities.data.map((item) => <li key={item.id}><span><strong>{item.kind}</strong><br /><span className="muted-small">{item.detail}</span></span><time className="muted-small" dateTime={item.occurredAt}>{new Date(item.occurredAt).toLocaleString()}</time></li>)}</ul></section>}
   </div>

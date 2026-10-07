@@ -8,10 +8,10 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 
 - **Route:** `/wellfound` in the Sales workspace.
 - **Component:** `src/features/wellfound/WellfoundPage.tsx`.
-- **What it shows:** Candidate-side discovery roles as hiring signals, recruiter-owned roles, applicants, immutable recent activity, and KPIs for owned jobs, hiring signals, applicants, reviewing, shortlisted and rejected states. Every record is labelled Demo or Provider synced.
-- **Actions:** Load deterministic demo data and move demo applicants to Reviewing, Shortlisted or Rejected. Live accept/reject remains blocked until Wellfound Recruit OAuth and an explicit provider confirmation are available.
+- **What it shows:** Current public Wellfound roles as hiring signals plus any OAuth-synced recruiter-owned roles/applicants, immutable activity, and separated public/private KPIs. Every record is labelled by source.
+- **Actions:** Refresh public hiring signals and open exact postings. Recruiter applicant decisions remain blocked until Wellfound Recruit OAuth and an explicit provider confirmation are available.
 - **State:** Wellfound status, recruiter-scoped jobs, applications, activities and Sales KPIs from `/api/v1/wellfound/*`.
-- **Status:** built for the demo/research queue; live OAuth is a user-owned integration step.
+- **Status:** public hiring-signal research built; private recruiter scope remains a user-owned OAuth step.
 
 ---
 
