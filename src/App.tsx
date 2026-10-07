@@ -29,6 +29,7 @@ const SalesProposalsPage = lazy(() => import('./features/sales/SalesProposalsPag
 const SalesBidsPage = lazy(() => import('./features/sales/SalesBidsPage').then((m) => ({ default: m.SalesBidsPage })))
 const AppShell = lazy(() => import('./features/shell/AppShell').then((m) => ({ default: m.AppShell })))
 const HowItWorksPage = lazy(() => import('./features/guide/HowItWorksPage').then((m) => ({ default: m.HowItWorksPage })))
+const WellfoundPage = lazy(() => import('./features/wellfound/WellfoundPage').then((m) => ({ default: m.WellfoundPage })))
 
 const SIGNED_OUT_SCREENS = {
   signin: SignInPage,
@@ -120,6 +121,7 @@ const router = createBrowserRouter([
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'integrations', element: <IntegrationsPage />, handle: { title: 'Sources & integrations' } },
+      { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Wellfound' } },
       { path: 'settings', element: <SettingsPage />, handle: { title: 'Settings' } },
       { path: '*', element: <NotFound />, handle: { title: 'Not found' } },
     ],

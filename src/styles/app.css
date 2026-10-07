@@ -518,6 +518,12 @@ p { margin: 0; }
 .clamp-cell { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-actions { display: flex; flex-wrap: wrap; gap: var(--op-space-2); }
 .filters .field-wide { flex: 0 1 360px; }
+.wellfound-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--op-space-4); }
+.wellfound-card { min-width: 0; }
+.wellfound-card h3, .wellfound-card p { margin: 0; }
+.wellfound-comp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--op-space-3); }
+.wellfound-comp span { display: grid; gap: 3px; padding: 12px; border: 1px solid var(--op-hair); border-radius: var(--op-radius-control); background: var(--op-panel-head); }
+.wellfound-comp small { color: var(--op-muted); }
 .flow-steps { text-align: left; max-width: 60ch; margin: 0; padding-left: var(--op-space-5); color: var(--op-muted); }
 .flow-steps li + li { margin-top: var(--op-space-1); }
 .facts-compact { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--op-space-3); }
@@ -676,6 +682,7 @@ p { margin: 0; }
   .builder-footer { position: static; }
 }
 @media (max-width: 600px) {
+  .wellfound-grid, .wellfound-comp { grid-template-columns: minmax(0, 1fr); }
   .review-list > div { grid-template-columns: minmax(0, 1fr); gap: var(--op-space-1); }
   .event-log li { grid-template-columns: auto minmax(0, 1fr); }
   .event-log .badge, .event-message { grid-column: 1 / -1; }

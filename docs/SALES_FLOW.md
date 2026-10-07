@@ -4,6 +4,15 @@ The Sales team uses the app to find business opportunities (companies with a pro
 
 Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. The campaign builder, research run and opportunity screens are the same components as the Candidate flow; their full entries are in `docs/CANDIDATE_FLOW.md` and only Customer differences are listed here. Contracts: built — `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`; planned — `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` and `../OpportunityPilotWebApi/docs/SALES_CONTRACT.md` (manual sales API slice built; provider, drafts and UI remain). Gap IDs refer to `docs/open-questions.md`.
 
+### Wellfound recruiting
+
+- **Route:** `/wellfound` in the Sales workspace.
+- **Component:** `src/features/wellfound/WellfoundPage.tsx`.
+- **What it shows:** Candidate-side discovery roles as hiring signals, recruiter-owned roles, applicants, immutable recent activity, and KPIs for owned jobs, hiring signals, applicants, reviewing, shortlisted and rejected states. Every record is labelled Demo or Provider synced.
+- **Actions:** Load deterministic demo data and move demo applicants to Reviewing, Shortlisted or Rejected. Live accept/reject remains blocked until Wellfound Recruit OAuth and an explicit provider confirmation are available.
+- **State:** Wellfound status, recruiter-scoped jobs, applications, activities and Sales KPIs from `/api/v1/wellfound/*`.
+- **Status:** built for the demo/research queue; live OAuth is a user-owned integration step.
+
 ---
 
 ### Campaign builder — Customer specifics (steps 1–4)
