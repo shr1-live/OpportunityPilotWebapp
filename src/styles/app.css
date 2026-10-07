@@ -1206,6 +1206,12 @@ p { margin: 0; }
 .apps-grid > .card, .apps-grid > section { margin: 0; }
 .outreach-grid { display: grid; grid-template-columns: minmax(280px, .8fr) minmax(0, 1.4fr); gap: 14px; align-items: start; }
 .inbox-list, .follow-list, .suppression-list { list-style: none; padding: 0; margin: 0; }
+.inbox-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--op-hair); }
+.inbox-row .inbox-item { border-bottom: 0; }
+.inbox-check { display: flex; align-items: center; padding-inline-start: var(--op-space-3); }
+.outreach-filters { border-bottom: 1px solid var(--op-hair); }
+.outreach-filters .field { flex: 1 1 140px; }
+.outreach-batch { flex: 1 1 100%; }
 .inbox-item { width: 100%; border: 0; border-bottom: 1px solid var(--op-hair); background: transparent; padding: 12px 16px; display: flex; gap: 12px; align-items: center; text-align: left; cursor: pointer; }
 .inbox-item > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
 .inbox-item small, .suppression-list small { display: block; color: var(--op-muted); }

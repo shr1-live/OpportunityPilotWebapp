@@ -408,16 +408,20 @@ export interface OutreachDraft {
 export interface DraftListItem {
   id: string
   opportunityId: string
+  campaignId: string
+  campaignName: string
   opportunityTitle: string
   organization: string
   channel: DraftChannel
   recipient: string | null
+  recipientVerified: boolean
   state: DraftState
   version: number
   updatedAt: string
 }
 
 export interface DraftPage { total: number; items: DraftListItem[] }
+export interface BatchApproveDraftResult { id: string; approved: boolean; reason: string | null; draft: OutreachDraft | null }
 export type NextActionKind = 'FollowUp' | 'CheckStatus' | 'Call' | 'Other'
 export type NextActionState = 'Open' | 'Done' | 'Cancelled'
 export interface NextAction {
