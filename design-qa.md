@@ -60,3 +60,29 @@ Focused region comparison was not needed: the selector labels, descriptions, rad
 in the full-view side-by-side comparison, and there are no detailed image assets.
 
 final result: passed
+
+---
+
+# Design QA — Job discovery controls
+
+**Source reference:** `D:\Temp\codex-clipboard-5533fbd5-16d5-4921-b9d2-64877513336e.png` (1279 × 630).
+
+## Source issues addressed
+
+- KPI label, value and supporting text were inline and visually collided.
+- Six Sales KPIs were forced into the five-column Candidate layout.
+- Sales had no discovery filters, and Candidate had no explicit tech-stack/company/state/sort controls.
+
+## Implementation checks
+
+- Sales uses the six-column KPI strip; Candidate keeps five columns.
+- Every KPI is a vertical flex stack: label → numeric value → supporting text.
+- Wellfound filters wrap within the existing responsive filter container.
+- Indeed is labelled as an official search handoff and never renders fabricated listing rows.
+- TypeScript, lint, 146 unit tests and the production build pass.
+
+## Visual comparison
+
+Post-change browser capture and 375 px interaction check were not run because the user explicitly asked to stop browser-based testing. No claim of live visual verification is made.
+
+final result: code-verified; visual check intentionally skipped by user request

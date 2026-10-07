@@ -4,14 +4,17 @@ The Candidate is a job seeker: a **Candidate** profile, **Job**-mode campaigns, 
 
 Phase-1 additions (open job sources Greenhouse / Lever / Adzuna, batch approval queue) follow `../OpportunityPilotWebApi/docs/CANDIDATE_PHASE1_CONTRACT.md`.
 
-### Wellfound startup roles
+### Job discovery — Wellfound and Indeed
 
 - **Route:** `/wellfound` in the Candidate workspace.
 - **Component:** `src/features/wellfound/WellfoundPage.tsx`.
-- **What it shows:** Current anonymous public Wellfound roles with keyword, location, remote, salary, equity and funding filters; source facts; exact posting links; and Candidate KPIs for matching, saved, applied, interviewing and offered roles.
-- **Actions:** Refresh public jobs, filter them, save a role, mark a role applied, or open the exact Wellfound posting. Decisions update OpportunityPilot only.
-- **State:** Wellfound status, jobs, activities and Candidate KPIs from `/api/v1/wellfound/*`.
-- **Status:** public marketplace discovery built. Private recruiter jobs/applicants remain blocked on Recruit OAuth; the public reader never uses authenticated sessions.
+- **What it shows:** A Wellfound/Indeed source switch. Wellfound shows stored anonymous public roles, exact posting links and Candidate KPIs with filters for role, company, tech stack, location, work mode, salary, equity, funding, industry, employment type, date, local state and sort. Indeed shows a precise official-search builder; it never labels a handoff as an in-app listing.
+- **Actions:** Wellfound: refresh, filter, save, mark applied or open the exact posting. Indeed: assemble role/technology/company/location/work-mode/type/experience/date/exclusion criteria and open that search on Indeed. Applications remain on the provider; local status is explicit.
+- **State:** Wellfound status, jobs, activities and Candidate KPIs from `/api/v1/wellfound/*`. Indeed search criteria are transient browser state and produce only an official `indeed.com/jobs` URL.
+- **Navigation out:** exact Wellfound job URL or generated Indeed search URL, both in a new tab.
+- **Validation:** Indeed needs at least a query term or location before its handoff link is enabled. Wellfound filters use stored facts only; unknown provider facts do not match.
+- **Status:** public Wellfound discovery and official Indeed search handoff built. An in-app Indeed listing feed needs written partner approval and an approved API; private Wellfound recruiter data remains blocked on Recruit OAuth.
+- **TODOs:** OQ-FE-043 (Wellfound OAuth), OQ-FE-044 (Indeed partner API approval).
 
 Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. Shared screens (sign-in, shell, Overview, Profiles, Integrations, Settings): `docs/SHARED_FLOW.md`. Customer-mode differences of the same components: `docs/SALES_FLOW.md`. API contract for built screens: `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`. Gap IDs refer to `docs/open-questions.md`.
 

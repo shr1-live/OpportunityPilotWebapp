@@ -25,7 +25,7 @@ Last updated: 2026-10-06 (design round 3).
 | `/opportunities/:id` | `src/features/opportunities/OpportunityDetailPage.tsx` | `docs/CANDIDATE_FLOW.md` → Opportunity — Detail (Job); `docs/SALES_FLOW.md` → Opportunity — Detail (Customer) | built |
 | `/approvals` | `src/features/approvals/ApprovalQueuePage.tsx` | `docs/CANDIDATE_FLOW.md` → Approval queue | built — against the phase-1 contract, API not verified (OQ-FE-033) |
 | `/applications` | `src/features/applications/ApplicationsPage.tsx` (+ `AgentSetup.tsx`, `HowItWorks.tsx`) | `docs/CANDIDATE_FLOW.md` → Applications | built |
-| `/wellfound` | `src/features/wellfound/WellfoundPage.tsx` | `docs/CANDIDATE_FLOW.md` → Wellfound startup roles; `docs/SALES_FLOW.md` → Wellfound recruiting | live public job research built; private Recruit OAuth pending |
+| `/wellfound` | `src/features/wellfound/WellfoundPage.tsx` + `IndeedSearchPanel.tsx` | Candidate/Sales flow → Job discovery — Wellfound and Indeed | public Wellfound research + official Indeed search handoff built; provider-authorized private feeds pending |
 | `/outreach` | `src/features/placeholder/NotBuiltPage.tsx` (M5 placeholder) | `docs/SALES_FLOW.md` → Outreach — Inbox and draft editor | not built |
 | `/follow-ups` | `src/features/placeholder/NotBuiltPage.tsx` (M7 placeholder) | `docs/SALES_FLOW.md` → Follow-ups | not built |
 | `/projects`, `/projects/:id` (Sales rail) | `src/features/sales/SalesProjectsPage.tsx`, `SalesProjectDetailPage.tsx` | `TASKS.md` R11 / N5 | manual project list + bid draft/approval built; provider ingestion and placement remain |
@@ -36,4 +36,4 @@ Last updated: 2026-10-06 (design round 3).
 | — (no route) | — | `docs/SALES_FLOW.md` → Freelancer.com bids | not built |
 | — (no route) | — | `docs/SALES_FLOW.md` → Batch approval | not built |
 
-Navigation rail (`navGroupsFor` in `src/features/shell/shellModel.ts`): **Candidate** — Overview · Find: Campaigns, Opportunities · Decide: Approvals · Act: Applications, Outreach (Soon) · Track: Follow-ups (Soon) · Set up: Profiles, Sources & integrations, Settings, How it works. **Sales** — Overview · Find: Campaigns, Projects & tenders (Soon), Companies (`/opportunities`) · Decide: Approvals · Act: Proposals & bids (Soon), Outreach (Soon) · Track: Bids sent (Soon), Follow-ups (Soon) · Set up (same).
+Navigation rail (`navGroupsFor` in `src/features/shell/shellModel.ts`): **Candidate** — Overview · Find: Campaigns, Opportunities, Job discovery · Decide: Approvals · Act: Applications, Outreach · Track: Follow-ups · Set up: Profiles, Sources & integrations, Settings, How it works. **Sales** — Overview · Find: Campaigns, Projects & tenders, Hiring signals, Companies (`/opportunities`) · Decide: Approvals · Act: Proposals & bids, Outreach · Track: Bids sent, Follow-ups · Set up (same).
