@@ -4,14 +4,17 @@ The Sales team uses the app to find business opportunities (companies with a pro
 
 Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. The campaign builder, research run and opportunity screens are the same components as the Candidate flow; their full entries are in `docs/CANDIDATE_FLOW.md` and only Customer differences are listed here. Contracts: built — `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`; planned — `../OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md` and `../OpportunityPilotWebApi/docs/SALES_CONTRACT.md` (manual sales API slice built; provider, drafts and UI remain). Gap IDs refer to `docs/open-questions.md`.
 
-### Wellfound recruiting
+### Job discovery — Wellfound and Indeed
 
 - **Route:** `/wellfound` in the Sales workspace.
 - **Component:** `src/features/wellfound/WellfoundPage.tsx`.
-- **What it shows:** Current public Wellfound roles as hiring signals plus any OAuth-synced recruiter-owned roles/applicants, immutable activity, and separated public/private KPIs. Every record is labelled by source.
-- **Actions:** Refresh public hiring signals and open exact postings. Recruiter applicant decisions remain blocked until Wellfound Recruit OAuth and an explicit provider confirmation are available.
-- **State:** Wellfound status, recruiter-scoped jobs, applications, activities and Sales KPIs from `/api/v1/wellfound/*`.
-- **Status:** public hiring-signal research built; private recruiter scope remains a user-owned OAuth step.
+- **What it shows:** Wellfound public roles as stored hiring signals plus OAuth-only recruiter scope, and an Indeed official-search builder for role/tech/company/location/work-mode/type/experience/date/exclusion research. Wellfound filters and KPIs use only observed facts.
+- **Actions:** Refresh and filter Wellfound signals, open exact postings, or open a generated Indeed search. A company found on Indeed is manually carried into a Customer campaign; no copied Indeed listing or automatic outreach is claimed.
+- **State:** Wellfound status, jobs, applications, activities and Sales KPIs from `/api/v1/wellfound/*`. Indeed search criteria remain transient and are not presented as synced data.
+- **Navigation out:** exact Wellfound job URL, generated Indeed search URL, or the existing Campaigns screen through normal navigation.
+- **Validation:** Indeed needs at least a query term or location. Unknown Wellfound facts do not pass a selected filter.
+- **Status:** Wellfound public hiring-signal research and Indeed official-search handoff built; private recruiter actions and an approved Indeed feed remain provider-authorized work.
+- **TODOs:** OQ-FE-043 (Wellfound OAuth), OQ-FE-044 (Indeed partner API approval), and a future explicit convert-signal-to-campaign action.
 
 ---
 

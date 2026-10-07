@@ -40,6 +40,7 @@ Endpoints the web app calls today:
 | Opportunities | `GET /api/v1/campaigns/:id/opportunities`, `GET /api/v1/opportunities/:id`, `PATCH /api/v1/opportunities/:id/status`, `GET /api/v1/campaigns/:id/export`, `GET/POST /api/v1/opportunities/:id/drafts`, `PUT/POST/DELETE /api/v1/drafts/:id` (CoverNote) |
 | Approvals | `GET /api/v1/approvals?campaignId&take&skip`, `POST /api/v1/approvals/decide` (phase-1 contract; also `POST …/sources` kinds `Greenhouse`, `Lever`, `Adzuna` and `autoSuggestMinScore` on campaign bodies) |
 | Applications / agent | `GET /api/v1/applications`, `GET /api/v1/applications/summary`, `GET/POST /api/v1/agent-keys`, `DELETE /api/v1/agent-keys/:id` |
+| Job discovery | `GET /api/v1/wellfound/status|jobs|kpis|activities|applications`, `POST /api/v1/wellfound/public/sync`, `PATCH /api/v1/wellfound/jobs/:id/state`; Indeed currently uses an official `https://www.indeed.com/jobs` search handoff and no API |
 
 ## Deploy targets
 
