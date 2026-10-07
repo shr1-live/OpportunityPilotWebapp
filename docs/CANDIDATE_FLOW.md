@@ -8,10 +8,10 @@ Phase-1 additions (open job sources Greenhouse / Lever / Adzuna, batch approval 
 
 - **Route:** `/wellfound` in the Candidate workspace.
 - **Component:** `src/features/wellfound/WellfoundPage.tsx`.
-- **What it shows:** Labelled demo or provider-synced startup roles with keyword, location, remote, salary, equity and funding filters; salary/equity/company facts; match evidence; and Candidate KPIs for matching, saved, applied, interviewing and offered roles.
-- **Actions:** Load deterministic demo listings, filter them, save a role, mark a role applied, or open Wellfound. Demo actions update OpportunityPilot only.
+- **What it shows:** Current anonymous public Wellfound roles with keyword, location, remote, salary, equity and funding filters; source facts; exact posting links; and Candidate KPIs for matching, saved, applied, interviewing and offered roles.
+- **Actions:** Refresh public jobs, filter them, save a role, mark a role applied, or open the exact Wellfound posting. Decisions update OpportunityPilot only.
 - **State:** Wellfound status, jobs, activities and Candidate KPIs from `/api/v1/wellfound/*`.
-- **Status:** built for the demo/research queue. Live marketplace discovery remains blocked until an approved source is available; Wellfound Recruit MCP is not a global candidate-job feed.
+- **Status:** public marketplace discovery built. Private recruiter jobs/applicants remain blocked on Recruit OAuth; the public reader never uses authenticated sessions.
 
 Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. Shared screens (sign-in, shell, Overview, Profiles, Integrations, Settings): `docs/SHARED_FLOW.md`. Customer-mode differences of the same components: `docs/SALES_FLOW.md`. API contract for built screens: `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`. Gap IDs refer to `docs/open-questions.md`.
 
