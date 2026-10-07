@@ -8,7 +8,7 @@ describe('overview analytics', () => {
   })
 
   it('treats an account with no profile and no campaign as a first run', () => {
-    const base = { profiles: 0, campaigns: 0, applied: 0, needsManual: 0, shortlisted: 0, awaitingApproval: 0 }
+    const base = { profiles: 0, campaigns: 0, applied: 0, needsManual: 0, shortlisted: 0, awaitingApproval: 0, draftsAwaitingReview: 0, followUpsDue: 0 }
     expect(isFirstRun(base)).toBe(true)
     expect(isFirstRun({ ...base, profiles: 1 })).toBe(false)
     expect(isFirstRun(undefined)).toBe(false)

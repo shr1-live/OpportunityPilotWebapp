@@ -73,6 +73,8 @@ export interface Overview {
   shortlisted: number
   /** Opportunities in status Suggested, waiting in the approval queue. */
   awaitingApproval: number
+  draftsAwaitingReview: number
+  followUpsDue: number
 }
 
 export type ApplicationPlatform = 'LinkedIn' | 'Naukri' | 'Instahyre'
@@ -161,6 +163,7 @@ export type OpportunityStatus =
 export type JobPlatform =
   | 'LinkedIn'
   | 'Naukri'
+  | 'Instahyre'
   | 'Other'
   | 'Greenhouse'
   | 'Lever'
@@ -191,6 +194,15 @@ export interface CampaignCriteria {
   excludeStaffingAgencies: boolean
   /** Job only: exclude postings older than this many days (1–365); null = off. Unknown dates are kept. */
   maxPostingAgeDays: number | null
+}
+
+export interface GoalPreview {
+  source: 'Gemini' | 'Rules' | 'Template'
+  fallbackReason: string | null
+  mode: OpportunityMode | null
+  criteria: CampaignCriteria
+  ambiguities: string[]
+  notes: string[]
 }
 
 export interface ResearchJobRef {
@@ -392,6 +404,41 @@ export interface OutreachDraft {
   createdAt: string
   updatedAt: string
 }
+
+export interface DraftListItem {
+  id: string
+  opportunityId: string
+  campaignId: string
+  campaignName: string
+  opportunityTitle: string
+  organization: string
+  channel: DraftChannel
+  recipient: string | null
+  recipientVerified: boolean
+  state: DraftState
+  version: number
+  updatedAt: string
+}
+
+export interface DraftPage { total: number; items: DraftListItem[] }
+export interface BatchApproveDraftResult { id: string; approved: boolean; reason: string | null; draft: OutreachDraft | null }
+export type NextActionKind = 'FollowUp' | 'CheckStatus' | 'Call' | 'Other'
+export type NextActionState = 'Open' | 'Done' | 'Cancelled'
+export interface NextAction {
+  id: string
+  opportunityId: string
+  opportunityTitle: string
+  organization: string
+  kind: NextActionKind
+  note: string
+  dueAt: string
+  timeZone: string
+  state: NextActionState
+  overdue: boolean
+  createdAt: string
+  completedAt: string | null
+}
+export interface Suppression { id: string; recipient: string; reason: string; createdAt: string }
 
 // ---------- Sales pipeline (OpportunityPilotWebApi/docs/SALES_CONTRACT.md) ----------
 

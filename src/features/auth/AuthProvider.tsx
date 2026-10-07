@@ -1,9 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { api, configureApiAuth } from '../../lib/api'
 import { config, supabaseConfigured } from '../../lib/config'
 import { setSessionPersistence, supabase } from '../../lib/supabase'
 import { activeGuestToken, AUTH_PATHS, type StoredGuestSession } from './authModel'
+import { AuthContext } from './AuthContext'
 
 /**
  * supabase: real accounts (email + password, Google), with "Continue as guest" next to them when the API allows it.
@@ -13,7 +14,7 @@ export type AuthMode = 'supabase' | 'dev' | 'guest'
 
 export type SignUpResult = 'signed-in' | 'verify-email'
 
-interface AuthState {
+export interface AuthState {
   mode: AuthMode
   ready: boolean
   user: { id?: string; email: string; guest: boolean } | null
@@ -32,7 +33,6 @@ interface AuthState {
   setNewPassword: (password: string, signOutOthers: boolean) => Promise<void>
 }
 
-const AuthContext = createContext<AuthState | null>(null)
 const DEV_USER_KEY = 'op.devUser'
 const GUEST_TOKEN_KEY = 'op.guestToken'
 const TOKEN_REFRESH_WINDOW_MS = 60_000
@@ -233,10 +233,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [mode, ready, session, devUser, guestToken, sessionExpired, recovering, signOut])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
-  return ctx
 }

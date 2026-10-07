@@ -53,16 +53,16 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 
 ### Outreach — Inbox and draft editor
 
-- **Route:** `/outreach` (currently renders `NotBuiltPage`, milestone M5; listed in the nav)
-- **Component:** today `src/features/placeholder/NotBuiltPage.tsx` via `src/App.tsx:52-62`; planned `src/features/outreach/OutreachPage.tsx` + `outreachModel.ts`
-- **What it shows:** Today: "Outreach — Drafts per opportunity. Every version needs your approval before it can be sent." and "Not built yet — milestone M5". Planned (`M4_M5_CONTRACT.md`, design `Outreach.dc.html`, `MobileOutreach.dc.html`): drafts across opportunities (title, organisation, channel, recipient, state, version, updated), channel tabs (Email, LinkedIn message, Contact form), an editor with recipient (verified / unverified), subject, body, claims with their basis, approval state, send blockers, version history, evidence panel.
-- **Actions:** Today: Go to profiles → `/profiles`. Planned: open a draft; edit (clears approval); approve the current version; revoke approval; delete; generate a new draft from an opportunity; copy the approved text.
-- **State (reads):** Today: none. Planned: `GET /api/v1/drafts?state&take&skip` (`{ total, items: DraftListItem[] }`), `GET /api/v1/drafts/:id` (`Draft`), `GET /api/v1/suppressions`.
-- **State (writes):** Today: none. Planned: `POST /api/v1/opportunities/:id/drafts { channel, recipient? }`, `PUT /api/v1/drafts/:id { recipient?, subject?, body, expectedVersion }`, `POST /api/v1/drafts/:id/approve { version }`, `POST /api/v1/drafts/:id/revoke-approval`, `DELETE /api/v1/drafts/:id`.
-- **Navigation out:** Today: `/profiles`. Planned: `/opportunities/:id`.
-- **Validation:** Planned: Approve disabled when the body is empty, the recipient is suppressed, or an Email draft has no recipient; 409 on a stale version; Send never enabled in M5 (`sendReady` is false: "Sending arrives with Gmail (M6)"); each disabled control shows its `sendBlockers`.
-- **Status:** not built
-- **TODOs:** API M5 not built (OQ-FE-005). Approval model (per version vs batch) undecided (OQ-FE-001). Gmail sending is M6 (OQ-FE-010). Types `Draft`, `DraftListItem` not in `src/lib/types.ts`.
+- **Route:** `/outreach`.
+- **Component:** `src/features/outreach/OutreachPage.tsx`.
+- **What it shows:** Cross-opportunity drafts with campaign, organisation, channel, recipient verification, state and exact version; filters for campaign/channel/state; editor fields and API-provided send blockers.
+- **Actions:** Open and edit (which clears approval), approve/revoke one version, select eligible filtered drafts for batch approval, or copy a draft while recording a Note activity on its opportunity.
+- **State (reads):** `GET /api/v1/drafts?state&channel&campaignId&take&skip`, `GET /api/v1/drafts/:id`.
+- **State (writes):** `PUT /api/v1/drafts/:id`, per-version approve/revoke, `POST /api/v1/drafts/batch-approve`, and `POST /api/v1/opportunities/:id/activities` for copy audit.
+- **Navigation out:** `/opportunities/:id`.
+- **Validation:** The API rechecks suppression during create/edit/approval, refuses bracketed placeholders and stale versions, and reports per-item approved/skipped/stale batch outcomes. User-entered recipients remain visibly unverified. Sending remains unavailable until a provider returns a receipt.
+- **Status:** built; strengthened review queue built 2026-10-07.
+- **TODOs:** Evidence-derived recipient verification, claims/evidence panel, version history and Gmail sending remain (OQ-FE-010).
 
 ---
 
@@ -113,13 +113,13 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 
 ### Batch approval — Approve outgoing emails and bids in one step
 
-- **Route:** none yet
-- **Component:** none yet
-- **What it shows:** (planned, product decision 2026-10-05) A list of prepared outgoing items (emails, bids, proposals) with recipient (verified or not), channel, first lines, claims basis and blockers; a count of what "Approve all" will approve.
-- **Actions:** (planned) remove items from the batch, open one to edit (editing clears its approval), Approve all.
-- **State (reads):** (planned) `GET /api/v1/drafts?state=Draft` exists in the M4/M5 contract; bids and proposals have no contract.
-- **State (writes):** (planned) no batch endpoint — the contract only has per-draft `POST /api/v1/drafts/:id/approve { version }`.
-- **Navigation out:** (planned) outreach editor, opportunity detail.
-- **Validation:** (planned) items with blockers (suppressed recipient, missing Email recipient, empty body, stale version) are excluded and listed with the reason; nothing is sent until Gmail (M6) or the bid API exists.
-- **Status:** not built
-- **TODOs:** Conflicts with per-version approval in `M4_M5_CONTRACT.md` and current UI copy (OQ-FE-001). Needs a contract (OQ-FE-002).
+- **Route:** `/outreach` for message drafts; `/proposals` and project detail for bids.
+- **Component:** batch selection is integrated into `OutreachPage.tsx`; sales bid batch API exists but has no combined web queue yet.
+- **What it shows:** Eligible drafts in the current filters, selected count, and the approved/skipped/stale result summary.
+- **Actions:** Select all eligible filtered drafts or individual drafts, then approve their exact versions in one request.
+- **State (reads):** `GET /api/v1/drafts`.
+- **State (writes):** `POST /api/v1/drafts/batch-approve`; `POST /api/v1/sales/bids/batch-approve` is available for the future combined queue.
+- **Navigation out:** outreach editor and opportunity detail.
+- **Validation:** Every item is revalidated independently for ownership, version, suppression, required recipient and placeholders. Nothing is sent or placed by approval.
+- **Status:** outreach batch approval built.
+- **TODOs:** Add sales bids to a combined outgoing review queue when provider placement is implemented (OQ-FE-002).

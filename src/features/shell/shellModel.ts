@@ -58,10 +58,10 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: 'applications',
         count: { key: 'needsManual', tone: 'attention', srLabel: 'need you' },
       },
-      { to: '/outreach', label: 'Outreach', icon: 'outreach', notBuilt: true },
+      { to: '/outreach', label: 'Outreach', icon: 'outreach' },
     ],
   },
-  { id: 'track', label: 'Track', items: [{ to: '/follow-ups', label: 'Follow-ups', icon: 'followUps', notBuilt: true }] },
+  { id: 'track', label: 'Track', items: [{ to: '/follow-ups', label: 'Follow-ups', icon: 'followUps' }] },
   {
     id: 'setup',
     label: 'Set up',
@@ -103,7 +103,7 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     label: 'Act',
     items: [
       { to: '/proposals', label: 'Proposals & bids', icon: 'applications' },
-      { to: '/outreach', label: 'Outreach', icon: 'outreach', notBuilt: true },
+      { to: '/outreach', label: 'Outreach', icon: 'outreach' },
     ],
   },
   {
@@ -111,7 +111,7 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     label: 'Track',
     items: [
       { to: '/bids', label: 'Bids sent', icon: 'bids' },
-      { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps', notBuilt: true },
+      { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps' },
     ],
   },
   SETUP_GROUP,

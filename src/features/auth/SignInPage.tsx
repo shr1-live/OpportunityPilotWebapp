@@ -5,7 +5,7 @@ import { ApiError, ApiStillUnreachableError, ApiUnreachableError } from '../../l
 import { isWakingError, wakeRetryDelay } from '../../lib/wakeRetry'
 import { AuthCardHeader, AuthLayout, Divider, GoogleButton, PasswordField } from './AuthLayout'
 import { AUTH_PATHS, KEEP_SIGNED_IN_KEY, readFlag } from './authModel'
-import { useAuth } from './AuthProvider'
+import { useAuth } from './AuthContext'
 
 const WAKE_NOTE =
   'The API sleeps when idle on free hosting. The first request after a quiet spell takes up to a minute — you will see “Starting the API service…”, not an error.'

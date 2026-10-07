@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { PageHeader } from '../../components/PageHeader'
+import { ErrorNotice } from '../../components/ErrorNotice'
+import { api } from '../../lib/api'
 import { config } from '../../lib/config'
-import { useAuth } from '../auth/AuthProvider'
+import { useAuth } from '../auth/AuthContext'
 import { useShell } from '../shell/ShellContext'
 import { WORKSPACES, type Workspace } from '../shell/shellModel'
 import { ThemeChoiceGroup } from '../shell/ThemeToggle'
@@ -24,6 +27,24 @@ const FIXED_RULES = [
 export function SettingsPage() {
   const { user, mode, signOut } = useAuth()
   const { capabilities, workspace, setWorkspace } = useShell()
+  const [accountError, setAccountError] = useState<Error>()
+  const [accountBusy, setAccountBusy] = useState(false)
+
+  async function exportData() {
+    setAccountBusy(true); setAccountError(undefined)
+    try {
+      const data = await api<object>('/api/v1/account-data/export')
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }))
+      const link = document.createElement('a'); link.href = url; link.download = `opportunitypilot-export-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(url)
+    } catch (e) { setAccountError(e as Error) } finally { setAccountBusy(false) }
+  }
+
+  async function deleteData() {
+    if (!window.confirm('Permanently delete all OpportunityPilot data for this account? Export first if you may need it.')) return
+    setAccountBusy(true); setAccountError(undefined)
+    try { await api('/api/v1/account-data', { method: 'DELETE', body: JSON.stringify({ confirm: true }) }); await signOut() }
+    catch (e) { setAccountError(e as Error); setAccountBusy(false) }
+  }
 
   return (
     <div className="page page-wide stack-4">
@@ -73,7 +94,9 @@ export function SettingsPage() {
                   {timeZone} <span className="muted-small">· from this browser; every date is shown in it</span>
                 </dd>
               </div>
+              <div><dt>Your data</dt><dd className="row wrap"><button className="btn btn-secondary btn-sm" type="button" disabled={accountBusy} onClick={exportData}>Export JSON</button><button className="btn btn-ghost btn-sm text-danger" type="button" disabled={accountBusy} onClick={deleteData}>Delete all data</button></dd></div>
             </dl>
+            {accountError && <div className="panel-body"><ErrorNotice error={accountError} /></div>}
           </section>
 
           <section className="panel" aria-labelledby="set-display">

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { AuthCardHeader, AuthLayout } from './AuthLayout'
 import { AUTH_PATHS, formatCountdown, resendSecondsLeft } from './authModel'
-import { useAuth } from './AuthProvider'
+import { useAuth } from './AuthContext'
 
 /** Design AuthVerify: check-your-email, resend on a cooldown, why it may not have arrived, change address. */
 export function VerifyEmailPage() {

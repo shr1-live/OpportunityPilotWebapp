@@ -11,6 +11,7 @@ import { formatWhen } from '../applications/applicationStatus'
 import { MODE_LABELS } from '../campaigns/campaignModel'
 import { useShell } from '../shell/ShellContext'
 import { CoverNotePanel } from './CoverNotePanel'
+import { OutreachActionsPanel } from './OutreachActionsPanel'
 import {
   agentApplyPlatform,
   displayUrl,
@@ -329,6 +330,7 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
 
         <div className="stack-4">
           {o.mode === 'Job' && <CoverNotePanel opportunityId={o.id} />}
+          <OutreachActionsPanel opportunityId={o.id} />
 
           <section className="panel" aria-labelledby="evidence-heading">
             <header className="panel-head">
@@ -379,7 +381,7 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
                       ? `This posting came from ${platform ?? 'a job board'}, so you apply yourself, then mark it applied.`
                       : o.mode === 'Job'
                         ? 'Apply on the company site, then mark it applied.'
-                        : 'Contacting is not built yet; the shortlist is yours to act on.'}
+                        : 'Create a draft above, approve its exact version, then copy it or use a configured provider.'}
                 </span>
               </div>
               {showApply && applyHref && (

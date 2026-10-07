@@ -18,23 +18,22 @@ export interface ApiState<T> {
 export function useApi<T>(path: string | null): ApiState<T> {
   const [data, setData] = useState<T>()
   const [error, setError] = useState<Error>()
-  const [loading, setLoading] = useState(path !== null)
+  const [settledKey, setSettledKey] = useState<string | null>(null)
   const [waking, setWaking] = useState(false)
   const [nonce, setNonce] = useState(0)
+  const requestKey = path === null ? null : `${path}\u0000${nonce}`
 
   useEffect(() => {
     if (path === null) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
-    setLoading(true)
-
     const attempt = (n: number) => {
       api<T>(path)
         .then((d) => {
           if (cancelled) return
           setData(d)
           setError(undefined)
-          setLoading(false)
+          setSettledKey(requestKey)
           setWaking(false)
         })
         .catch((e: Error) => {
@@ -47,7 +46,7 @@ export function useApi<T>(path: string | null): ApiState<T> {
           }
           // Say that retries happened only when they did.
           setError(e instanceof ApiUnreachableError && n > 0 ? new ApiStillUnreachableError(e.message) : e)
-          setLoading(false)
+          setSettledKey(requestKey)
           setWaking(false)
         })
     }
@@ -57,8 +56,9 @@ export function useApi<T>(path: string | null): ApiState<T> {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [path, nonce])
+  }, [path, nonce, requestKey])
 
   const reload = useCallback(() => setNonce((n) => n + 1), [])
-  return { data, error, loading, waking, reload }
+  const loading = requestKey !== null && settledKey !== requestKey
+  return { data, error: loading ? undefined : error, loading, waking, reload }
 }

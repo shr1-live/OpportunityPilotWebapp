@@ -1,8 +1,9 @@
-import type { Dispatch, SetStateAction } from 'react'
+import { useState, type Dispatch, type SetStateAction } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
-import type { ProfileSummary } from '../../lib/types'
+import { api } from '../../lib/api'
+import type { GoalPreview, ProfileSummary } from '../../lib/types'
 import type { ApiState } from '../../lib/useApi'
 import {
   type CampaignDraft,
@@ -37,12 +38,25 @@ const CUSTOMER_STEPS = [
   ['Read every source you add', 'CSV rows, public pages, feeds or pasted lists — de-duplicated first.'],
   ['Score against your criteria', 'Industries, problems and buying signals, each with the sentence that matched.'],
   ['Shortlist with the evidence', 'You pick which companies to keep; nothing is contacted.'],
-  ['Contact — not built yet', 'Proposals and email have no API yet, so the builder does not offer them.'],
+  ['Prepare reviewed outreach', 'Create an evidence-safe draft, approve its exact version, and track the next action.'],
 ]
 
 export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, fieldErrors, onEditCriteria }: Props) {
+  const [suggesting, setSuggesting] = useState(false)
+  const [suggestError, setSuggestError] = useState<Error>()
+  const [suggestion, setSuggestion] = useState<GoalPreview>()
   const lines = criteriaSummary(mode, draft.criteria)
   const profile = profiles.data?.find((p) => p.id === profileId)
+
+  async function suggestCriteria() {
+    if (!profileId || !draft.goal.trim()) return
+    setSuggesting(true); setSuggestError(undefined)
+    try {
+      const result = await api<GoalPreview>('/api/v1/goal-previews', { method: 'POST', body: JSON.stringify({ profileId, goal: draft.goal, mode }) })
+      setSuggestion(result)
+      setDraft((current) => ({ ...current, criteria: result.criteria }))
+    } catch (e) { setSuggestError(e as Error) } finally { setSuggesting(false) }
+  }
   const nameError = fieldError(fieldErrors, 'name')
   const goalError = fieldError(fieldErrors, 'goal')
 
@@ -104,7 +118,7 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
                   />
                   <span className="type-option-label">{m.label}</span>
                   <span className="muted-small">{m.description}</span>
-                  {!m.supported && <Badge>Not built yet · M7</Badge>}
+                  {!m.supported && <Badge>Unavailable</Badge>}
                 </label>
               )
             })}
@@ -179,10 +193,10 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
           </h4>
           <Badge>Entered by you</Badge>
         </div>
-        <p className="muted-small">
-          Criteria are entered by you; AI parsing arrives with Gemini (M4). Nothing is searched until you queue a run in
-          step 4.
-        </p>
+        <p className="muted-small">Turn the goal into a reviewable criteria proposal. Gemini is used only when configured; otherwise deterministic rules are used.</p>
+        {suggestError && <ErrorNotice error={suggestError} />}
+        <button type="button" className="btn btn-secondary btn-sm" disabled={suggesting || !profileId || !draft.goal.trim()} onClick={suggestCriteria}>{suggesting ? 'Suggesting…' : 'Suggest criteria from goal'}</button>
+        {suggestion && <p className="hint">Applied from {suggestion.source}{suggestion.fallbackReason ? ` (${suggestion.fallbackReason})` : ''}. Review before saving.</p>}
         {lines.length ? (
           <dl className="criteria-list">
             {lines.map((l) => (

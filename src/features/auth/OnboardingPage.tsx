@@ -4,7 +4,7 @@ import type { Workspace } from '../shell/shellModel'
 import { writeWorkspace } from '../shell/shellModel'
 import { BrandMark } from './AuthLayout'
 import { ONBOARDED_KEY, writeFlag } from './authModel'
-import { useAuth } from './AuthProvider'
+import { useAuth } from './AuthContext'
 
 const CHOICES: { key: Workspace; title: string; sub: string; status: string; tone: string; points: string[] }[] = [
   {

@@ -19,7 +19,7 @@ import {
   type NavItem,
 } from './shellModel'
 
-const overview: Overview = { profiles: 1, applied: 4, needsManual: 2, campaigns: 3, shortlisted: 5, awaitingApproval: 0 }
+const overview: Overview = { profiles: 1, applied: 4, needsManual: 2, campaigns: 3, shortlisted: 5, awaitingApproval: 0, draftsAwaitingReview: 0, followUpsDue: 0 }
 const item = (to: string): NavItem => {
   const found = NAV_GROUPS.flatMap((g) => g.items).find((i) => i.to === to)
   if (!found) throw new Error(`no nav item ${to}`)
@@ -81,7 +81,7 @@ describe('navAccessibleName', () => {
   it('says the count and the not-built state in words', () => {
     expect(navAccessibleName(item('/approvals'), 4)).toBe('Approvals (4 awaiting approval)')
     expect(navAccessibleName(item('/approvals'), null)).toBe('Approvals')
-    expect(navAccessibleName(item('/outreach'), null)).toBe('Outreach (not built yet)')
+    expect(navAccessibleName(item('/outreach'), null)).toBe('Outreach')
   })
 })
 
