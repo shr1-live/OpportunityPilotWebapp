@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SendPanel } from './SendPanel'
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
@@ -29,6 +29,13 @@ export function OutreachPage() {
   const eligible = filtered.filter((item) => item.state === 'Draft')
   const campaigns = [...new Map(items.map((item) => [item.campaignId, item.campaignName])).entries()]
     .sort((a, b) => a[1].localeCompare(b[1]))
+
+  const firstId = filtered[0]?.id
+  useEffect(() => {
+    if (!selected && firstId) void open({ id: firstId })
+    // Opens the first draft once the list arrives so the editor is never an empty pane.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstId, selected])
 
   async function open(item: Pick<DraftListItem, 'id'>) {
     setError(undefined); setNotice('')

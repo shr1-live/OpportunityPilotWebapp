@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest'
-import { inZone, money, nextStages, percent, submittableFields, zonedToUtc } from './staffingModel'
+import { inZone, money, nextStages, percent, stageProgress, submittableFields, zonedToUtc } from './staffingModel'
 
 describe('nextStages', () => {
   it('offers one step forward plus hold, lost and disqualified', () =>
     expect(nextStages('Replied', null)).toEqual(['MeetingScheduled', 'OnHold', 'Lost', 'Disqualified']))
   it('resumes a held deal only to where it was', () => expect(nextStages('OnHold', 'Interviewing')).toEqual(['Interviewing']))
   it('offers nothing for closed deals', () => expect(nextStages('Won', null)).toEqual([]))
+})
+
+describe('stageProgress', () => {
+  it('marks earlier stages done and the current one', () => {
+    const steps = stageProgress('Replied', null)
+    expect(steps[0]).toEqual({ stage: 'New', state: 'done' })
+    expect(steps.find((s) => s.stage === 'Replied')?.state).toBe('current')
+    expect(steps.at(-1)?.state).toBe('todo')
+  })
+  it('shows a held deal at the stage it was held', () =>
+    expect(stageProgress('OnHold', 'Offer').find((s) => s.state === 'current')?.stage).toBe('Offer'))
+  it('shows every stage done when won', () => expect(stageProgress('Won', null).every((s) => s.state === 'done')).toBe(true))
+  it('shows no position for a lost deal', () => expect(stageProgress('Lost', null).every((s) => s.state === 'todo')).toBe(true))
 })
 
 describe('submittableFields', () => {
