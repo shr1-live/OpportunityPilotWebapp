@@ -185,7 +185,7 @@ function Sources({ a }: { a: AnalyticsOverview }) {
       {a.sources.length === 0 ? (
         <p className="muted-small">No source has been read in this window.</p>
       ) : (
-        <div className="table-scroll">
+        <div className="table-scroll" tabIndex={0} role="region" aria-label="Source performance table">
           <table className="mini-table">
             <thead>
               <tr>
