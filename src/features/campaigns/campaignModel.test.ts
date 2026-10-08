@@ -233,7 +233,7 @@ describe('board tokens', () => {
 
 describe('job sources', () => {
   it('offers every public job source to Job campaigns only', () => {
-    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Remotive', 'RemoteOk'] as const) {
+    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Indeed', 'Remotive', 'RemoteOk'] as const) {
       expect(sourceKindAllowed(kind, 'Job')).toBe(true)
       expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
     }

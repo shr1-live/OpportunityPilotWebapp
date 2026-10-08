@@ -232,3 +232,79 @@ export function AdzunaForm({ campaign, onAdded }: { campaign: Campaign; onAdded:
     </form>
   )
 }
+
+export function IndeedForm({ campaign, onAdded }: { campaign: Campaign; onAdded: () => void }) {
+  const { capabilities } = useShell()
+  const [label, setLabel] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<Error>()
+  const search = adzunaSearch(campaign.criteria)
+  const notConfigured =
+    capabilities?.items.find((c) => c.key === JOB_SOURCE_CAPABILITY.Indeed)?.status === 'NotConfigured'
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(undefined)
+    try {
+      await api<Source>(`/api/v1/campaigns/${campaign.id}/sources`, {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'Indeed', label: label.trim() || undefined }),
+      })
+      setLabel('')
+      onAdded()
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="stack-3" onSubmit={(e) => void submit(e)}>
+      <SourceCapability kind="Indeed" />
+      {notConfigured && (
+        <p className="notice notice-warning">
+          Live Indeed postings are not set up on this server (its JSearch key is missing). You can add the source, but every
+          run will report it as failed until the key is set.
+        </p>
+      )}
+      <p className="small">
+        Finds current <strong>Indeed</strong> postings with this campaign&rsquo;s <strong>job titles and search phrases</strong>{' '}
+        (the first 3, one search each) in its <strong>first location that is not &ldquo;Remote&rdquo;</strong> (only
+        &ldquo;Remote&rdquo; searches remote jobs), posted in the last month. Indeed has no public API, so postings come
+        through JSearch, a licensed Google-for-Jobs data service; only postings with an indeed.com link are kept, scored
+        like any other job, and sent to Approvals. You apply on Indeed.
+      </p>
+      <dl className="criteria-list">
+        <div>
+          <dt>Will search for</dt>
+          <dd>
+            {search.keywords.length ? search.keywords.join(', ') : <span className="text-warning">No job titles yet</span>}
+          </dd>
+        </div>
+        <div>
+          <dt>Location</dt>
+          <dd>{search.location ?? <span className="muted-small">None set (only “Remote” or no locations)</span>}</dd>
+        </div>
+      </dl>
+      {search.keywords.length === 0 && (
+        <p className="notice notice-warning">
+          Add job titles or search phrases in step 2 (Filters) and save — without them an Indeed search has nothing to
+          look for.
+        </p>
+      )}
+      <p className="hint">Read from the saved campaign each time a run starts, so later edits in step 2 apply.</p>
+      <div className="field">
+        <label htmlFor="indeed-label">Label (optional)</label>
+        <input id="indeed-label" value={label} maxLength={200} onChange={(e) => setLabel(e.target.value)} />
+      </div>
+      {error && <ErrorNotice error={error} />}
+      <div>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Adding…' : 'Add Indeed search'}
+        </button>
+      </div>
+    </form>
+  )
+}

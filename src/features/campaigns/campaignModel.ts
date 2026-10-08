@@ -310,6 +310,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   SmartRecruiters: 'SmartRecruiters careers board',
   Recruitee: 'Recruitee careers board',
   Workable: 'Workable careers board',
+  Indeed: 'Indeed search',
   Remotive: 'Remotive remote jobs',
   RemoteOk: 'Remote OK jobs',
 }
@@ -324,6 +325,7 @@ export type JobSourceKind = Extract<
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Indeed'
   | 'Remotive'
   | 'RemoteOk'
 >
@@ -338,6 +340,7 @@ export const JOB_SOURCE_CAPABILITY: Record<JobSourceKind, SourceCapabilityKey> =
   SmartRecruiters: 'smartrecruiters',
   Recruitee: 'recruitee',
   Workable: 'workable',
+  Indeed: 'job-boards',
   Remotive: 'remotive',
   RemoteOk: 'remoteok',
 }

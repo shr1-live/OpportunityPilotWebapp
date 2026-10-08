@@ -42,6 +42,7 @@ export interface Capability {
 
 /** Capability keys for the open job sources (CANDIDATE_PHASE1_CONTRACT.md §1), category "Sources". */
 export type SourceCapabilityKey =
+  | 'job-boards'
   | 'greenhouse'
   | 'lever'
   | 'adzuna'
@@ -143,6 +144,7 @@ export type SourceKind =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Indeed'
   | 'Remotive'
   | 'RemoteOk'
 export type SourceStatus = 'Pending' | 'Ok' | 'Failed' | 'Skipped'
@@ -172,6 +174,7 @@ export type JobPlatform =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Indeed'
   | 'Remotive'
   | 'RemoteOk'
 export type EventLevel = 'Info' | 'Warning' | 'Error'

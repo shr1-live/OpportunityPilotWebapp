@@ -224,3 +224,10 @@ Designs: `../opportunitypilot-ui/` (`Campaigns`, `Campaign*`, `ResearchProgress`
 - **Approval queue:** pill campaign select; selection bar with "✓ Approve selected · N", Reject selected, Approve all; one panel per campaign ("NAME · N suggested", threshold, Suggestion settings) with a table: Job, Platform, Fit meter, Evidence meter, Why it was suggested, Applies via ("Your agent" / "You apply").
 - **Applications:** KPI strip (Applied, Needs you, Dry run, Failed, Skipped, Last activity); "Agent results" panel with Status/Platform pill filters beside the agent setup panel; "How the apply agent works" below. Header: Refresh, Agent setup.
 - **Phones (< 860 px):** opportunity and approval tables render each row as a card (title, fit on the right, then badges and meters).
+
+### Update 2026-10-08 — Indeed campaign source (W17)
+
+Campaign builder step 3 offers **Indeed job search** (Job campaigns only), next to Adzuna. The form shows what will be
+searched (first 3 job titles/phrases, first location that is not "Remote"), warns when the server has no JSearch key,
+and adds a source with no URL (`POST /api/v1/campaigns/{id}/sources { kind: "Indeed" }`). Runs list Indeed postings in
+Opportunities with platform "Indeed"; they are scored, suggested to Approvals and applied to on Indeed.
