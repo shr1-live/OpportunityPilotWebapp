@@ -145,7 +145,7 @@ export function SettingsPage() {
             <dl className="settings-rows panel-body">
               <div>
                 <dt>Web</dt>
-                <dd className="mono">{typeof window === 'undefined' ? '' : window.location.host} · {__APP_COMMIT__}</dd>
+                <dd className="mono">{typeof window === 'undefined' ? '' : window.location.host} · {typeof __APP_COMMIT__ === "string" ? __APP_COMMIT__ : "local"}</dd>
               </div>
               <div>
                 <dt>API version</dt>

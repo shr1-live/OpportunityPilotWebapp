@@ -266,8 +266,8 @@ export function ProposalsPanel({ base, work, busy, act }: PanelProps) {
         return <article key={p.id} className="card stack-2">
           <div className="row wrap"><strong>{p.title}</strong><Badge tone={p.state === 'Accepted' ? 'success' : p.state === 'Rejected' ? 'danger' : p.state === 'Draft' ? 'neutral' : 'primary'}>{p.state}</Badge>
             <span className="muted-small">from rate card v{p.rateCardVersion}{p.validUntil ? ` · valid until ${p.validUntil}` : ''}</span></div>
-          <table className="table"><thead><tr><th>Role</th><th>Seniority</th><th className="num">Rate</th></tr></thead>
-            <tbody>{p.lines.map((l, i) => <tr key={i}><td>{l.role}</td><td>{l.seniority ?? '—'}</td><td className="num op-numeric">{money(l.rate, p.currency)} / {l.unit.toLowerCase()}</td></tr>)}</tbody></table>
+          <div className="table-scroll"><table className="table"><thead><tr><th>Role</th><th>Seniority</th><th className="num">Rate</th></tr></thead>
+            <tbody>{p.lines.map((l, i) => <tr key={i}><td>{l.role}</td><td>{l.seniority ?? '—'}</td><td className="num op-numeric">{money(l.rate, p.currency)} / {l.unit.toLowerCase()}</td></tr>)}</tbody></table></div>
           {p.terms && <p className="muted-small">Terms: {p.terms}</p>}
           {p.body && <p className="pre-wrap small">{p.body}</p>}
           {p.state === 'Draft' && <div><button className="btn btn-primary btn-sm" type="button" disabled={busy} onClick={() => void act(`${url}/approve`, 'POST', { expectedVersion: p.version })}>Approve exactly this</button></div>}

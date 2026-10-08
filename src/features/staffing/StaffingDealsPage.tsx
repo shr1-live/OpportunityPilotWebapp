@@ -45,13 +45,13 @@ export function StaffingDealsPage() {
         <Kpi label="Placements" value={k.placements} sub={k.placementValue.map((m) => money(m.amount, m.currency)).join(' · ') || `${k.contractsSigned} contracts signed`} />
       </div>
       <div className="panel-body">
-        <table className="table">
+        <div className="table-scroll"><table className="table">
           <thead><tr><th>Step</th><th className="num">Reached</th><th className="num">Then</th><th className="num">Conversion</th></tr></thead>
           <tbody>{k.conversions.map((c) => <tr key={c.from}>
             <td>{STAGE_LABELS[c.from as DealStage]} → {STAGE_LABELS[c.to as DealStage]}</td>
             <td className="num op-numeric">{c.fromCount}</td><td className="num op-numeric">{c.toCount}</td><td className="num op-numeric">{percent(c.rate)}</td>
           </tr>)}</tbody>
-        </table>
+        </table></div>
         <p className="muted-small">
           Average time in the current stage: {k.averageDaysInStage == null ? '—' : `${k.averageDaysInStage} days`}. Average time from contact to reply:{' '}
           {k.averageHoursToReply == null ? '—' : `${k.averageHoursToReply} hours`}. Candidates: {k.candidates} on the bench, {k.candidatesWithConsent} with consent, {k.candidatesAvailable} available.
@@ -72,7 +72,7 @@ export function StaffingDealsPage() {
       {deals.error ? <ErrorNotice error={deals.error} onRetry={deals.reload} what="deals" />
         : !deals.data ? <LoadingState label="Loading deals…" waking={deals.waking} />
         : deals.data.length === 0 ? <EmptyState title="No staffing deals yet">Create a deal for a client requirement, then add candidates, submissions and interviews to it.</EmptyState>
-        : <table className="table">
+        : <div className="table-scroll"><table className="table">
           <thead><tr><th>Deal</th><th>Client</th><th>Stage</th><th>Source</th><th className="num">Value</th><th>Next action</th></tr></thead>
           <tbody>{visible.map((d) => {
             const overdue = d.nextActionAt && !isClosed(d.stage) && new Date(d.nextActionAt).getTime() < now
@@ -85,7 +85,7 @@ export function StaffingDealsPage() {
               <td className={overdue ? 'text-danger' : undefined}>{d.nextAction ?? '—'}{d.nextActionAt ? ` · ${new Date(d.nextActionAt).toLocaleDateString()}` : ''}</td>
             </tr>
           })}</tbody>
-        </table>}
+        </table></div>}
     </section>
   </div>
 }

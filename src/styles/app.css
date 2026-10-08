@@ -282,6 +282,9 @@ p { margin: 0; }
 .btn-primary:hover:not(:disabled) { background: var(--op-primary-hover); color: var(--op-on-primary); }
 .btn-secondary { background: var(--op-surface); color: var(--op-ink); border-color: var(--op-field-border); }
 .btn-secondary:hover:not(:disabled) { background: var(--op-panel-head); color: var(--op-ink); }
+.btn-ghost { background: transparent; color: var(--op-ink); border-color: transparent; }
+.btn-ghost:hover:not(:disabled) { background: var(--op-panel-head); }
+.btn-ghost.text-danger { color: var(--op-on-danger-tint); }
 .btn-sm { min-height: 28px; padding: 0 10px; font-size: 12px; }
 .btn-link { background: none; border: 0; padding: 0; color: var(--op-primary); cursor: pointer; text-align: left; }
 .btn-link:hover { text-decoration: underline; }
@@ -410,7 +413,7 @@ p { margin: 0; }
 .filters .field { flex: 0 1 200px; }
 .segmented { display: inline-flex; align-self: flex-start; padding: 4px; gap: 4px; border: 1px solid var(--op-line); border-radius: 10px; background: var(--op-surface); }
 .segmented button { min-height: 36px; padding: 6px 14px; border: 0; border-radius: 7px; background: transparent; color: var(--op-muted); font: inherit; font-weight: 600; cursor: pointer; }
-.segmented button.active { background: var(--op-primary-tint); color: var(--op-primary); }
+.segmented button.active { background: var(--op-primary-tint); color: var(--op-on-primary-tint); }
 .board-search-actions { display: flex; align-items: center; gap: var(--op-space-4); justify-content: space-between; }
 
 .table-card { padding: 0; overflow: hidden; }
@@ -1279,5 +1282,14 @@ p { margin: 0; }
 .activity-list { list-style: none; margin: 0; padding: 0 var(--op-space-4) var(--op-space-3); display: flex; flex-direction: column; gap: 6px; }
 .activity-list li { font-size: var(--op-text-meta); }
 .panel-body.row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.table-role a { text-decoration: underline; text-underline-offset: 2px; }
 .msg-in { border-left: 3px solid var(--op-primary, currentColor); }
 .kpi-strip-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+@media (max-width: 1280px) { .kpi-strip-7 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .kpi-strip-7 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* S11: links inside notices and running text are underlined (not told apart by colour alone) and readable on tinted backgrounds. */
+.notice a, .panel-note a, p.small a, p.muted-small a { text-decoration: underline; }
+.notice-warning a { color: var(--op-on-amber-tint); }
+.code-block pre:focus-visible { outline: 2px solid var(--op-primary); outline-offset: 2px; }
+.notice-neutral a { color: var(--op-on-neutral-tint); }

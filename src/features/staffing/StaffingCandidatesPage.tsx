@@ -24,7 +24,7 @@ export function StaffingCandidatesPage() {
       {list.error ? <ErrorNotice error={list.error} onRetry={list.reload} what="candidates" />
         : !list.data ? <LoadingState label="Loading candidates…" waking={list.waking} />
         : list.data.length === 0 ? <EmptyState title="No candidates yet">Add the people you can place, then record what each agreed to share.</EmptyState>
-        : <table className="table">
+        : <div className="table-scroll"><table className="table">
           <thead><tr><th>Candidate</th><th>Availability</th><th className="num">Rate</th><th>Consent</th><th>May be shared</th><th /></tr></thead>
           <tbody>{list.data.map((c) => <tr key={c.id}>
             <td><strong>{c.name}</strong><div className="muted-small">{[c.headline, c.location, c.yearsExperience != null ? `${c.yearsExperience} yrs` : null].filter(Boolean).join(' · ')}</div></td>
@@ -36,7 +36,7 @@ export function StaffingCandidatesPage() {
             <td className="row"><button className="btn btn-secondary btn-sm" type="button" onClick={() => setEditing(c)}>Edit</button>
               <button className="btn btn-secondary btn-sm" type="button" onClick={() => setConsentFor(c)}>Consent</button></td>
           </tr>)}</tbody>
-        </table>}
+        </table></div>}
     </section>
   </div>
 }

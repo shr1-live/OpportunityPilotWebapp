@@ -33,8 +33,8 @@ export function StaffingRateCardsPage() {
           {c.status === 'Draft' && <button className="btn btn-primary btn-sm" type="button" onClick={() => void setStatus(c, 'Active')}>Activate</button>}
           {c.status !== 'Retired' && <button className="btn btn-secondary btn-sm" type="button" onClick={() => void setStatus(c, 'Retired')}>Retire</button>}
         </header>
-        <table className="table"><thead><tr><th>Role</th><th>Seniority</th><th className="num">Rate</th></tr></thead>
-          <tbody>{c.lines.map((l, i) => <tr key={i}><td>{l.role}</td><td>{l.seniority ?? '—'}</td><td className="num op-numeric">{money(l.rate, c.currency)} / {l.unit.toLowerCase()}</td></tr>)}</tbody></table>
+        <div className="table-scroll"><table className="table"><thead><tr><th>Role</th><th>Seniority</th><th className="num">Rate</th></tr></thead>
+          <tbody>{c.lines.map((l, i) => <tr key={i}><td>{l.role}</td><td>{l.seniority ?? '—'}</td><td className="num op-numeric">{money(l.rate, c.currency)} / {l.unit.toLowerCase()}</td></tr>)}</tbody></table></div>
         {(c.terms || c.validUntil) && <p className="panel-body muted-small">{c.terms}{c.validUntil ? ` · valid until ${c.validUntil}` : ''}</p>}
       </section>)}
   </div>
