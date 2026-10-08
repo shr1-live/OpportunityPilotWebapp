@@ -6,6 +6,7 @@ import { LoadingState } from '../../components/States'
 import { Badge } from '../../components/StatusBadge'
 import { api } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
+import { ConversationPanel } from './ConversationPanel'
 import { InterviewsPanel, OffersPanel, ProposalsPanel, SubmissionsPanel } from './DealWorkPanels'
 import { isClosed, money, nextStages, SOURCE_LABELS, STAGE_LABELS } from './staffingModel'
 import type { DealWork, StaffingAccount, StaffingDeal } from './staffingTypes'
@@ -57,6 +58,8 @@ export function StaffingDealPage() {
     </section>
 
     <NextActionForm deal={d} busy={busy} onSave={(body) => act(base, 'PUT', body)} />
+
+    <ConversationPanel base={base} contacts={account?.contacts ?? []} busy={busy} act={act} onChange={() => deal.reload()} />
 
     {work.error ? <ErrorNotice error={work.error} onRetry={work.reload} what="the deal's candidates and offers" />
       : !work.data ? <LoadingState label="Loading submissions, interviews and offers…" waking={work.waking} />

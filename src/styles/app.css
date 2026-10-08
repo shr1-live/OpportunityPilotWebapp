@@ -1279,3 +1279,5 @@ p { margin: 0; }
 .activity-list { list-style: none; margin: 0; padding: 0 var(--op-space-4) var(--op-space-3); display: flex; flex-direction: column; gap: 6px; }
 .activity-list li { font-size: var(--op-text-meta); }
 .panel-body.row { flex-direction: row; flex-wrap: wrap; align-items: center; }
+.msg-in { border-left: 3px solid var(--op-primary, currentColor); }
+.kpi-strip-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }

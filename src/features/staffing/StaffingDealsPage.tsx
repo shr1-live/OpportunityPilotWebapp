@@ -35,8 +35,9 @@ export function StaffingDealsPage() {
 
     {kpis.error ? <ErrorNotice error={kpis.error} onRetry={kpis.reload} what="staffing KPIs" /> : k && <section className="panel">
       <header className="panel-head"><h3 className="eyebrow">Funnel</h3><span className="grow" /><span className="muted-small">Counted from stored deals and records; nothing is estimated.</span></header>
-      <div className="kpi-strip">
+      <div className="kpi-strip kpi-strip-7">
         <Kpi label="Open deals" value={k.openDeals} sub={k.overdueNextActions ? `${k.overdueNextActions} next actions overdue` : 'none overdue'} />
+        <Kpi label="Outreach" value={k.messagesAwaitingSend} sub={`to send · ${k.repliesToClassify} replies to read · ${k.meetingsUpcoming} meetings`} />
         <Kpi label="Pipeline value" value={k.openPipelineValue.map((m) => money(m.amount, m.currency)).join(' · ') || '—'} sub="open deals with a value" />
         <Kpi label="Submitted" value={k.submissionsSent} sub={`${k.submissionsApproved} approved, ${k.submissionsDraft} drafts`} />
         <Kpi label="Interviews" value={k.interviewsUpcoming} sub={`upcoming · ${k.interviewsNotNotified} candidate not told`} />

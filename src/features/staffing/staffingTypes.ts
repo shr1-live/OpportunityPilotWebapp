@@ -96,4 +96,5 @@ export type StaffingKpis = {
   submissionsDraft: number; submissionsApproved: number; submissionsSent: number
   interviewsUpcoming: number; interviewsCompleted: number; interviewsNotNotified: number
   offersExtended: number; offersAccepted: number; contractsSigned: number; placements: number
+  messagesAwaitingSend: number; repliesToClassify: number; meetingsUpcoming: number
 }
