@@ -682,7 +682,9 @@ export interface AnalyticsOverview {
     failing: boolean
   }[]
   applicationsPerDay: { date: string; applied: number; replies: number }[] | null
-  attention: { kind: 'Approvals' | 'ShortlistedNotApplied' | 'AgentNeedsYou' | 'SourceFailing'; count: number; detail: string }[]
+  attention: { kind: 'Approvals' | 'ShortlistedNotApplied' | 'AgentNeedsYou' | 'SourceFailing' | 'FollowUpsOverdue'; count: number; detail: string }[]
+  /** Sales only: drafts, bids and follow-ups counted now from stored records. */
+  outreach?: { draftsAwaitingReview: number; draftsApproved: number; bidsPlaced: number; bidsFailed: number; followUpsDue: number; followUpsOverdue: number; replyRate: number | null } | null
   activeResearch: {
     jobId: string
     campaignId: string
