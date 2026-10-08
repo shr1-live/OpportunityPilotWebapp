@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { LoadingState } from '../../components/States'
 import type { Capabilities, Capability } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
+import { ProviderReadinessPanel } from './ProviderReadinessPanel'
 
 const CATEGORY_ORDER = ['Core', 'AI', 'Sources', 'Outreach', 'Platforms', 'Optional']
 
@@ -59,6 +60,8 @@ export function IntegrationsPage() {
           )
         }
       />
+
+      <ProviderReadinessPanel />
 
       {caps.error && <ErrorNotice error={caps.error} onRetry={caps.reload} />}
       {caps.loading && !caps.data && <LoadingState label="Loading capabilities…" waking={caps.waking} rows={5} />}
