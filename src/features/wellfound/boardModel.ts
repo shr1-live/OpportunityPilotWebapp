@@ -26,6 +26,8 @@ export type BoardSearchResult = {
   observedAt: string | null
   fromCache: boolean
   source: string
+  /** Searches left on the JSearch plan this period (RapidAPI header); null when unknown. */
+  quotaRemaining?: number | null
 }
 
 export type BoardSearch = { query: string; location: string; workMode: string; postedWithinDays: string; country: string }

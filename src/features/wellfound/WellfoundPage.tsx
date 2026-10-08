@@ -68,6 +68,7 @@ export function WellfoundPage() {
   }
 
   async function syncPublic() {
+    if (busy) return
     setBusy(true); setActionError(undefined)
     try { await api('/api/v1/wellfound/public/sync', { method: 'POST' }); reloadAll() }
     catch (e) { setActionError(e as Error) }
@@ -78,9 +79,8 @@ export function WellfoundPage() {
     if (autoSyncAttempted.current || !jobs.data || jobs.loading) return
     if (jobs.data.length === 0 || jobs.data.every((job) => job.isDemo)) {
       autoSyncAttempted.current = true
-      void api('/api/v1/wellfound/public/sync', { method: 'POST' })
-        .then(() => reloadAll())
-        .catch((error) => setActionError(error as Error))
+      // Same path as the button, so the button is disabled while this first refresh runs (no double refresh).
+      void syncPublic()
     }
     // This one-shot migration is intentionally keyed only to the first loaded job collection.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
