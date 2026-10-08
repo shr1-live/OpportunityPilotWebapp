@@ -3,6 +3,7 @@ import {
   campaignFilterCounts,
   filterCampaigns,
   isRunning,
+  jobSearchTerms,
   addTags,
   adzunaSearch,
   applicableCriteria,
@@ -233,11 +234,13 @@ describe('board tokens', () => {
 
 describe('job sources', () => {
   it('offers every public job source to Job campaigns only', () => {
-    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Indeed', 'Remotive', 'RemoteOk'] as const) {
+    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Remotive', 'RemoteOk'] as const) {
       expect(sourceKindAllowed(kind, 'Job')).toBe(true)
       expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
     }
     expect(sourceKindAllowed('Url', 'Customer')).toBe(true)
+    expect(sourceKindAllowed('JobSearch', 'Job')).toBe(true)
+    expect(sourceKindAllowed('JobSearch', 'Customer')).toBe(true)
   })
 
   it('shows Adzuna searching up to 3 keywords in the first non-Remote location', () => {
@@ -263,4 +266,14 @@ describe('campaigns list', () => {
   it('knows when the latest run is still going', () => {
     expect(list.map(isRunning)).toEqual([true, false, false])
   })
+})
+
+describe('jobSearchTerms', () => {
+  const criteria = { keywords: ['React', 'react', 'Node'], signals: ['hiring frontend', 'new funding'], locations: ['Remote', 'Pune'] }
+  it('uses keywords for Job campaigns', () =>
+    expect(jobSearchTerms(criteria, 'Job')).toEqual({ terms: ['React', 'Node'], location: 'Pune', remoteOnly: false }))
+  it('adds buying signals for Sales campaigns, at most 3', () =>
+    expect(jobSearchTerms(criteria, 'Customer').terms).toEqual(['React', 'Node', 'hiring frontend']))
+  it('searches remote only when every location is Remote', () =>
+    expect(jobSearchTerms({ ...criteria, locations: ['Remote'] }, 'Job')).toMatchObject({ location: null, remoteOnly: true }))
 })

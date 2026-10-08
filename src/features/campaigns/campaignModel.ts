@@ -310,7 +310,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   SmartRecruiters: 'SmartRecruiters careers board',
   Recruitee: 'Recruitee careers board',
   Workable: 'Workable careers board',
-  Indeed: 'Indeed search',
+  JobSearch: 'Job board search (Indeed, LinkedIn, SEEK)',
   Remotive: 'Remotive remote jobs',
   RemoteOk: 'Remote OK jobs',
 }
@@ -325,7 +325,7 @@ export type JobSourceKind = Extract<
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
-  | 'Indeed'
+  | 'JobSearch'
   | 'Remotive'
   | 'RemoteOk'
 >
@@ -340,15 +340,37 @@ export const JOB_SOURCE_CAPABILITY: Record<JobSourceKind, SourceCapabilityKey> =
   SmartRecruiters: 'smartrecruiters',
   Recruitee: 'recruitee',
   Workable: 'workable',
-  Indeed: 'job-boards',
+  JobSearch: 'job-boards',
   Remotive: 'remotive',
   RemoteOk: 'remoteok',
 }
 
 /** The source kinds a campaign of this mode may add; the API rejects the job sources for Customer campaigns. */
 export function sourceKindAllowed(kind: SourceKind, mode: OpportunityMode): boolean {
+  // A job board search gives jobs to Job campaigns and hiring companies (leads) to every other mode.
+  if (kind === 'JobSearch') return true
   if (kind in JOB_SOURCE_CAPABILITY) return mode === 'Job'
   return true
+}
+
+export type SearchBoard = 'Indeed' | 'LinkedIn' | 'Seek'
+export const SEARCH_BOARDS: { value: SearchBoard; label: string }[] = [
+  { value: 'Indeed', label: 'Indeed' },
+  { value: 'LinkedIn', label: 'LinkedIn' },
+  { value: 'Seek', label: 'SEEK (Australia / New Zealand)' },
+]
+
+/** What a job board search will look for: Job → first 3 keywords; other modes → keywords, then buying signals. */
+export function jobSearchTerms(criteria: Pick<CampaignCriteria, 'keywords' | 'signals' | 'locations'>, mode: OpportunityMode): {
+  terms: string[]
+  location: string | null
+  remoteOnly: boolean
+} {
+  const pool = mode === 'Job' ? criteria.keywords : [...criteria.keywords, ...(criteria.signals ?? [])]
+  const seen = new Set<string>()
+  const terms = pool.map((t) => t.trim()).filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase())).slice(0, 3)
+  const location = criteria.locations.find((l) => l.trim() && l.trim().toLowerCase() !== 'remote')?.trim() ?? null
+  return { terms, location, remoteOnly: location === null && criteria.locations.length > 0 }
 }
 
 /** Same pattern the API validates a board token / company slug with. */
