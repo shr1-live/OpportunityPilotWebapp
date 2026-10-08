@@ -178,7 +178,6 @@ export function topbarHint(pathname: string, workspace: Workspace, overview: Ove
     const ws = `${WORKSPACES[workspace].label} workspace`
     return overview && known(overview.campaigns) ? `${ws} · ${plural(overview.campaigns, 'campaign', 'campaigns')}` : ws
   }
-  if (['/outreach', '/follow-ups', '/projects', '/proposals', '/bids'].includes(pathname)) return `${group?.label} · Not built yet`
   let detail: string | null = null
   if (overview) {
     if (pathname === '/campaigns') detail = plural(overview.campaigns, 'campaign', 'campaigns')

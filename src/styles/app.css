@@ -1134,6 +1134,7 @@ p { margin: 0; }
 .builder-stage > .stack-6 > dl.review-list { grid-column: 1 / -1; }
 .builder-body { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: 14px; }
 .builder-side .panel-body { gap: 10px; }
+@media (max-width: 1080px) { /* the round-3 rule above overrode the earlier one-column rule */ .builder-body { grid-template-columns: minmax(0, 1fr); } }
 .mode-steps { list-style: none; margin: 0; counter-reset: ms; }
 .mode-steps li { counter-increment: ms; display: grid; grid-template-columns: 26px 1fr; column-gap: 8px; }
 .mode-steps li::before {
@@ -1266,3 +1267,6 @@ p { margin: 0; }
 
 /* .panel-body stacks vertically; a filter row inside it must still wrap across (fields were 200px tall). */
 .panel-body.filters { flex-direction: row; align-items: flex-start; }
+
+/* R13: on phones a panel header with filters wraps instead of pushing the page sideways. */
+@media (max-width: 600px) { .panel-head { flex-wrap: wrap; } }
