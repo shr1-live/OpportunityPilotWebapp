@@ -456,6 +456,10 @@ function OpportunityTable({
                           {next.label}
                           <span className="sr-only"> {o.title}</span>
                         </button>
+                      ) : next.label === 'Draft outreach' ? (
+                        <Link to={`/opportunities/${o.id}#outreach`}>
+                          Draft outreach<span className="sr-only"> for {o.organization}</span>
+                        </Link>
                       ) : next.label === 'Open posting' && (o.applyUrl || o.url) ? (
                         <a href={(o.applyUrl ?? o.url)!} target="_blank" rel="noreferrer">
                           Open posting

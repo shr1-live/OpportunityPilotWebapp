@@ -24,6 +24,7 @@ import {
   settableStatuses,
   STATUS_LABELS,
   valueLabel,
+  nextPermittedAction,
 } from './opportunityModel'
 
 const dateFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
@@ -168,6 +169,7 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
           }
           actions={decisions}
         />
+          <p className="notice notice-neutral small" aria-live="polite"><strong>Next:</strong> {nextPermittedAction(o)}</p>
       </div>
 
       <span className="sr-only" role="status" aria-live="polite">
@@ -337,7 +339,9 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
 
         <div className="stack-4">
           {o.mode === 'Job' && <CoverNotePanel opportunityId={o.id} />}
-          <OutreachActionsPanel opportunityId={o.id} />
+          <div id="outreach">
+            <OutreachActionsPanel opportunityId={o.id} />
+          </div>
 
           <section className="panel" aria-labelledby="evidence-heading">
             <header className="panel-head">

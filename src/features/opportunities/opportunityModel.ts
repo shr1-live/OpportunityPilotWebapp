@@ -218,11 +218,37 @@ export function selectionCsv(items: OpportunitySummary[]): string {
   return [head, ...rows].map((r) => r.map(csvCell).join(',')).join('\n')
 }
 
+/** What the user may do next with this opportunity, in one sentence (P4). Nothing here happens automatically. */
+export function nextPermittedAction(o: Pick<OpportunitySummary, 'status' | 'outcome' | 'mode'>): string {
+  const job = o.mode === 'Job'
+  switch (o.status) {
+    case 'Suggested': return 'Approve it to shortlist it, or reject it. Nothing is contacted or applied to until you do.'
+    case 'New':
+      return o.outcome === 'Excluded'
+        ? 'Excluded by a hard filter. Restore it only if the filter was wrong for this one.'
+        : o.outcome === 'NeedsVerification'
+          ? 'Check the unknown criteria against the evidence, then shortlist or dismiss it.'
+          : 'Shortlist it if the evidence fits, or dismiss it.'
+    case 'Shortlisted':
+      return job
+        ? 'Apply: LinkedIn, Naukri and InstaHyre jobs go to your local agent; open the others and apply yourself.'
+        : 'Draft outreach below, approve its exact version, send it yourself, then record that it was sent.'
+    case 'Applied': return 'Applied. Add a follow-up so you check the outcome.'
+    case 'Contacted': return 'Contacted. Record their reply when it comes, or schedule a follow-up.'
+    case 'Responded': return 'They replied. Record whether they are interested and plan the next step.'
+    case 'Interested': return 'Interested. Agree the next step and keep a follow-up open until it happens.'
+    case 'Dismissed': return 'Dismissed. Restore it if you change your mind.'
+    case 'Closed': return 'Closed. No further action.'
+    default: return 'Review the evidence.'
+  }
+}
+
 /** One clear next step per row (design): approve, review, open the posting, or restore. */
-export function primaryAction(o: Pick<OpportunitySummary, 'status' | 'outcome'>): { label: string; to?: OpportunityStatus } {
+export function primaryAction(o: Pick<OpportunitySummary, 'status' | 'outcome'> & { mode?: OpportunitySummary['mode'] }): { label: string; to?: OpportunityStatus } {
   if (o.status === 'Suggested') return { label: 'Approve', to: 'Shortlisted' }
   if (o.status === 'Dismissed') return { label: 'Restore', to: 'New' }
-  if (o.status === 'Shortlisted') return { label: 'Open posting' }
+  // Sales: a shortlisted company is approached with a reviewed draft, not "applied to".
+  if (o.status === 'Shortlisted') return o.mode && o.mode !== 'Job' ? { label: 'Draft outreach' } : { label: 'Open posting' }
   if (o.status === 'New' && o.outcome === 'Qualified') return { label: 'Shortlist', to: 'Shortlisted' }
   return { label: 'Review' }
 }
