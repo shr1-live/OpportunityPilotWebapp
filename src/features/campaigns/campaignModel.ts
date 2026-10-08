@@ -586,3 +586,16 @@ export function campaignFilterCounts(campaigns: { mode: OpportunityMode }[]): Re
 export function isRunning(c: { lastJob: { state: string } | null }): boolean {
   return c.lastJob?.state === 'Queued' || c.lastJob?.state === 'Running'
 }
+
+/** Schedule cadences offered in the builder (API allows 15–10080 minutes). */
+export const CADENCES = [
+  { minutes: 360, label: 'Every 6 hours' },
+  { minutes: 720, label: 'Every 12 hours' },
+  { minutes: 1440, label: 'Daily' },
+  { minutes: 4320, label: 'Every 3 days' },
+  { minutes: 10080, label: 'Weekly' },
+]
+
+export function cadenceLabel(minutes: number): string {
+  return CADENCES.find((c) => c.minutes === minutes)?.label ?? `Every ${minutes} minutes`
+}

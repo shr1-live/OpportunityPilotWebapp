@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  cadenceLabel,
   campaignFilterCounts,
   filterCampaigns,
   isRunning,
@@ -276,4 +277,11 @@ describe('jobSearchTerms', () => {
     expect(jobSearchTerms(criteria, 'Customer').terms).toEqual(['React', 'Node', 'hiring frontend']))
   it('searches remote only when every location is Remote', () =>
     expect(jobSearchTerms({ ...criteria, locations: ['Remote'] }, 'Job')).toMatchObject({ location: null, remoteOnly: true }))
+})
+
+describe('cadenceLabel', () => {
+  it('names known cadences and falls back to minutes', () => {
+    expect(cadenceLabel(1440)).toBe('Daily')
+    expect(cadenceLabel(90)).toBe('Every 90 minutes')
+  })
 })

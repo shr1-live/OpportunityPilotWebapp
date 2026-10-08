@@ -1,3 +1,4 @@
+import { SchedulePanel } from './SchedulePanel'
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
@@ -261,6 +262,8 @@ export function ReviewStep({ campaign, draft, mode, profile, profileLoading, dir
           </Link>
         )}
       </section>
+
+      <SchedulePanel campaignId={campaign.id} />
 
       <p className="hint">Results are a research shortlist ranked by fit, not confirmed interest.</p>
     </div>
