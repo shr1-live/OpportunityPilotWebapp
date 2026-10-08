@@ -79,7 +79,7 @@ function SubmissionCard({ s, base, busy, act }: { s: Submission; base: string; b
       <span className="grow" />
       {s.state !== 'Withdrawn' && s.state !== 'Sent' && <button className="btn btn-secondary btn-sm" type="button" disabled={busy} onClick={() => void act(`${url}/withdraw`, 'POST', {})}>Withdraw</button>}
     </div>
-    <dl className="criteria-list">{Object.entries(s.snapshot).map(([k, v]) =>
+    <dl className="criteria-list criteria-row">{Object.entries(s.snapshot).map(([k, v]) =>
       <div key={k}><dt>{k}</dt><dd className="pre-wrap">{k === 'resume' && v ? `${v.slice(0, 300)}${v.length > 300 ? '…' : ''}` : v ?? '—'}</dd></div>)}</dl>
     {s.note && <p className="muted-small">Note: {s.note}</p>}
     {s.state === 'Draft' && <div><button className="btn btn-primary btn-sm" type="button" disabled={busy} onClick={() => void act(`${url}/approve`, 'POST', { expectedVersion: s.version })}>Approve exactly this</button></div>}

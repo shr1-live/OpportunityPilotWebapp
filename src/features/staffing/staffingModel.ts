@@ -38,6 +38,15 @@ export function nextStages(stage: DealStage, beforeHold: DealStage | null): Deal
   return [...forward, 'OnHold', 'Lost', 'Disqualified']
 }
 
+export type StageStep = { stage: DealStage; state: 'done' | 'current' | 'todo' }
+
+/** The forward pipeline with where this deal is: a held deal shows the stage it was held at; lost/disqualified show no position. */
+export function stageProgress(stage: DealStage, beforeHold: DealStage | null): StageStep[] {
+  const at = stage === 'OnHold' ? beforeHold : stage
+  const i = at ? FORWARD.indexOf(at) : -1
+  return FORWARD.map((s, n) => ({ stage: s, state: i < 0 ? 'todo' : n < i ? 'done' : n === i ? (s === 'Won' ? 'done' : 'current') : 'todo' }))
+}
+
 /** Fields the user may choose for a submission: only what the candidate allowed, and only with consent. */
 export function submittableFields(candidate: Pick<StaffingCandidate, 'consent' | 'shareableFields'>): CandidateField[] {
   return candidate.consent === 'Granted' ? CANDIDATE_FIELDS.map((f) => f.field).filter((f) => candidate.shareableFields.includes(f)) : []

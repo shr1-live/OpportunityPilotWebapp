@@ -184,7 +184,8 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
           }
           actions={decisions}
         />
-          <p className="notice notice-neutral small" aria-live="polite"><strong>Next:</strong> {nextPermittedAction(o)}
+          <p className={`notice ${suggested ? 'notice-warning' : 'notice-neutral'} small`} aria-live="polite"><strong>Next:</strong> {nextPermittedAction(o)}
+            {suggested && <> It scored at or above your campaign&rsquo;s threshold — you can also decide in bulk on <Link to="/approvals">Approvals</Link>.</>}
             {o.mode !== 'Job' && (o.status === 'Shortlisted' || o.status === 'Contacted' || o.status === 'Responded' || o.status === 'Interested') && (
               <> <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void makeStaffingLead()}>Make a staffing lead</button></>
             )}</p>
@@ -194,14 +195,6 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
         {announcement}
       </span>
       {error && <ErrorNotice error={error} />}
-      {suggested && (
-        <p className="notice notice-warning">
-          <span>
-            Suggested for approval: research scored this at or above your campaign&rsquo;s threshold. Nothing is applied until you
-            approve. You can also decide in bulk on the <Link to="/approvals">Approvals page</Link>.
-          </span>
-        </p>
-      )}
 
       <div className="detail3">
         <div className="stack-4">

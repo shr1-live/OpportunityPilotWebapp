@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
+import { HowItWorks } from '../../components/HowItWorks'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState, LoadingState } from '../../components/States'
 import { api } from '../../lib/api'
@@ -56,15 +57,12 @@ export function ApprovalQueuePage() {
     <div className="page page-wide stack-4">
       <PageHeader
         title="Approvals"
-        subtitle={
-          <>
-            Jobs research suggested because they qualified and scored at or above your campaign&rsquo;s threshold.
-            <strong> Approve</strong> moves a job to Shortlisted: your agent applies to shortlisted LinkedIn and Naukri jobs
-            on its next apply run, and you apply to the others from their application page. Nothing is applied when you
-            approve. <strong>Reject</strong> dismisses it; you can restore it from Opportunities.
-          </>
-        }
+        subtitle="Jobs that scored at or above your campaign's threshold. Approve to shortlist, reject to dismiss."
       />
+      <HowItWorks summary="What approving does — nothing is applied when you approve">
+        <p>Approve moves a job to Shortlisted. Your agent applies to shortlisted LinkedIn and Naukri jobs on its next apply run;
+          you apply to the others from their application page. Reject dismisses a job; you can restore it from Opportunities.</p>
+      </HowItWorks>
 
       {campaigns.error && <ErrorNotice error={campaigns.error} onRetry={campaigns.reload} />}
 

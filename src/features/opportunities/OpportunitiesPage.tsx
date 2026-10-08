@@ -55,12 +55,7 @@ export function OpportunitiesPage() {
     <div className="page page-wide stack-4">
       <PageHeader
         title="Opportunities"
-        subtitle={
-          <>
-            Everything your campaigns found. <strong>Fit is a ranking out of 100</strong>, not a chance of success. Coverage says how
-            much of the score rests on verified facts.
-          </>
-        }
+        subtitle="Everything your campaigns found, best fit first. Fit is a ranking out of 100, not a chance of success."
         actions={
           awaiting > 0 ? (
             <Link className="btn btn-primary btn-sm" to="/approvals">

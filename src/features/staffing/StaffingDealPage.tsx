@@ -8,7 +8,7 @@ import { api } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
 import { ConversationPanel } from './ConversationPanel'
 import { InterviewsPanel, OffersPanel, ProposalsPanel, SubmissionsPanel } from './DealWorkPanels'
-import { isClosed, money, nextStages, SOURCE_LABELS, STAGE_LABELS } from './staffingModel'
+import { isClosed, money, nextStages, SOURCE_LABELS, STAGE_LABELS, stageProgress } from './staffingModel'
 import type { DealWork, StaffingAccount, StaffingDeal } from './staffingTypes'
 
 export function StaffingDealPage() {
@@ -46,7 +46,13 @@ export function StaffingDealPage() {
     <section className="panel">
       <header className="panel-head"><h3 className="eyebrow">Stage</h3><span className="grow" />
         <span className="muted-small">Moves one step at a time. Submitting, interviewing, offers and placement also move it when you record them.</span></header>
-      <div className="panel-body row wrap">
+      <div className="panel-body">
+        <ol className="stage-track" aria-label="Deal stages">
+          {stageProgress(d.stage, d.stageBeforeHold).map((s) => <li key={s.stage} className={`stage-${s.state}`} aria-current={s.state === 'current' ? 'step' : undefined}>
+            <span className="stage-dot" aria-hidden="true" /><span className="stage-name">{STAGE_LABELS[s.stage]}</span>
+          </li>)}
+        </ol>
+        <div className="row wrap">
         {nextStages(d.stage, d.stageBeforeHold).length === 0
           ? <span className="muted-small">This deal is closed ({STAGE_LABELS[d.stage]}).</span>
           : nextStages(d.stage, d.stageBeforeHold).map((s) =>
@@ -54,6 +60,7 @@ export function StaffingDealPage() {
               onClick={() => void act(`${base}/stage`, 'POST', { stage: s, expectedVersion: d.version })}>
               {s === d.stageBeforeHold ? `Resume: ${STAGE_LABELS[s]}` : `→ ${STAGE_LABELS[s]}`}
             </button>)}
+        </div>
       </div>
     </section>
 

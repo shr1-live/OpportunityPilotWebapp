@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Badge } from '../../components/StatusBadge'
+import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { HowItWorks } from '../../components/HowItWorks'
 import type { Workspace } from '../shell/shellModel'
 import { BoardLiveResults } from './BoardLiveResults'
 import { BOARDS, boardJobsPath, type JobBoard } from './boardModel'
@@ -8,8 +8,8 @@ function terms(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean).slice(0, 12)
 }
 
-/** Search one job board (Indeed, LinkedIn or SEEK): show live postings through JSearch, or open the same search on the board. */
-export function BoardSearchPanel({ board, workspace }: { board: JobBoard; workspace: Workspace }) {
+/** Search one job board (Indeed, LinkedIn or SEEK): live postings through JSearch first, the same search on the board as a fallback. */
+export function BoardSearchPanel({ board, workspace, tabs }: { board: JobBoard; workspace: Workspace; tabs: ReactNode }) {
   const info = BOARDS[board]
   const [keywords, setKeywords] = useState('')
   const [techStack, setTechStack] = useState('')
@@ -21,6 +21,7 @@ export function BoardSearchPanel({ board, workspace }: { board: JobBoard; worksp
   const [experience, setExperience] = useState('')
   const [postedWithinDays, setPostedWithinDays] = useState('')
   const [exclude, setExclude] = useState('')
+  const [moreOpen, setMoreOpen] = useState(false)
   const [livePath, setLivePath] = useState<string | null>(null)
 
   const query = useMemo(() => {
@@ -32,6 +33,12 @@ export function BoardSearchPanel({ board, workspace }: { board: JobBoard; worksp
   const search = { query, location, workMode, postedWithinDays, country }
   const searchUrl = info.searchUrl(search)
   const canSearch = Boolean(query || location.trim())
+  const extraCount = [techStack, company, workMode, jobType, experience, postedWithinDays, exclude].filter(Boolean).length
+
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    if (query) setLivePath(boardJobsPath(board, search))
+  }
 
   function clear() {
     setKeywords(''); setTechStack(''); setCompany(''); setLocation(''); setWorkMode(''); setJobType('')
@@ -39,39 +46,41 @@ export function BoardSearchPanel({ board, workspace }: { board: JobBoard; worksp
   }
 
   return <>
-    <section className="notice notice-neutral row wrap">
-      <Badge tone="neutral">How {info.name} jobs get here</Badge>
-      <span className="grow">{info.boundary} OpportunityPilot does not scrape it. "Show live {info.name} jobs" reads current postings through JSearch, a licensed Google-for-Jobs data service, and keeps only those published on {info.name}, each with its {info.name} link. "Open search on {info.name}" opens the same search there.</span>
-    </section>
-
-    <section className="panel stack-3">
-      <header className="panel-head"><div><h3 className="eyebrow">{workspace === 'candidate' ? `Find ${info.name} jobs` : `Find ${info.name} hiring signals`}</h3><p className="muted-small">Set only the facts you care about. The generated query stays visible before you search.</p></div><span className="grow" /><button type="button" className="btn btn-secondary btn-sm" onClick={clear}>Clear</button></header>
-      <div className="panel-body filters">
-        <label className="field field-wide"><span>{workspace === 'candidate' ? 'Role or keywords' : 'Hiring role or demand signal'}</span><input value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder={workspace === 'candidate' ? 'Backend engineer, platform…' : 'React developer, data engineer…'} /></label>
-        <label className="field field-wide"><span>Tech stack</span><input value={techStack} onChange={(event) => setTechStack(event.target.value)} placeholder="React, TypeScript, AWS" /><small>Up to 12 comma-separated technologies.</small></label>
-        <label className="field"><span>Company</span><input value={company} onChange={(event) => setCompany(event.target.value)} placeholder="Optional company" /></label>
-        {info.countries ? <label className="field"><span>Country</span><select value={country} onChange={(event) => setCountry(event.target.value)}>{info.countries.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label> : null}
-        <label className="field"><span>Location</span><input value={location} onChange={(event) => setLocation(event.target.value)} placeholder={board === 'Seek' ? 'Sydney, Melbourne…' : 'Bengaluru, India…'} /></label>
+    <form className="search-hero" onSubmit={submit} aria-label={`Search ${info.name}`}>
+      {tabs}
+      <div className="search-bar">
+        <label className="search-field search-field-main"><span className="sr-only">{workspace === 'candidate' ? 'Role or keywords' : 'Hiring role or demand signal'}</span>
+          <input value={keywords} onChange={(event) => setKeywords(event.target.value)} placeholder={workspace === 'candidate' ? 'Role or keywords, e.g. .NET developer' : 'Role companies are hiring, e.g. React developer'} /></label>
+        <label className="search-field"><span className="sr-only">Location</span>
+          <input value={location} onChange={(event) => setLocation(event.target.value)} placeholder={board === 'Seek' ? 'Sydney, Melbourne…' : 'Location, e.g. Bengaluru'} /></label>
+        {info.countries ? <label className="search-field search-field-small"><span className="sr-only">Country</span><select value={country} onChange={(event) => setCountry(event.target.value)}>{info.countries.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}</select></label> : null}
+        <button className="btn btn-primary" type="submit" disabled={!query}>Search {info.name}</button>
+      </div>
+      <div className="search-tools">
+        <button type="button" className="btn btn-ghost btn-sm" aria-expanded={moreOpen} onClick={() => setMoreOpen(!moreOpen)}>{moreOpen ? 'Fewer filters' : `More filters${extraCount ? ` (${extraCount})` : ''}`}</button>
+        {(canSearch || extraCount > 0) && <button type="button" className="btn btn-ghost btn-sm" onClick={clear}>Clear</button>}
+        <span className="grow" />
+        {query && <span className="muted-small search-query" title="The query sent to the job board">Query: {query}</span>}
+        {canSearch ? <a className="btn btn-ghost btn-sm" href={searchUrl} target="_blank" rel="noopener noreferrer">Open on {info.name} ↗<span className="sr-only"> (opens in a new tab)</span></a> : null}
+      </div>
+      {moreOpen && <div className="search-more filters">
+        <label className="field field-wide"><span>Tech stack</span><input value={techStack} onChange={(event) => setTechStack(event.target.value)} placeholder="React, TypeScript, AWS" /></label>
+        <label className="field"><span>Company</span><input value={company} onChange={(event) => setCompany(event.target.value)} placeholder="Only this company" /></label>
         <label className="field"><span>Work mode</span><select value={workMode} onChange={(event) => setWorkMode(event.target.value)}><option value="">Any mode</option><option value="remote">Remote</option><option value="hybrid">Hybrid</option><option value="in-person">In person</option></select></label>
         <label className="field"><span>Job type</span><select value={jobType} onChange={(event) => setJobType(event.target.value)}><option value="">Any type</option><option value="full-time">Full time</option><option value="part-time">Part time</option><option value="contract">Contract</option><option value="internship">Internship</option></select></label>
         <label className="field"><span>Experience</span><select value={experience} onChange={(event) => setExperience(event.target.value)}><option value="">Any level</option><option value="entry-level">Entry level</option><option value="mid-level">Mid level</option><option value="senior">Senior</option><option value="lead">Lead</option></select></label>
         <label className="field"><span>Date posted</span><select value={postedWithinDays} onChange={(event) => setPostedWithinDays(event.target.value)}><option value="">Any time</option><option value="1">Past 24 hours</option><option value="3">Past 3 days</option><option value="7">Past week</option><option value="14">Past 2 weeks</option></select></label>
-        <label className="field field-wide"><span>Exclude terms</span><input value={exclude} onChange={(event) => setExclude(event.target.value)} placeholder="WordPress, agency, unpaid" /><small>Comma-separated terms are added as exclusions to the query.</small></label>
-      </div>
-      <div className="panel-foot board-search-actions">
-        <div><span className="eyebrow">Generated query</span><p className="muted-small">{query || location.trim() || 'Add a role, technology, company or location to begin.'}</p></div>
-        <button className="btn btn-primary" type="button" disabled={!query} onClick={() => setLivePath(boardJobsPath(board, search))}>Show live {info.name} jobs</button>
-        {canSearch ? <a className="btn btn-secondary" href={searchUrl} target="_blank" rel="noopener noreferrer">Open search on {info.name}<span className="sr-only"> (opens in a new tab)</span></a> : <button className="btn btn-secondary" type="button" disabled>Open search on {info.name}</button>}
-      </div>
-    </section>
+        <label className="field field-wide"><span>Exclude terms</span><input value={exclude} onChange={(event) => setExclude(event.target.value)} placeholder="WordPress, agency, unpaid" /></label>
+      </div>}
+      <HowItWorks summary={`How ${info.name} jobs get here — read-only, nothing is applied for you`}>
+        <p>{info.boundary} OpportunityPilot does not scrape it. Live results come from JSearch, a licensed Google-for-Jobs data service, and only postings published on {info.name} are kept, each with its {info.name} link. Results are shown, not saved, and cached for a few hours to stay within the free quota.</p>
+        <p>{workspace === 'candidate'
+          ? `Apply on ${info.name}, then track the result in Applications.`
+          : `Use the companies hiring your stack as demand signals, then create or update the customer campaign.`}</p>
+      </HowItWorks>
+    </form>
 
-    <BoardLiveResults board={board} path={livePath} />
-
-    <section className="panel-grid panel-grid-2">
-      <article className="card stack-2"><Badge tone="success">Available now</Badge><h3>{workspace === 'candidate' ? 'Candidate use' : 'Sales use'}</h3><p>{workspace === 'candidate'
-        ? `Show live ${info.name} jobs or open the search on ${info.name}, review the posting, apply on ${info.name}, then track the result in OpportunityPilot Applications.`
-        : `Show live ${info.name} jobs to see which companies are hiring your target stack right now, then create or update the customer campaign in OpportunityPilot.`}</p></article>
-      <article className="card stack-2"><Badge tone="warning">Provider boundary</Badge><h3>Read-only, not stored</h3><p>Live results are shown, not saved, and nothing is applied to automatically. Applications, messages and employer data stay on {info.name}. Searches are cached for a few hours to stay within the free JSearch quota.</p></article>
-    </section>
+    {livePath ? <BoardLiveResults board={board} path={livePath} searchUrl={searchUrl} />
+      : <p className="muted-small search-hint">{workspace === 'candidate' ? `Type a role and press Search to see live ${info.name} jobs.` : `Type a role and press Search to see which companies are hiring on ${info.name}.`}</p>}
   </>
 }

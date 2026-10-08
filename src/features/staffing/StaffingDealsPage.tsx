@@ -33,31 +33,6 @@ export function StaffingDealsPage() {
 
     {creating && <NewDealForm accounts={accounts.data ?? []} onCreated={() => { setCreating(false); reload() }} />}
 
-    {kpis.error ? <ErrorNotice error={kpis.error} onRetry={kpis.reload} what="staffing KPIs" /> : k && <section className="panel">
-      <header className="panel-head"><h3 className="eyebrow">Funnel</h3><span className="grow" /><span className="muted-small">Counted from stored deals and records; nothing is estimated.</span></header>
-      <div className="kpi-strip kpi-strip-7">
-        <Kpi label="Open deals" value={k.openDeals} sub={k.overdueNextActions ? `${k.overdueNextActions} next actions overdue` : 'none overdue'} />
-        <Kpi label="Outreach" value={k.messagesAwaitingSend} sub={`to send · ${k.repliesToClassify} replies to read · ${k.meetingsUpcoming} meetings`} />
-        <Kpi label="Pipeline value" value={k.openPipelineValue.map((m) => money(m.amount, m.currency)).join(' · ') || '—'} sub="open deals with a value" />
-        <Kpi label="Submitted" value={k.submissionsSent} sub={`${k.submissionsApproved} approved, ${k.submissionsDraft} drafts`} />
-        <Kpi label="Interviews" value={k.interviewsUpcoming} sub={`upcoming · ${k.interviewsNotNotified} candidate not told`} />
-        <Kpi label="Offers" value={k.offersExtended + k.offersAccepted} sub={`${k.offersAccepted} accepted`} />
-        <Kpi label="Placements" value={k.placements} sub={k.placementValue.map((m) => money(m.amount, m.currency)).join(' · ') || `${k.contractsSigned} contracts signed`} />
-      </div>
-      <div className="panel-body">
-        <div className="table-scroll"><table className="table">
-          <thead><tr><th>Step</th><th className="num">Reached</th><th className="num">Then</th><th className="num">Conversion</th></tr></thead>
-          <tbody>{k.conversions.map((c) => <tr key={c.from}>
-            <td>{STAGE_LABELS[c.from as DealStage]} → {STAGE_LABELS[c.to as DealStage]}</td>
-            <td className="num op-numeric">{c.fromCount}</td><td className="num op-numeric">{c.toCount}</td><td className="num op-numeric">{percent(c.rate)}</td>
-          </tr>)}</tbody>
-        </table></div>
-        <p className="muted-small">
-          Average time in the current stage: {k.averageDaysInStage == null ? '—' : `${k.averageDaysInStage} days`}. Average time from contact to reply:{' '}
-          {k.averageHoursToReply == null ? '—' : `${k.averageHoursToReply} hours`}. Candidates: {k.candidates} on the bench, {k.candidatesWithConsent} with consent, {k.candidatesAvailable} available.
-        </p>
-      </div>
-    </section>}
 
     <section className="panel">
       <header className="panel-head">
@@ -87,6 +62,34 @@ export function StaffingDealsPage() {
           })}</tbody>
         </table></div>}
     </section>
+
+    {kpis.error ? <ErrorNotice error={kpis.error} onRetry={kpis.reload} what="staffing KPIs" /> : k && <section className="panel">
+      <header className="panel-head"><h3 className="eyebrow">Funnel</h3><span className="grow" /><span className="muted-small">Counted from stored deals and records; nothing is estimated.</span></header>
+      <div className="kpi-strip kpi-strip-7">
+        <Kpi label="Open deals" value={k.openDeals} sub={k.overdueNextActions ? `${k.overdueNextActions} next actions overdue` : 'none overdue'} />
+        <Kpi label="Outreach" value={k.messagesAwaitingSend} sub={`to send · ${k.repliesToClassify} replies to read · ${k.meetingsUpcoming} meetings`} />
+        <Kpi label="Pipeline value" value={k.openPipelineValue.map((m) => money(m.amount, m.currency)).join(' · ') || '—'} sub="open deals with a value" />
+        <Kpi label="Submitted" value={k.submissionsSent} sub={`${k.submissionsApproved} approved, ${k.submissionsDraft} drafts`} />
+        <Kpi label="Interviews" value={k.interviewsUpcoming} sub={`upcoming · ${k.interviewsNotNotified} candidate not told`} />
+        <Kpi label="Offers" value={k.offersExtended + k.offersAccepted} sub={`${k.offersAccepted} accepted`} />
+        <Kpi label="Placements" value={k.placements} sub={k.placementValue.map((m) => money(m.amount, m.currency)).join(' · ') || `${k.contractsSigned} contracts signed`} />
+      </div>
+      <div className="panel-body">
+        <details className="how-it-works"><summary>Stage-to-stage conversion</summary>
+        <div className="table-scroll"><table className="table">
+          <thead><tr><th>Step</th><th className="num">Reached</th><th className="num">Then</th><th className="num">Conversion</th></tr></thead>
+          <tbody>{k.conversions.map((c) => <tr key={c.from}>
+            <td>{STAGE_LABELS[c.from as DealStage]} → {STAGE_LABELS[c.to as DealStage]}</td>
+            <td className="num op-numeric">{c.fromCount}</td><td className="num op-numeric">{c.toCount}</td><td className="num op-numeric">{percent(c.rate)}</td>
+          </tr>)}</tbody>
+        </table></div>
+        </details>
+        <p className="muted-small">
+          Average time in the current stage: {k.averageDaysInStage == null ? '—' : `${k.averageDaysInStage} days`}. Average time from contact to reply:{' '}
+          {k.averageHoursToReply == null ? '—' : `${k.averageHoursToReply} hours`}. Candidates: {k.candidates} on the bench, {k.candidatesWithConsent} with consent, {k.candidatesAvailable} available.
+        </p>
+      </div>
+    </section>}
   </div>
 }
 

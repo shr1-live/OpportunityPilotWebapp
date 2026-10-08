@@ -88,20 +88,20 @@
   --op-seq-5: #04776c;
 
   /* shape */
-  --op-radius: 8px;
-  --op-radius-control: 7px;
-  --op-radius-chip: 5px;
+  --op-radius: 12px;
+  --op-radius-control: 8px;
+  --op-radius-chip: 6px;
 
   /* type */
   --op-font: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --op-font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --op-text-page: 19px;
-  --op-text-screen: 15.5px;
-  --op-text-metric: 25px;
-  --op-text-body: 12.5px;
-  --op-text-meta: 11.5px;
-  --op-text-micro: 10.5px;
-  --op-text-label: 10.5px;
+  --op-text-page: 24px;
+  --op-text-screen: 16px;
+  --op-text-metric: 30px;
+  --op-text-body: 14px;
+  --op-text-meta: 12.5px;
+  --op-text-micro: 11.5px;
+  --op-text-label: 11.5px;
 
   /* spacing, 4 / 8 */
   --op-space-1: 4px;  --op-space-2: 8px;  --op-space-3: 12px;
@@ -332,6 +332,8 @@ body {
 
   /* Elevation */
   --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.15);       /* skip link, tooltips */
+  --op-shadow-card: 0 1px 2px rgb(22 37 58 / 0.05), 0 2px 8px rgb(22 37 58 / 0.04); /* cards and panels */
+  --op-shadow-hover: 0 4px 16px rgb(22 37 58 / 0.10);    /* hovered result cards */
   --op-shadow-popover: 0 8px 24px rgb(22 37 58 / 0.12);  /* menus */
   --op-shadow-sticky: 0 -4px 12px rgb(22 37 58 / 0.06);  /* sticky footers */
   --op-shadow-drawer: 0 0 32px rgb(16 30 48 / 0.35);     /* open navigation drawer */
@@ -347,6 +349,8 @@ body {
   --op-warning-icon: #e2ad52;
   --op-danger-border: #5a2a30;
   --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.5);
+  --op-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35);
+  --op-shadow-hover: 0 6px 18px rgb(0 0 0 / 0.45);
   --op-shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45);
   --op-shadow-sticky: 0 -4px 12px rgb(0 0 0 / 0.35);
   --op-scrim: rgb(3 8 14 / 0.62);
@@ -357,6 +361,8 @@ body {
     --op-warning-icon: #e2ad52;
     --op-danger-border: #5a2a30;
     --op-shadow-raised: 0 2px 8px rgb(0 0 0 / 0.5);
+    --op-shadow-card: 0 1px 2px rgb(0 0 0 / 0.35);
+    --op-shadow-hover: 0 6px 18px rgb(0 0 0 / 0.45);
     --op-shadow-popover: 0 8px 24px rgb(0 0 0 / 0.45);
     --op-shadow-sticky: 0 -4px 12px rgb(0 0 0 / 0.35);
     --op-scrim: rgb(3 8 14 / 0.62);
