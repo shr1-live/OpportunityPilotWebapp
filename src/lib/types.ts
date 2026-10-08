@@ -383,7 +383,7 @@ export interface OpportunityDetail extends OpportunitySummary {
 // ---------- Outreach drafts (OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md) ----------
 
 export type DraftChannel = 'Email' | 'CoverNote' | 'LinkedInMessage' | 'ContactForm'
-export type DraftState = 'Draft' | 'Approved'
+export type DraftState = 'Draft' | 'Approved' | 'Sent'
 export type DraftSource = 'Gemini' | 'Template'
 
 export interface DraftClaim {
