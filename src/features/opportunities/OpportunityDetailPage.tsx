@@ -234,6 +234,13 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
             </div>
           </section>
 
+          {o.scoredBy && (
+            <p className="muted-small">
+              Scored by the <Link to={`/research/${o.scoredBy.researchJobId}`}>run of {new Date(o.scoredBy.runAt).toLocaleString()}</Link> using
+              campaign version {o.scoredBy.campaignVersion} and profile version {o.scoredBy.profileVersion}.
+            </p>
+          )}
+
           <section className="panel" aria-labelledby="facts-heading">
             <header className="panel-head">
               <h3 id="facts-heading" className="eyebrow">

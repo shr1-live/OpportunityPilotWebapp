@@ -299,6 +299,8 @@ export interface ResearchJob {
   finishedAt: string | null
   safeError: string | null
   counts: ResearchCounts
+  /** The exact inputs the run used (single job only). */
+  inputs?: { campaignVersion: number; profileVersion: number; profile: unknown; criteria: Record<string, unknown> }
   /** Latest 100, newest first. Omitted from job lists. */
   events?: ResearchEvent[]
 }
@@ -374,6 +376,8 @@ export interface OpportunityDetail extends OpportunitySummary {
   gaps: string[]
   evidence: Evidence[]
   activities: OpportunityActivity[]
+  /** The run that last scored this, with the exact campaign and profile versions it used. */
+  scoredBy?: { researchJobId: string; campaignVersion: number; profileVersion: number; runAt: string } | null
 }
 
 // ---------- Outreach drafts (OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md) ----------

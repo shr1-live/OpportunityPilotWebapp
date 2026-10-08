@@ -230,6 +230,25 @@ function ResearchProgress({ jobId }: { jobId: string }) {
         </ol>
       </section>
 
+      {job.inputs && (
+        <details className="card">
+          <summary>
+            Inputs used: campaign version {job.inputs.campaignVersion}, profile version {job.inputs.profileVersion}
+          </summary>
+          <p className="muted-small">Results of this run were scored against exactly these criteria, even if the campaign changed later.</p>
+          <dl className="criteria-list">
+            {Object.entries(job.inputs.criteria)
+              .filter(([, v]) => v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
+              .map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase()}</dt>
+                  <dd>{Array.isArray(v) ? v.join(', ') : String(v)}</dd>
+                </div>
+              ))}
+          </dl>
+        </details>
+      )}
+
       <section className="stack-3" aria-labelledby="counts-heading">
         <div className="row wrap">
           <h3 id="counts-heading" className="section-heading">
