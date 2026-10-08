@@ -121,7 +121,7 @@ const router = createBrowserRouter([
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'integrations', element: <IntegrationsPage />, handle: { title: 'Sources & integrations' } },
-      { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Wellfound' } },
+      { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Job discovery' } },
       { path: 'settings', element: <SettingsPage />, handle: { title: 'Settings' } },
       { path: '*', element: <NotFound />, handle: { title: 'Not found' } },
     ],

@@ -411,7 +411,7 @@ p { margin: 0; }
 .segmented { display: inline-flex; align-self: flex-start; padding: 4px; gap: 4px; border: 1px solid var(--op-line); border-radius: 10px; background: var(--op-surface); }
 .segmented button { min-height: 36px; padding: 6px 14px; border: 0; border-radius: 7px; background: transparent; color: var(--op-muted); font: inherit; font-weight: 600; cursor: pointer; }
 .segmented button.active { background: var(--op-primary-tint); color: var(--op-primary); }
-.indeed-search-actions { display: flex; align-items: center; gap: var(--op-space-4); justify-content: space-between; }
+.board-search-actions { display: flex; align-items: center; gap: var(--op-space-4); justify-content: space-between; }
 
 .table-card { padding: 0; overflow: hidden; }
 /* Wide tables scroll inside the card so the page itself never scrolls sideways. */
@@ -1096,7 +1096,7 @@ p { margin: 0; }
 @media (max-width: 860px) {
   .kpi-strip, .kpi-strip-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .kpi { border-left: 0; border-top: 1px solid var(--op-hair); }
-  .indeed-search-actions { align-items: stretch; flex-direction: column; }
+  .board-search-actions { align-items: stretch; flex-direction: column; }
   .panel-grid-3, .panel-grid-2, .panel-grid-wide-left, .choice-grid, .first-steps { grid-template-columns: minmax(0, 1fr); }
   .funnel li { grid-template-columns: 100px 40px minmax(0, 1fr); }
   .funnel-prev { display: none; }
@@ -1252,3 +1252,17 @@ p { margin: 0; }
 .guide-step-body, .guide-step-where { display: flex; flex-direction: column; gap: 3px; }
 .guide-log { font-size: 12px; white-space: normal; color: var(--op-ink); background: var(--op-panel-head); padding: 2px 6px; border-radius: 4px; }
 @media (max-width: 860px) { .guide-steps li { grid-template-columns: 30px minmax(0, 1fr); } .guide-step-where { grid-column: 2; } }
+
+/* Live job-board results (W10–W13) */
+.board-results { list-style: none; margin: 0; padding: 0; }
+.board-result { display: flex; gap: var(--op-space-4); padding: var(--op-space-3) var(--op-space-4); border-top: 1px solid var(--op-line); }
+.board-result:first-child { border-top: 0; }
+.board-result .board-snippet { margin: 4px 0 0; line-height: 1.45; max-height: 2.9em; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.board-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; text-align: right; }
+@media (max-width: 640px) {
+  .board-result { flex-direction: column; }
+  .board-meta { align-items: flex-start; text-align: left; }
+}
+
+/* .panel-body stacks vertically; a filter row inside it must still wrap across (fields were 200px tall). */
+.panel-body.filters { flex-direction: row; align-items: flex-start; }
