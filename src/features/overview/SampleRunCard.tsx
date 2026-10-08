@@ -37,26 +37,20 @@ export function SampleRunCard() {
   }
 
   return (
-    <section className="card stack-3 sample-run">
-      <div className="row">
-        <h3 className="section-heading">See it work: try a sample run</h3>
-        <span className="badge badge-primary">Live data</span>
+    <section className="hero-strip">
+      <div className="hero-strip-text">
+        <div className="row wrap">
+          <h3 className="section-heading">See it work on real job boards</h3>
+          <span className="badge badge-primary">Live data</span>
+        </div>
+        <p className="muted-small">
+          One click reads {SAMPLE_SOURCES.map((s) => s.label).join(' and ')}, then filters and scores every job in about a minute.
+          Jobs scoring {SAMPLE_SUGGEST_AT}+ go to Approvals. Nothing is applied for you.
+        </p>
+        {error && <ErrorNotice error={error} onRetry={start} />}
       </div>
-      <p className="muted-small">
-        One click creates a sample backend-engineer profile and a campaign that reads real, public job boards:
-      </p>
-      <ul className="muted-small">
-        {SAMPLE_SOURCES.map((s) => (
-          <li key={s.url}>{s.label}</li>
-        ))}
-      </ul>
-      <p className="muted-small">
-        You then watch each stage live: gather → filter → score. Jobs scoring {SAMPLE_SUGGEST_AT}+ go to Approvals.
-        Takes about 30–60 seconds. Nothing is applied for you.
-      </p>
-      {error && <ErrorNotice error={error} onRetry={start} />}
-      <div className="row">
-        <button type="button" className="btn btn-primary btn-sm" onClick={start} disabled={busy !== null}>
+      <div className="row wrap hero-strip-actions">
+        <button type="button" className="btn btn-primary" onClick={start} disabled={busy !== null}>
           {busy ? 'Starting…' : 'Start sample run'}
         </button>
         {busy && (

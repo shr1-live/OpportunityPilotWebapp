@@ -1358,3 +1358,13 @@ a.result-title:hover { color: var(--op-primary); }
   .result-side { align-items: flex-start; text-align: left; }
 }
 .search-hero > .segmented { justify-self: start; max-width: 100%; overflow-x: auto; position: relative; }
+
+/* Hero strip: one-line "try it" cards (sample run, Sales demo) */
+.hero-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; padding: 18px 22px; border-radius: var(--op-radius); border: 1px solid var(--op-primary-tint-border); background: linear-gradient(0deg, var(--op-primary-tint), var(--op-primary-tint)) , var(--op-surface); box-shadow: var(--op-shadow-card); }
+.hero-strip-text { flex: 1 1 420px; min-width: 0; display: grid; gap: 8px; }
+.hero-strip-actions { flex: 0 1 auto; min-width: 0; }
+.kpi-label { color: var(--op-muted); font-size: var(--op-text-meta); font-weight: 500; }
+.kpi-strip { border-radius: var(--op-radius); box-shadow: var(--op-shadow-card); }
+.kpi { padding: 16px 18px; }
+.kpi-value { font-size: var(--op-text-metric); }
+.section-heading { font-size: 16px; letter-spacing: -0.01em; }

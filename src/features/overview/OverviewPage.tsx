@@ -35,7 +35,7 @@ export function OverviewPage() {
 
   if (overview.error) return <div className="page"><ErrorNotice error={overview.error} onRetry={overview.reload} what="your overview" /></div>
   if (!overview.data) return <div className="page"><LoadingState label="Loading your overview…" waking={overview.waking} stats={5} rows={4} /></div>
-  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} onChanged={overview.reload} />
+  if (isFirstRun(overview.data)) return <FirstRun onChanged={overview.reload} />
 
   const a = analytics.data
   return (
@@ -81,7 +81,7 @@ export function OverviewPage() {
 function Kpi({ label, value, sub, tone }: { label: string; value: string | number; sub: string; tone?: 'warning' | 'muted' }) {
   return (
     <div className="kpi">
-      <div className="eyebrow">{label}</div>
+      <div className="kpi-label">{label}</div>
       <div className={`kpi-value op-numeric ${tone === 'warning' ? 'text-warning' : tone === 'muted' ? 'muted' : ''}`}>{value}</div>
       <div className="muted-small">{sub}</div>
     </div>
@@ -231,25 +231,6 @@ function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Ov
         <Kpi label="Agent needs you" value={k.agentNeedsYou || overview.needsManual} sub="captcha or an extra question" tone={k.agentNeedsYou ? 'warning' : undefined} />
       </div>
 
-      <Funnel a={a} title="Pipeline — what happened to everything we read" tone="teal" />
-
-      <div className="panel-grid-3">
-        <Histogram a={a} />
-        <RankedBars
-          title="Why qualified jobs stall"
-          tone="amber"
-          rows={a.unknownCriteria.map((u) => ({ label: u.label, count: u.unknownCount }))}
-          empty="No criterion was left unknown in this window."
-          footer={
-            <>
-              Criteria most often <strong>Unknown</strong>. Unknown never counts as a pass — adding a source that supplies these
-              lifts scores honestly.
-            </>
-          }
-        />
-        <Sources a={a} />
-      </div>
-
       <div className="panel-grid-2">
         <Panel
           title="Needs your attention"
@@ -294,6 +275,25 @@ function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Ov
           </p>
           <p className="muted-small">Counted from agent results and the jobs you marked applied. Nothing is inferred.</p>
         </Panel>
+      </div>
+
+      <Funnel a={a} title="Pipeline — what happened to everything we read" tone="teal" />
+
+      <div className="panel-grid-3">
+        <Histogram a={a} />
+        <RankedBars
+          title="Why qualified jobs stall"
+          tone="amber"
+          rows={a.unknownCriteria.map((u) => ({ label: u.label, count: u.unknownCount }))}
+          empty="No criterion was left unknown in this window."
+          footer={
+            <>
+              Criteria most often <strong>Unknown</strong>. Unknown never counts as a pass — adding a source that supplies these
+              lifts scores honestly.
+            </>
+          }
+        />
+        <Sources a={a} />
       </div>
     </>
   )
@@ -340,7 +340,7 @@ function SalesOverview({ a, onChanged }: { a: AnalyticsOverview; onChanged: () =
         <Funnel a={a} title="Pipeline — Sales" tone="blue" />
         <Panel title="Outreach">
           {a.outreach ? (
-            <dl className="criteria-list">
+            <dl className="criteria-list criteria-row">
               <div><dt>Drafts awaiting your review</dt><dd className="op-numeric">{a.outreach.draftsAwaitingReview}</dd></div>
               <div><dt>Approved, ready for you to send</dt><dd className="op-numeric">{a.outreach.draftsApproved}</dd></div>
               <div><dt>Bids placed / failed</dt><dd className="op-numeric">{a.outreach.bidsPlaced} / {a.outreach.bidsFailed}</dd></div>
@@ -383,26 +383,26 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; poi
     title: 'Candidate',
     sub: 'I am looking for work',
     status: 'Built',
-    points: ['Apply to every role that fits your skills', 'Jobs from Greenhouse, Lever, Adzuna, or your own browser agent', 'Approve a batch, then the agent applies or you open the link'],
+    points: ['Every role that fits your skills, scored with evidence', 'Greenhouse, Lever, Wellfound, Indeed and your own browser agent', 'Approve a batch, then apply — nothing goes out without you'],
   },
   {
     key: 'sales',
     title: 'Sales',
     sub: 'I am looking for customers',
     status: 'Built — you send',
-    points: ['Find businesses that need what your company sells', 'Companies from CSVs, public pages, feeds or pasted lists', 'Shortlist with evidence — proposals and email come later'],
+    points: ['Find companies that need what you sell, with evidence', 'Hiring signals from Wellfound, Indeed, LinkedIn and SEEK', 'Drafts, bids and staffing deals you approve, then send yourself'],
   },
 ]
 
 /** Design OverviewFirstRun: pick a workspace, then three steps in order. Tiles stay at zero rather than sample data. */
-function FirstRun({ overview, onChanged }: { overview: Overview; onChanged: () => void }) {
+function FirstRun({ onChanged }: { onChanged: () => void }) {
   const { workspace, setWorkspace } = useShell()
   const navigate = useNavigate()
   return (
     <div className="page page-wide stack-4">
       <PageHeader
-        title="Which job are you here to do?"
-        subtitle="Both run on the same pipeline. The workspace you pick decides what the app shows. You can switch any time from the rail."
+        title="Welcome to OpportunityPilot"
+        subtitle="Pick what you are here to do. You can switch any time from the workspace menu."
       />
       <div className="choice-grid">
         {CHOICES.map((c) => (
@@ -435,7 +435,9 @@ function FirstRun({ overview, onChanged }: { overview: Overview; onChanged: () =
         ))}
       </div>
 
-      <div className="eyebrow">Then, three steps — in this order</div>
+      {workspace === 'candidate' ? <SampleRunCard /> : <SalesDemoCard onChanged={onChanged} />}
+
+      <h3 className="section-heading">Or set it up yourself — three steps</h3>
       <ol className="first-steps plain-list">
         <li className="card is-next">
           <span className="step-num">1</span>
@@ -469,19 +471,7 @@ function FirstRun({ overview, onChanged }: { overview: Overview; onChanged: () =
         </li>
       </ol>
 
-      {workspace === 'candidate' ? <SampleRunCard /> : <SalesDemoCard onChanged={onChanged} />}
 
-      <div className="kpi-strip kpi-strip-5">
-        <Kpi label="Profiles" value={overview.profiles} sub="none yet" />
-        <Kpi label="Campaigns" value={overview.campaigns} sub="none yet" />
-        <Kpi label="Shortlisted" value={overview.shortlisted} sub="no run has finished" />
-        <Kpi label="Waiting on you" value={overview.awaitingApproval} sub="nothing to approve" />
-        <Kpi label="Applied" value={overview.applied} sub="nothing sent" />
-      </div>
-      <p className="notice notice-neutral">
-        Every number in this app comes from the API. Until a run finishes there is nothing to show, so these tiles stay at zero
-        rather than filling with sample data.
-      </p>
     </div>
   )
 }

@@ -67,30 +67,26 @@ export function SalesDemoCard({ onChanged }: { onChanged: () => void }) {
   const value = data
   const complete = Boolean(value?.researchDone && value.shortlisted > 0)
   return (
-    <section className="card stack-3 sample-run">
-      <div className="row">
-        <h3 className="section-heading">See the complete Sales workflow</h3>
-        <span className={`badge ${complete ? 'badge-success' : 'badge-primary'}`}>{complete ? 'Ready' : 'Fictional demo'}</span>
+    <section className="hero-strip">
+      <div className="hero-strip-text">
+        <div className="row wrap">
+          <h3 className="section-heading">{value?.exists ? 'Sales demo' : 'See the whole Sales workflow in one click'}</h3>
+          <span className={`badge ${complete ? 'badge-success' : 'badge-primary'}`}>{complete ? 'Ready' : 'Fictional demo'}</span>
+        </div>
+        {value?.exists ? (
+          <div className="stat-chips">
+            {([['Campaigns', value.campaigns], ['Companies', value.opportunities], ['Shortlisted', value.shortlisted], ['Drafts', value.drafts], ['Staffing deals', value.staffingDeals]] as const).map(([label, n]) => (
+              <span key={label} className="stat-chip"><strong className="op-numeric">{n}</strong> {label}</span>
+            ))}
+          </div>
+        ) : (
+          <p className="muted-small">Creates labelled fictional campaigns, scored companies, drafts, follow-ups and a staffing deal through to placement. Nothing is sent anywhere.</p>
+        )}
+        {error && <ErrorNotice error={error} onRetry={reload} />}
       </div>
-      <p className="muted-small">
-        One action creates clearly labelled fictional Customer, Partner, Investor and Freelance campaigns. Normal research scores
-        their evidence, then the demo prepares shortlists, email, LinkedIn and cover-note drafts, follow-ups, and a staffing journey through
-        candidate submission, interview, feedback, accepted offer, signed contract and placement.
-        Nothing is sent to an external provider.
-      </p>
-      {error && <ErrorNotice error={error} onRetry={reload} />}
-      {value?.exists && (
-        <dl className="criteria-list criteria-row">
-          <div><dt>Campaigns</dt><dd className="op-numeric">{value.campaigns}</dd></div>
-          <div><dt>Opportunities</dt><dd className="op-numeric">{value.opportunities}</dd></div>
-          <div><dt>Shortlisted</dt><dd className="op-numeric">{value.shortlisted}</dd></div>
-          <div><dt>Drafts</dt><dd className="op-numeric">{value.drafts}</dd></div>
-          <div><dt>Staffing deals</dt><dd className="op-numeric">{value.staffingDeals}</dd></div>
-        </dl>
-      )}
-      <div className="row">
+      <div className="row wrap hero-strip-actions">
         {!value?.exists && (
-          <button type="button" className="btn btn-primary btn-sm" onClick={start} disabled={busy || loading}>
+          <button type="button" className="btn btn-primary" onClick={start} disabled={busy || loading}>
             {busy ? 'Creating…' : 'Create Sales demo'}
           </button>
         )}
