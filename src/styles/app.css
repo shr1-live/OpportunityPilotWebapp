@@ -1181,7 +1181,7 @@ p { margin: 0; }
 }
 
 /* ---- Opportunity detail, round 3: three columns ---- */
-.detail3 { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.5fr) minmax(280px, 1fr); gap: 14px; align-items: start; }
+.detail3 { display: grid; grid-template-columns: minmax(240px, 0.75fr) minmax(0, 2.2fr) minmax(270px, 0.9fr); gap: 16px; align-items: start; }
 .fit-big { display: flex; align-items: baseline; gap: 6px; }
 .fit-big .fit-value { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; }
 .fit-big .fit-of { color: var(--op-muted); }
@@ -1288,7 +1288,8 @@ p { margin: 0; }
 .activity-list { list-style: none; margin: 0; padding: 0 var(--op-space-4) var(--op-space-3); display: flex; flex-direction: column; gap: 6px; }
 .activity-list li { font-size: var(--op-text-meta); }
 .panel-body.row { flex-direction: row; flex-wrap: wrap; align-items: center; }
-.table-role a { text-decoration: underline; text-underline-offset: 2px; }
+.table-role a { color: var(--op-ink); font-weight: 600; text-decoration: none; }
+.table-role a:hover { color: var(--op-primary); text-decoration: underline; text-underline-offset: 2px; }
 .msg-in { border-left: 3px solid var(--op-primary, currentColor); }
 .kpi-strip-7 { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 @media (max-width: 1280px) { .kpi-strip-7 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -1368,3 +1369,7 @@ a.result-title:hover { color: var(--op-primary); }
 .kpi { padding: 16px 18px; }
 .kpi-value { font-size: var(--op-text-metric); }
 .section-heading { font-size: 16px; letter-spacing: -0.01em; }
+
+/* Tables: calmer header and roomier rows */
+.table th { font-weight: 500; text-transform: none; letter-spacing: 0; }
+.table tbody tr:hover td { background: var(--op-hair); }
