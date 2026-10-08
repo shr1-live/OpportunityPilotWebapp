@@ -1,3 +1,4 @@
+import { SchedulePanel } from './SchedulePanel'
 import { useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
@@ -184,7 +185,7 @@ export function ReviewStep({ campaign, draft, mode, profile, profileLoading, dir
             {sourceList.length} {sourceList.length === 1 ? 'source' : 'sources'} you added
             {failed.length > 0 && <span className="text-warning"> · {failed.length} failed last time — a run will be marked completed with gaps if it fails again</span>}
           </li>
-          <li className="muted-small">Discovery provider: not built yet, so only your own sources (and local-agent postings) are read.</li>
+          <li className="muted-small">Only the sources listed here are read — including any job board search (Indeed, LinkedIn, SEEK) you added and local-agent postings. Paid company databases are not connected.</li>
           <li className="muted-small">
             Workload and duration are not estimated here — the server does not report them before a run. The run reads at
             most 100 candidates and keeps up to {campaign.resultLimit} new ones.
@@ -261,6 +262,8 @@ export function ReviewStep({ campaign, draft, mode, profile, profileLoading, dir
           </Link>
         )}
       </section>
+
+      <SchedulePanel campaignId={campaign.id} />
 
       <p className="hint">Results are a research shortlist ranked by fit, not confirmed interest.</p>
     </div>

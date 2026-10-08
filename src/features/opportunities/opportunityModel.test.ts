@@ -3,6 +3,7 @@ import type { OpportunitySummary } from '../../lib/types'
 import {
   agentApplyPlatform,
   canMoveTo,
+  nextPermittedAction,
   primaryAction,
   searchLoaded,
   selectionCsv,
@@ -172,5 +173,9 @@ describe('opportunity list helpers', () => {
     expect(primaryAction(o({ status: 'Suggested' })).label).toBe('Approve')
     expect(primaryAction(o({ status: 'New', outcome: 'NeedsVerification' })).label).toBe('Review')
     expect(primaryAction(o({ status: 'Shortlisted' })).label).toBe('Open posting')
+    expect(primaryAction(o({ status: 'Shortlisted', mode: 'Customer' })).label).toBe('Draft outreach')
+    expect(nextPermittedAction(o({ status: 'Shortlisted', mode: 'Customer' }))).toMatch(/Draft outreach/)
+    expect(nextPermittedAction(o({ status: 'Shortlisted', mode: 'Job' }))).toMatch(/local agent/)
+    expect(nextPermittedAction(o({ status: 'Suggested' }))).toMatch(/Nothing is contacted/)
   })
 })

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { NavLink, Outlet, useLocation, useMatches } from 'react-router-dom'
 import { Icon } from '../../components/icons'
-import { api, ApiUnreachableError } from '../../lib/api'
+import { api, ApiUnreachableError, isDegraded } from '../../lib/api'
 import type { Capabilities, Overview } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
 import { useAuth } from '../auth/AuthContext'
@@ -51,7 +51,9 @@ function useApiStatus(): ApiStatus {
         if (!cancelled) setStatus('ready')
       } catch (e) {
         if (cancelled) return
-        setStatus(e instanceof ApiUnreachableError ? 'waking' : 'degraded')
+        // A 429 or other 4xx is this browser being throttled, not a database outage: keep the last known state.
+        if (e instanceof ApiUnreachableError) setStatus('waking')
+        else if (isDegraded(e)) setStatus('degraded')
         // Back off quickly at first, then keep checking every 30 s so the banner clears once the host wakes.
         timer = setTimeout(check, attempt++ < 8 ? Math.min(2000 * 2 ** attempt, 20000) : 30000)
       }

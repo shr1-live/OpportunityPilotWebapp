@@ -16,6 +16,16 @@ Phase-1 additions (open job sources Greenhouse / Lever / Adzuna, batch approval 
 - **Status:** public Wellfound discovery and official Indeed search handoff built. An in-app Indeed listing feed needs written partner approval and an approved API; private Wellfound recruiter data remains blocked on Recruit OAuth.
 - **TODOs:** OQ-FE-043 (Wellfound OAuth), OQ-FE-044 (Indeed partner API approval).
 
+**Update 2026-10-08 — Indeed, LinkedIn and SEEK tabs (W10–W13).** The source switch is now Wellfound · Indeed ·
+LinkedIn · SEEK. Each board tab (`BoardSearchPanel.tsx`, `boardModel.ts`) keeps the same filters (SEEK adds a
+Country select, Australia / New Zealand) and offers two actions: **Show live <board> jobs** calls
+`GET /api/v1/jobboards/jobs?board=&query=&location=&remoteOnly=&datePosted=&country=` and lists current postings
+published on that board (`BoardLiveResults.tsx`: title, company, location, remote, job type, pay, posted date,
+snippet, "Open on <board>"); **Open search on <board>** opens the same search on the board. Results are read-only and
+not stored. States: loading; "Live listings not set up" when the server has no `Jsearch__Key`; "unavailable" on
+provider errors (refused key, quota); an empty list explains that no matching posting was published on that board.
+The page title is now "Job discovery". Supersedes the Indeed-only wording above where they disagree.
+
 Template fields per entry: Route, Component, What it shows, Actions, State (reads), State (writes), Navigation out, Validation, Status, TODOs. `Status` is flipped only by `/build-screen`. Shared screens (sign-in, shell, Overview, Profiles, Integrations, Settings): `docs/SHARED_FLOW.md`. Customer-mode differences of the same components: `docs/SALES_FLOW.md`. API contract for built screens: `../OpportunityPilotWebApi/docs/RESEARCH_CONTRACT.md`. Gap IDs refer to `docs/open-questions.md`.
 
 ---
@@ -214,3 +224,10 @@ Designs: `../opportunitypilot-ui/` (`Campaigns`, `Campaign*`, `ResearchProgress`
 - **Approval queue:** pill campaign select; selection bar with "✓ Approve selected · N", Reject selected, Approve all; one panel per campaign ("NAME · N suggested", threshold, Suggestion settings) with a table: Job, Platform, Fit meter, Evidence meter, Why it was suggested, Applies via ("Your agent" / "You apply").
 - **Applications:** KPI strip (Applied, Needs you, Dry run, Failed, Skipped, Last activity); "Agent results" panel with Status/Platform pill filters beside the agent setup panel; "How the apply agent works" below. Header: Refresh, Agent setup.
 - **Phones (< 860 px):** opportunity and approval tables render each row as a card (title, fit on the right, then badges and meters).
+
+### Update 2026-10-08 — Indeed campaign source (W17)
+
+Campaign builder step 3 offers **Indeed job search** (Job campaigns only), next to Adzuna. The form shows what will be
+searched (first 3 job titles/phrases, first location that is not "Remote"), warns when the server has no JSearch key,
+and adds a source with no URL (`POST /api/v1/campaigns/{id}/sources { kind: "Indeed" }`). Runs list Indeed postings in
+Opportunities with platform "Indeed"; they are scored, suggested to Approvals and applied to on Indeed.

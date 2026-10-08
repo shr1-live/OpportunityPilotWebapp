@@ -42,6 +42,7 @@ export interface Capability {
 
 /** Capability keys for the open job sources (CANDIDATE_PHASE1_CONTRACT.md §1), category "Sources". */
 export type SourceCapabilityKey =
+  | 'job-boards'
   | 'greenhouse'
   | 'lever'
   | 'adzuna'
@@ -143,6 +144,7 @@ export type SourceKind =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'JobSearch'
   | 'Remotive'
   | 'RemoteOk'
 export type SourceStatus = 'Pending' | 'Ok' | 'Failed' | 'Skipped'
@@ -172,6 +174,8 @@ export type JobPlatform =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Indeed'
+  | 'Seek'
   | 'Remotive'
   | 'RemoteOk'
 export type EventLevel = 'Info' | 'Warning' | 'Error'
@@ -295,6 +299,8 @@ export interface ResearchJob {
   finishedAt: string | null
   safeError: string | null
   counts: ResearchCounts
+  /** The exact inputs the run used (single job only). */
+  inputs?: { campaignVersion: number; profileVersion: number; profile: unknown; criteria: Record<string, unknown> }
   /** Latest 100, newest first. Omitted from job lists. */
   events?: ResearchEvent[]
 }
@@ -370,12 +376,14 @@ export interface OpportunityDetail extends OpportunitySummary {
   gaps: string[]
   evidence: Evidence[]
   activities: OpportunityActivity[]
+  /** The run that last scored this, with the exact campaign and profile versions it used. */
+  scoredBy?: { researchJobId: string; campaignVersion: number; profileVersion: number; runAt: string } | null
 }
 
 // ---------- Outreach drafts (OpportunityPilotWebApi/docs/M4_M5_CONTRACT.md) ----------
 
 export type DraftChannel = 'Email' | 'CoverNote' | 'LinkedInMessage' | 'ContactForm'
-export type DraftState = 'Draft' | 'Approved'
+export type DraftState = 'Draft' | 'Approved' | 'Sent'
 export type DraftSource = 'Gemini' | 'Template'
 
 export interface DraftClaim {
@@ -674,7 +682,9 @@ export interface AnalyticsOverview {
     failing: boolean
   }[]
   applicationsPerDay: { date: string; applied: number; replies: number }[] | null
-  attention: { kind: 'Approvals' | 'ShortlistedNotApplied' | 'AgentNeedsYou' | 'SourceFailing'; count: number; detail: string }[]
+  attention: { kind: 'Approvals' | 'ShortlistedNotApplied' | 'AgentNeedsYou' | 'SourceFailing' | 'FollowUpsOverdue'; count: number; detail: string }[]
+  /** Sales only: drafts, bids and follow-ups counted now from stored records. */
+  outreach?: { draftsAwaitingReview: number; draftsApproved: number; bidsPlaced: number; bidsFailed: number; followUpsDue: number; followUpsOverdue: number; replyRate: number | null } | null
   activeResearch: {
     jobId: string
     campaignId: string
@@ -685,4 +695,16 @@ export interface AnalyticsOverview {
   } | null
   qualifiedByIndustry: { industry: string; count: number }[] | null
   signalsFound: { signal: string; count: number }[] | null
+}
+
+/** GET/POST /api/v1/demo/sales — owner-scoped, fictional replayable Sales workspace. */
+export interface SalesDemoStatus {
+  exists: boolean
+  researchDone: boolean
+  campaigns: number
+  opportunities: number
+  shortlisted: number
+  drafts: number
+  staffingDeals: number
+  jobIds: string[]
 }

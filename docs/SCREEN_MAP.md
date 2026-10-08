@@ -37,3 +37,16 @@ Last updated: 2026-10-06 (design round 3).
 | — (no route) | — | `docs/SALES_FLOW.md` → Batch approval | not built |
 
 Navigation rail (`navGroupsFor` in `src/features/shell/shellModel.ts`): **Candidate** — Overview · Find: Campaigns, Opportunities, Job discovery · Decide: Approvals · Act: Applications, Outreach · Track: Follow-ups · Set up: Profiles, Sources & integrations, Settings, How it works. **Sales** — Overview · Find: Campaigns, Projects & tenders, Hiring signals, Companies (`/opportunities`) · Decide: Approvals · Act: Proposals & bids, Outreach · Track: Bids sent, Follow-ups · Set up (same).
+
+### Update 2026-10-08
+
+| Route | Component | Status |
+|---|---|---|
+| `/staffing` | `src/features/staffing/StaffingDealsPage.tsx` | built |
+| `/staffing/deals/:id` | `src/features/staffing/StaffingDealPage.tsx` (+ `DealWorkPanels.tsx`, `ConversationPanel.tsx`) | built |
+| `/staffing/candidates` | `src/features/staffing/StaffingCandidatesPage.tsx` | built |
+| `/staffing/rate-cards` | `src/features/staffing/StaffingRateCardsPage.tsx` | built |
+| `/wellfound` (Job discovery / Hiring signals) | `src/features/wellfound/WellfoundPage.tsx` + `BoardSearchPanel.tsx` (Indeed, LinkedIn, SEEK tabs) | built |
+
+Sales rail gains a **Staffing** group (Deals, Candidates, Rate cards). Outreach, Follow-ups, Projects, Proposals and Bids are
+built; the top bar no longer marks them "Not built yet".

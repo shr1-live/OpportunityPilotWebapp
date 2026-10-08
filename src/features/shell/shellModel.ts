@@ -116,6 +116,15 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
       { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps' },
     ],
   },
+  {
+    id: 'staffing',
+    label: 'Staffing',
+    items: [
+      { to: '/staffing', label: 'Deals', icon: 'bids' },
+      { to: '/staffing/candidates', label: 'Candidates', icon: 'profiles' },
+      { to: '/staffing/rate-cards', label: 'Rate cards', icon: 'applications' },
+    ],
+  },
   SETUP_GROUP,
 ]
 
@@ -164,7 +173,7 @@ export const WORKSPACES: Record<Workspace, { label: string; tagline: string; opt
     label: 'Sales',
     tagline: 'Finding businesses to sell to',
     option: 'Companies, projects and tenders to bid on',
-    status: 'Partly built',
+    status: 'Built — you send',
     icon: 'sales',
   },
 }
@@ -178,7 +187,6 @@ export function topbarHint(pathname: string, workspace: Workspace, overview: Ove
     const ws = `${WORKSPACES[workspace].label} workspace`
     return overview && known(overview.campaigns) ? `${ws} · ${plural(overview.campaigns, 'campaign', 'campaigns')}` : ws
   }
-  if (['/outreach', '/follow-ups', '/projects', '/proposals', '/bids'].includes(pathname)) return `${group?.label} · Not built yet`
   let detail: string | null = null
   if (overview) {
     if (pathname === '/campaigns') detail = plural(overview.campaigns, 'campaign', 'campaigns')

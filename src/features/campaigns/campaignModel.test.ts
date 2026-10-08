@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  cadenceLabel,
+  modeCopy,
   campaignFilterCounts,
   filterCampaigns,
   isRunning,
+  jobSearchTerms,
   addTags,
   adzunaSearch,
   applicableCriteria,
@@ -238,6 +241,8 @@ describe('job sources', () => {
       expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
     }
     expect(sourceKindAllowed('Url', 'Customer')).toBe(true)
+    expect(sourceKindAllowed('JobSearch', 'Job')).toBe(true)
+    expect(sourceKindAllowed('JobSearch', 'Customer')).toBe(true)
   })
 
   it('shows Adzuna searching up to 3 keywords in the first non-Remote location', () => {
@@ -262,5 +267,33 @@ describe('campaigns list', () => {
   })
   it('knows when the latest run is still going', () => {
     expect(list.map(isRunning)).toEqual([true, false, false])
+  })
+})
+
+describe('jobSearchTerms', () => {
+  const criteria = { keywords: ['React', 'react', 'Node'], signals: ['hiring frontend', 'new funding'], locations: ['Remote', 'Pune'] }
+  it('uses keywords for Job campaigns', () =>
+    expect(jobSearchTerms(criteria, 'Job')).toEqual({ terms: ['React', 'Node'], location: 'Pune', remoteOnly: false }))
+  it('adds buying signals for Sales campaigns, at most 3', () =>
+    expect(jobSearchTerms(criteria, 'Customer').terms).toEqual(['React', 'Node', 'hiring frontend']))
+  it('searches remote only when every location is Remote', () =>
+    expect(jobSearchTerms({ ...criteria, locations: ['Remote'] }, 'Job')).toMatchObject({ location: null, remoteOnly: true }))
+})
+
+describe('cadenceLabel', () => {
+  it('names known cadences and falls back to minutes', () => {
+    expect(cadenceLabel(1440)).toBe('Daily')
+    expect(cadenceLabel(90)).toBe('Every 90 minutes')
+  })
+})
+
+describe('modeCopy', () => {
+  it('gives every Sales mode its own wording', () => {
+    const modes = ['Customer', 'Partner', 'Investor', 'Freelance'] as const
+    const goals = new Set(modes.map((m) => modeCopy(m).goal))
+    const signals = new Set(modes.map((m) => modeCopy(m).signals[0]))
+    expect(goals.size).toBe(4)
+    expect(signals.size).toBe(4)
+    for (const m of modes) expect(modeCopy(m).steps).toHaveLength(4)
   })
 })

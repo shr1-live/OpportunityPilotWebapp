@@ -3,6 +3,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { api } from '../../lib/api'
 import { config } from '../../lib/config'
+import { useApi } from '../../lib/useApi'
 import { useAuth } from '../auth/AuthContext'
 import { useShell } from '../shell/ShellContext'
 import { WORKSPACES, type Workspace } from '../shell/shellModel'
@@ -25,6 +26,7 @@ const FIXED_RULES = [
  * Only preferences this build can really keep are editable (theme and default workspace, both per browser).
  */
 export function SettingsPage() {
+  const diagnostics = useApi<{ version: string; database: { pendingMigrations: number | null } }>('/api/v1/diagnostics')
   const { user, mode, signOut } = useAuth()
   const { capabilities, workspace, setWorkspace } = useShell()
   const [accountError, setAccountError] = useState<Error>()
@@ -143,7 +145,11 @@ export function SettingsPage() {
             <dl className="settings-rows panel-body">
               <div>
                 <dt>Web</dt>
-                <dd className="mono">{typeof window === 'undefined' ? '' : window.location.host}</dd>
+                <dd className="mono">{typeof window === 'undefined' ? '' : window.location.host} · {typeof __APP_COMMIT__ === "string" ? __APP_COMMIT__ : "local"}</dd>
+              </div>
+              <div>
+                <dt>API version</dt>
+                <dd className="mono">{diagnostics.data ? `${diagnostics.data.version} · ${diagnostics.data.database.pendingMigrations ?? 0} pending migrations` : '—'}</dd>
               </div>
               <div>
                 <dt>API</dt>

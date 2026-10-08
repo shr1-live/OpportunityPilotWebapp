@@ -63,12 +63,23 @@ async function send(path: string, init: RequestInit): Promise<Response> {
     }
     throw new ApiError(
       response.status,
-      problem.detail ?? problem.title ?? `Request failed (${response.status})`,
+      problem.detail ?? problem.title ?? fallbackMessage(response.status),
       problem.correlationId ?? response.headers.get('X-Correlation-ID') ?? undefined,
       problem.errors,
     )
   }
   return response
+}
+
+/** Plain message when the API sent no problem details (the rate limiter sends an empty 429). */
+export function fallbackMessage(status: number): string {
+  if (status === 429) return 'Too many requests in a short time. Wait a minute, then try again.'
+  return `Request failed (${status})`
+}
+
+/** Readiness failures that mean the API itself is unhealthy, not that this browser asked too often. */
+export function isDegraded(error: unknown): boolean {
+  return error instanceof ApiError && error.status >= 500
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {

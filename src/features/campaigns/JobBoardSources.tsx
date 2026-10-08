@@ -6,6 +6,9 @@ import type { Campaign, Source } from '../../lib/types'
 import { useShell } from '../shell/ShellContext'
 import {
   adzunaSearch,
+  jobSearchTerms,
+  SEARCH_BOARDS,
+  type SearchBoard,
   type AggregateBoardKind,
   BOARD_EXAMPLES,
   type BoardKind,
@@ -227,6 +230,106 @@ export function AdzunaForm({ campaign, onAdded }: { campaign: Campaign; onAdded:
       <div>
         <button type="submit" className="btn btn-primary" disabled={busy}>
           {busy ? 'Adding…' : 'Add Adzuna search'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+export function JobSearchForm({ campaign, onAdded }: { campaign: Campaign; onAdded: (label: string) => void }) {
+  const { capabilities } = useShell()
+  const [board, setBoard] = useState<SearchBoard>('Indeed')
+  const [label, setLabel] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<Error>()
+  const job = campaign.mode === 'Job'
+  const search = jobSearchTerms(campaign.criteria, campaign.mode)
+  const name = board === 'Seek' ? 'SEEK' : board
+  const notConfigured = capabilities?.items.find((c) => c.key === JOB_SOURCE_CAPABILITY.JobSearch)?.status === 'NotConfigured'
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(undefined)
+    try {
+      await api<Source>(`/api/v1/campaigns/${campaign.id}/sources`, {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'JobSearch', url: board, label: label.trim() || undefined }),
+      })
+      setLabel('')
+      onAdded(`${name} search`)
+    } catch (err) {
+      setError(err as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="stack-3" onSubmit={(e) => void submit(e)}>
+      <SourceCapability kind="JobSearch" />
+      {notConfigured && (
+        <p className="notice notice-warning">
+          Live job board postings are not set up on this server (its JSearch key is missing). You can add the source, but
+          every run will report it as failed until the key is set.
+        </p>
+      )}
+      <div className="field">
+        <label htmlFor="job-search-board">Board</label>
+        <select id="job-search-board" value={board} onChange={(e) => setBoard(e.target.value as SearchBoard)}>
+          {SEARCH_BOARDS.map((b) => (
+            <option key={b.value} value={b.value}>
+              {b.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="small">
+        {job ? (
+          <>
+            Finds current <strong>{name}</strong> postings for this campaign&rsquo;s <strong>job titles and search phrases</strong>{' '}
+            (the first 3, one search each), posted in the last month, and scores them like any other job.{' '}
+            {board === 'LinkedIn'
+              ? 'A LinkedIn job you shortlist is applied to by your local agent (Easy Apply), like the jobs it finds itself.'
+              : `You apply on ${name}.`}
+          </>
+        ) : (
+          <>
+            Finds companies that are <strong>hiring on {name}</strong> for this campaign&rsquo;s <strong>keywords and buying
+            signals</strong> (the first 3, one search each), posted in the last month. Each hiring company becomes one lead,
+            with its job postings as the evidence, and is scored against your criteria.
+          </>
+        )}{' '}
+        {name} has no public search API, so postings come through JSearch, a licensed Google-for-Jobs data service; only
+        postings with a {name} link are kept.
+      </p>
+      <dl className="criteria-list">
+        <div>
+          <dt>Will search for</dt>
+          <dd>
+            {search.terms.length ? search.terms.join(', ') : <span className="text-warning">Nothing yet</span>}
+          </dd>
+        </div>
+        <div>
+          <dt>Location</dt>
+          <dd>{search.location ?? (search.remoteOnly ? 'Remote only' : <span className="muted-small">Any (no location set)</span>)}</dd>
+        </div>
+      </dl>
+      {search.terms.length === 0 && (
+        <p className="notice notice-warning">
+          Add {job ? 'job titles or search phrases' : 'keywords or buying signals'} in step 2 (Filters) and save — without
+          them the search has nothing to look for.
+        </p>
+      )}
+      <p className="hint">Read from the saved campaign each time a run starts, so later edits in step 2 apply.</p>
+      <div className="field">
+        <label htmlFor="job-search-label">Label (optional)</label>
+        <input id="job-search-label" value={label} maxLength={200} onChange={(e) => setLabel(e.target.value)} />
+      </div>
+      {error && <ErrorNotice error={error} />}
+      <div>
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Adding…' : `Add ${name} search`}
         </button>
       </div>
     </form>

@@ -112,7 +112,7 @@ export function AgentSetup() {
               <div className="setup-step-title">{step.title}</div>
               {step.note && <p className="muted-small">{step.note}</p>}
               <div className="code-block">
-                <pre>
+                <pre tabIndex={0}>
                   <code>{step.code}</code>
                 </pre>
                 <CopyButton text={step.code} label={`step ${i + 1} commands`} />
@@ -225,7 +225,7 @@ function AgentKeys() {
             <code>api.key</code>.
           </p>
           <div className="code-block">
-            <pre>
+            <pre tabIndex={0}>
               <code>{created.key}</code>
             </pre>
             <CopyButton text={created.key} label={`agent key ${created.name}`} />

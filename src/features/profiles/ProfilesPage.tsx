@@ -10,6 +10,7 @@ import { useApi } from '../../lib/useApi'
 import {
   buildSummary,
   confirmationState,
+  readiness,
   createFields,
   emptyData,
   FIELDS,
@@ -208,7 +209,7 @@ function FieldInput({
   return (
     <div className={`field ${isWideField(f) ? 'grid-wide' : ''}`}>
       <div className="row">
-        <label htmlFor={`f-${f.key}`}>{f.label}</label>
+        <label htmlFor={`f-${f.key}`}>{f.label}{f.required && !f.label.endsWith('*') ? ' *' : ''}</label>
         <div className="grow" />
         {chip}
       </div>
@@ -346,6 +347,7 @@ function ProfileEditor({ existing, onSaved }: { existing: Profile; onSaved: (p: 
   const fields = FIELDS[type]
   const confirmed = isFullyConfirmed(type, data)
   const state = confirmationState(type, data)
+  const ready = readiness(type, data)
   const summary = buildSummary(type, data)
   const typeInfo = PROFILE_TYPES.find((t) => t.type === type)
 
@@ -397,6 +399,14 @@ function ProfileEditor({ existing, onSaved }: { existing: Profile; onSaved: (p: 
         <p className="muted-small">
           Version {existing.version} · saved {dateFmt.format(new Date(existing.updatedAt))}
           {dirty && <span className="text-warning"> · unsaved changes</span>}
+        </p>
+        <p className={`small ${ready.ready ? '' : 'text-warning'}`} aria-live="polite">
+          {ready.ready
+            ? 'Ready: every required field is filled and every claim is confirmed. Drafts cite this exact version.'
+            : [
+                ready.missingRequired.length > 0 && `Still needed: ${ready.missingRequired.join(', ')}.`,
+                ready.claimsAwaiting.length > 0 && `To confirm: ${ready.claimsAwaiting.join(', ')}.`,
+              ].filter(Boolean).join(' ')}
         </p>
         <div className="tabs" role="tablist" aria-label="Profile sections">
           {TABS.map((t) => (

@@ -2,8 +2,12 @@ import type { AnalyticsOverview, Overview } from '../../lib/types'
 
 /** Pure helpers for the overview charts (design Main / OverviewSales / OverviewFirstRun). Nothing is estimated. */
 
-export function analyticsPath(workspace: 'candidate' | 'sales', days = 30): string {
-  return `/api/v1/analytics/overview?workspace=${workspace === 'sales' ? 'Sales' : 'Candidate'}&days=${days}`
+export type SalesModeFilter = '' | 'Customer' | 'Partner' | 'Investor' | 'Freelance'
+
+/** Sales may narrow to one mode; empty = all four Sales modes. */
+export function analyticsPath(workspace: 'candidate' | 'sales', days = 30, salesMode: SalesModeFilter = ''): string {
+  const mode = workspace === 'sales' && salesMode ? `&mode=${salesMode}` : ''
+  return `/api/v1/analytics/overview?workspace=${workspace === 'sales' ? 'Sales' : 'Candidate'}&days=${days}${mode}`
 }
 
 /** First run: nothing set up yet, so the page shows the workspace choice and three steps instead of empty charts. */
@@ -57,6 +61,7 @@ const ATTENTION_LINKS: Record<AnalyticsOverview['attention'][number]['kind'], { 
   ShortlistedNotApplied: { to: '/opportunities', action: 'See them', tone: 'neutral' },
   AgentNeedsYou: { to: '/applications', action: 'Review', tone: 'warning' },
   SourceFailing: { to: '/campaigns', action: 'Fix source', tone: 'danger' },
+  FollowUpsOverdue: { to: '/follow-ups', action: 'Open follow-ups', tone: 'warning' },
 }
 
 export function attentionLink(kind: AnalyticsOverview['attention'][number]['kind']) {

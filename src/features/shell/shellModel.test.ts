@@ -101,8 +101,11 @@ describe('navGroupFor / topbarHint', () => {
     expect(topbarHint('/approvals', 'candidate', undefined)).toBe('Decide')
     expect(topbarHint('/applications', 'candidate', overview)).toBe('Act · 2 need you')
     expect(topbarHint('/profiles', 'candidate', overview)).toBe('Set up · 1 profile')
-    expect(topbarHint('/outreach', 'candidate', overview)).toBe('Act · Not built yet')
-    expect(topbarHint('/follow-ups', 'candidate', overview)).toBe('Track · Not built yet')
+    expect(topbarHint('/outreach', 'candidate', overview)).toBe('Act')
+    expect(topbarHint('/follow-ups', 'candidate', overview)).toBe('Track')
+    // Sales-only pages opened from the Candidate workspace have no rail group: no "undefined" label.
+    expect(topbarHint('/projects', 'candidate', overview)).toBeNull()
+    expect(topbarHint('/projects', 'sales', overview)).toBe('Find')
     expect(topbarHint('/nowhere', 'candidate', overview)).toBeNull()
   })
 })

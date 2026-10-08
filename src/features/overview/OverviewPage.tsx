@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Icon } from '../../components/icons'
@@ -17,8 +18,10 @@ import {
   isFirstRun,
   percent,
   shareWidths,
+  type SalesModeFilter,
 } from './analyticsModel'
 import { SampleRunCard } from './SampleRunCard'
+import { SalesDemoCard } from './SalesDemoCard'
 
 /**
  * Design round 3: OverviewFirstRun (nothing set up), Main (Candidate) and OverviewSales.
@@ -27,11 +30,12 @@ import { SampleRunCard } from './SampleRunCard'
 export function OverviewPage() {
   const overview = useApi<Overview>('/api/v1/overview')
   const { workspace } = useShell()
-  const analytics = useApi<AnalyticsOverview>(overview.data && !isFirstRun(overview.data) ? analyticsPath(workspace) : null)
+  const [salesMode, setSalesMode] = useState<SalesModeFilter>('')
+  const analytics = useApi<AnalyticsOverview>(overview.data && !isFirstRun(overview.data) ? analyticsPath(workspace, 30, salesMode) : null)
 
   if (overview.error) return <div className="page"><ErrorNotice error={overview.error} onRetry={overview.reload} what="your overview" /></div>
   if (!overview.data) return <div className="page"><LoadingState label="Loading your overview…" waking={overview.waking} stats={5} rows={4} /></div>
-  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} />
+  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} onChanged={overview.reload} />
 
   const a = analytics.data
   return (
@@ -40,9 +44,23 @@ export function OverviewPage() {
         title={workspace === 'sales' ? 'Sales overview' : 'Your opportunity workspace'}
         subtitle={a ? `${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'} in this workspace · last ${a.days} days` : 'Loading figures…'}
         actions={
-          <Link className="btn btn-primary btn-sm" to="/campaigns/new">
-            + New campaign
-          </Link>
+          <>
+            {workspace === 'sales' && (
+              <label className="pill-select">
+                <span>Mode</span>
+                <select value={salesMode} onChange={(e) => setSalesMode(e.target.value as SalesModeFilter)}>
+                  <option value="">All Sales modes</option>
+                  <option value="Customer">Customers</option>
+                  <option value="Partner">Partners</option>
+                  <option value="Investor">Investors</option>
+                  <option value="Freelance">Freelance</option>
+                </select>
+              </label>
+            )}
+            <Link className="btn btn-primary btn-sm" to="/campaigns/new">
+              + New campaign
+            </Link>
+          </>
         }
       />
       {analytics.error && <ErrorNotice error={analytics.error} onRetry={analytics.reload} what="the analytics" />}
@@ -55,7 +73,7 @@ export function OverviewPage() {
         </p>
       )}
       {a && !hasAnyActivity(a) && workspace === 'candidate' && <SampleRunCard />}
-      {a && (workspace === 'sales' ? <SalesOverview a={a} /> : <CandidateOverview a={a} overview={overview.data} />)}
+      {a && (workspace === 'sales' ? <SalesOverview a={a} onChanged={() => { overview.reload(); analytics.reload() }} /> : <CandidateOverview a={a} overview={overview.data} />)}
     </div>
   )
 }
@@ -281,17 +299,19 @@ function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Ov
   )
 }
 
-function SalesOverview({ a }: { a: AnalyticsOverview }) {
+function SalesOverview({ a, onChanged }: { a: AnalyticsOverview; onChanged: () => void }) {
   const k = a.kpis
   if (a.campaignCount === 0)
     return (
+      <>
+      <SalesDemoCard onChanged={onChanged} />
       <EmptyState
         icon="▦"
-        title="No Customers campaign yet"
+        title="No Sales campaign yet"
         actions={
           <>
             <Link className="btn btn-primary btn-sm" to="/campaigns/new">
-              Build a Customers campaign
+              Build a Sales campaign
             </Link>
             <Link className="btn btn-secondary btn-sm" to="/profiles/new">
               Write a Product or Services profile
@@ -299,44 +319,40 @@ function SalesOverview({ a }: { a: AnalyticsOverview }) {
           </>
         }
       >
-        The Sales overview counts companies found by Customers campaigns: from a CSV, public pages, feeds or a pasted list. Your
-        Job campaigns stay in the Candidate workspace.
+        The Sales overview counts what Customer, Partner, Investor and Freelance campaigns find: from a CSV, public pages,
+        feeds, job-board hiring signals or a pasted list. Your Job campaigns stay in the Candidate workspace.
       </EmptyState>
+      </>
     )
   const industryTotal = (a.qualifiedByIndustry ?? []).reduce((n, x) => n + x.count, 0)
   return (
     <>
+      <SalesDemoCard onChanged={onChanged} />
       <div className="kpi-strip kpi-strip-5">
         <Kpi label="Companies found" value={k.found} sub={`across ${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'}`} />
         <Kpi label="Qualified" value={k.qualified} sub={`${percent(k.qualifyRate)} of what was found`} />
         <Kpi label="Shortlisted" value={k.shortlisted} sub="ready to contact" />
-        <Kpi label="Contacted" value="—" sub="Outreach not built" tone="muted" />
-        <Kpi label="Responded" value="—" sub="Outreach not built" tone="muted" />
+        <Kpi label="Contacted" value={k.contacted ?? 0} sub="marked after you sent the approved message" />
+        <Kpi label="Responded" value={k.responded ?? 0} sub={k.respondedRate == null ? 'nothing contacted yet' : `${percent(k.respondedRate)} of contacted`} />
       </div>
 
       <div className="panel-grid-2 panel-grid-wide-left">
         <Funnel a={a} title="Pipeline — Sales" tone="blue" />
-        <Panel title="What is missing to finish the job">
-          <div className="missing">
-            <div className="row">
-              <span className="badge">Not built yet</span>
-              <strong>Proposal, bid and email</strong>
-            </div>
-            <p className="muted-small">
-              A shortlisted company today ends with evidence and a contact route. These steps have no API yet, so nothing in the
-              UI pretends to do them.
-            </p>
-            <ul className="state-list">
-              <li>Draft a proposal from the profile and the evidence</li>
-              <li>Place a bid on Freelancer.com or a tender portal</li>
-              <li>Send an approved email and track the reply</li>
-            </ul>
-          </div>
+        <Panel title="Outreach">
+          {a.outreach ? (
+            <dl className="criteria-list">
+              <div><dt>Drafts awaiting your review</dt><dd className="op-numeric">{a.outreach.draftsAwaitingReview}</dd></div>
+              <div><dt>Approved, ready for you to send</dt><dd className="op-numeric">{a.outreach.draftsApproved}</dd></div>
+              <div><dt>Bids placed / failed</dt><dd className="op-numeric">{a.outreach.bidsPlaced} / {a.outreach.bidsFailed}</dd></div>
+              <div><dt>Follow-ups due this week</dt><dd className="op-numeric">{a.outreach.followUpsDue}</dd></div>
+              <div><dt>Follow-ups overdue</dt><dd className={`op-numeric ${a.outreach.followUpsOverdue ? 'text-danger' : ''}`}>{a.outreach.followUpsOverdue}</dd></div>
+              <div><dt>Reply rate</dt><dd className="op-numeric">{percent(a.outreach.replyRate)}</dd></div>
+            </dl>
+          ) : <p className="muted-small">No outreach yet.</p>}
+          <p className="muted-small">You send every message yourself; OpportunityPilot counts only what you recorded.</p>
           <div className="row">
-            <Link className="btn btn-secondary btn-sm" to="/opportunities">
-              Export shortlist CSV
-            </Link>
-            <Link to="/proposals">See what is built</Link>
+            <Link className="btn btn-secondary btn-sm" to="/outreach">Open outreach</Link>
+            <Link to="/follow-ups">Follow-ups</Link>
           </div>
         </Panel>
       </div>
@@ -373,13 +389,13 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; poi
     key: 'sales',
     title: 'Sales',
     sub: 'I am looking for customers',
-    status: 'Partly built',
+    status: 'Built — you send',
     points: ['Find businesses that need what your company sells', 'Companies from CSVs, public pages, feeds or pasted lists', 'Shortlist with evidence — proposals and email come later'],
   },
 ]
 
 /** Design OverviewFirstRun: pick a workspace, then three steps in order. Tiles stay at zero rather than sample data. */
-function FirstRun({ overview }: { overview: Overview }) {
+function FirstRun({ overview, onChanged }: { overview: Overview; onChanged: () => void }) {
   const { workspace, setWorkspace } = useShell()
   const navigate = useNavigate()
   return (
@@ -453,7 +469,7 @@ function FirstRun({ overview }: { overview: Overview }) {
         </li>
       </ol>
 
-      {workspace === 'candidate' && <SampleRunCard />}
+      {workspace === 'candidate' ? <SampleRunCard /> : <SalesDemoCard onChanged={onChanged} />}
 
       <div className="kpi-strip kpi-strip-5">
         <Kpi label="Profiles" value={overview.profiles} sub="none yet" />

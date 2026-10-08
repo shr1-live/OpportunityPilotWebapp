@@ -26,6 +26,10 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(
 const SalesProjectDetailPage = lazy(() => import('./features/sales/SalesProjectDetailPage').then((m) => ({ default: m.SalesProjectDetailPage })))
 const SalesProjectsPage = lazy(() => import('./features/sales/SalesProjectsPage').then((m) => ({ default: m.SalesProjectsPage })))
 const SalesProposalsPage = lazy(() => import('./features/sales/SalesProposalsPage').then((m) => ({ default: m.SalesProposalsPage })))
+const StaffingDealsPage = lazy(() => import('./features/staffing/StaffingDealsPage').then((m) => ({ default: m.StaffingDealsPage })))
+const StaffingDealPage = lazy(() => import('./features/staffing/StaffingDealPage').then((m) => ({ default: m.StaffingDealPage })))
+const StaffingCandidatesPage = lazy(() => import('./features/staffing/StaffingCandidatesPage').then((m) => ({ default: m.StaffingCandidatesPage })))
+const StaffingRateCardsPage = lazy(() => import('./features/staffing/StaffingRateCardsPage').then((m) => ({ default: m.StaffingRateCardsPage })))
 const SalesBidsPage = lazy(() => import('./features/sales/SalesBidsPage').then((m) => ({ default: m.SalesBidsPage })))
 const AppShell = lazy(() => import('./features/shell/AppShell').then((m) => ({ default: m.AppShell })))
 const HowItWorksPage = lazy(() => import('./features/guide/HowItWorksPage').then((m) => ({ default: m.HowItWorksPage })))
@@ -117,11 +121,15 @@ const router = createBrowserRouter([
         handle: { title: 'Bids sent' },
         element: <SalesBidsPage />,
       },
+      { path: 'staffing', element: <StaffingDealsPage />, handle: { title: 'Staffing deals' } },
+      { path: 'staffing/deals/:id', element: <StaffingDealPage />, handle: { title: 'Staffing deal' } },
+      { path: 'staffing/candidates', element: <StaffingCandidatesPage />, handle: { title: 'Candidates' } },
+      { path: 'staffing/rate-cards', element: <StaffingRateCardsPage />, handle: { title: 'Rate cards' } },
       { path: 'how-it-works', element: <HowItWorksPage />, handle: { title: 'How it works' } },
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'integrations', element: <IntegrationsPage />, handle: { title: 'Sources & integrations' } },
-      { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Wellfound' } },
+      { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Job discovery' } },
       { path: 'settings', element: <SettingsPage />, handle: { title: 'Settings' } },
       { path: '*', element: <NotFound />, handle: { title: 'Not found' } },
     ],

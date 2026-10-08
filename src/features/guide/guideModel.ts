@@ -104,6 +104,6 @@ export const GUIDE_LIMITS = [
   'It never applies, sends or bids without your approval, and never in bulk.',
   'It does not guess: a fact no source supplies stays Unknown and scores zero.',
   'Greenhouse, Lever and Adzuna applications are submitted by you — their apply APIs need the employer’s key.',
-  'Proposals, bids, email and follow-ups are not built yet; those screens say so.',
+  'Emails, LinkedIn messages, contact forms, proposals and bids are drafted and approved here, then sent by you; you record the receipt. Gmail, Freelancer.com and Upwork connections need their keys first.',
   'On free hosting the API sleeps when idle; the first request can take up to a minute.',
 ]

@@ -5,6 +5,8 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  // Shown in Settings → This deployment, so a release can be checked against the merged commit.
+  define: { __APP_COMMIT__: JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA ?? 'local').slice(0, 7)) },
   server: { port: 5173, strictPort: true },
   build: {
     rollupOptions: {

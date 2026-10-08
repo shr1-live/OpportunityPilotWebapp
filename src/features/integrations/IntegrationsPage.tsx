@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { LoadingState } from '../../components/States'
 import type { Capabilities, Capability } from '../../lib/types'
 import { useApi } from '../../lib/useApi'
+import { ProviderReadinessPanel } from './ProviderReadinessPanel'
 
 const CATEGORY_ORDER = ['Core', 'AI', 'Sources', 'Outreach', 'Platforms', 'Optional']
 
@@ -25,6 +26,7 @@ const CARD_ACTIONS: Record<string, { label: string; to: string }> = {
   'csv-import': { label: 'Add to a campaign', to: '/campaigns' },
   'public-urls': { label: 'Add to a campaign', to: '/campaigns' },
   feeds: { label: 'Add to a campaign', to: '/campaigns' },
+  'job-boards': { label: 'Open Job discovery', to: '/wellfound' },
 }
 
 function statusCounts(items: Capability[]) {
@@ -58,6 +60,8 @@ export function IntegrationsPage() {
           )
         }
       />
+
+      <ProviderReadinessPanel />
 
       {caps.error && <ErrorNotice error={caps.error} onRetry={caps.reload} />}
       {caps.loading && !caps.data && <LoadingState label="Loading capabilities…" waking={caps.waking} rows={5} />}

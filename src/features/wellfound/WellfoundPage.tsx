@@ -8,7 +8,8 @@ import type { WellfoundApplication, WellfoundApplicationState, WellfoundActivity
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
 import { useShell } from '../shell/ShellContext'
-import { IndeedSearchPanel } from './IndeedSearchPanel'
+import { BoardSearchPanel } from './BoardSearchPanel'
+import type { JobBoard } from './boardModel'
 
 function Kpi({ label, value, sub }: { label: string; value: number | string; sub: string }) {
   return <div className="kpi"><span className="kpi-label">{label}</span><strong className="kpi-value op-numeric">{value}</strong><span className="muted-small">{sub}</span></div>
@@ -22,7 +23,7 @@ function money(value: number | null, currency: string | null) {
 export function WellfoundPage() {
   const { workspace } = useShell()
   const ws = workspace === 'sales' ? 'Sales' : 'Candidate'
-  const [provider, setProvider] = useState<'wellfound' | 'indeed'>('wellfound')
+  const [provider, setProvider] = useState<'wellfound' | JobBoard>('wellfound')
   const [keyword, setKeyword] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
@@ -121,10 +122,10 @@ export function WellfoundPage() {
 
     <div className="segmented" role="group" aria-label="Job source">
       <button type="button" className={provider === 'wellfound' ? 'active' : ''} aria-pressed={provider === 'wellfound'} onClick={() => setProvider('wellfound')}>Wellfound</button>
-      <button type="button" className={provider === 'indeed' ? 'active' : ''} aria-pressed={provider === 'indeed'} onClick={() => setProvider('indeed')}>Indeed</button>
+      {(['Indeed', 'LinkedIn', 'Seek'] as const).map((board) => <button key={board} type="button" className={provider === board ? 'active' : ''} aria-pressed={provider === board} onClick={() => setProvider(board)}>{board === 'Seek' ? 'SEEK' : board}</button>)}
     </div>
 
-    {provider === 'indeed' ? <IndeedSearchPanel workspace={workspace} /> : <>
+    {provider !== 'wellfound' ? <BoardSearchPanel key={provider} board={provider} workspace={workspace} /> : <>
 
     {status.data && <section className="notice notice-neutral row wrap"><Badge tone="success">Public jobs live</Badge><Badge tone="warning">Recruit MCP not connected</Badge><span className="grow">{status.data.detail}</span><a href="https://help.wellfound.com/article/1219-connect-wellfound-to-your-ai-assistant" target="_blank" rel="noreferrer">Recruit connection requirements</a></section>}
     {actionError && <ErrorNotice error={actionError} onRetry={() => setActionError(undefined)} what="the Wellfound action" />}

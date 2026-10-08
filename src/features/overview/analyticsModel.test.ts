@@ -37,3 +37,11 @@ describe('overview analytics', () => {
     expect(shareWidths([3, 6, 0])).toEqual([50, 100, 0])
   })
 })
+
+describe('analyticsPath with a Sales mode', () => {
+  it('adds the mode only for Sales', () => {
+    expect(analyticsPath('sales', 30, 'Partner')).toBe('/api/v1/analytics/overview?workspace=Sales&days=30&mode=Partner')
+    expect(analyticsPath('sales', 30)).toBe('/api/v1/analytics/overview?workspace=Sales&days=30')
+    expect(analyticsPath('candidate', 30, 'Partner')).toBe('/api/v1/analytics/overview?workspace=Candidate&days=30')
+  })
+})
