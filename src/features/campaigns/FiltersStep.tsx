@@ -18,6 +18,7 @@ import {
   weightsForMode,
   WORK_MODES,
   YEARS_MAX,
+  modeCopy,
 } from './campaignModel'
 
 interface Props {
@@ -71,7 +72,7 @@ export function FiltersStep({ draft, setDraft, mode, fieldErrors }: Props) {
               'e.g. .NET developer',
               'Also used by your local agent when it searches LinkedIn or Naukri.',
             )
-          : list('keywords', 'Product and search words', 'e.g. warehouse management', 'Words that describe what you sell.')}
+          : list('keywords', modeCopy(mode).keywords[0], modeCopy(mode).keywords[1], modeCopy(mode).keywords[2])}
       </section>
 
       <section className="stack-3" aria-labelledby="filters-hard">
@@ -196,15 +197,9 @@ export function FiltersStep({ draft, setDraft, mode, fieldErrors }: Props) {
             </>
           ) : (
             <>
-              {list('industries', 'Industries', 'e.g. Logistics software', undefined, SOFT)}
-              {list('problems', 'Problems you solve', 'e.g. manual dispatch', 'Two or more mentions count as a full match.', SOFT)}
-              {list(
-                'signals',
-                'Published signals',
-                'e.g. hiring, funding, expansion',
-                'Absence of a signal is unknown, not a negative.',
-                SOFT,
-              )}
+              {list('industries', modeCopy(mode).industries[0], modeCopy(mode).industries[1], undefined, SOFT)}
+              {list('problems', modeCopy(mode).problems[0], modeCopy(mode).problems[1], 'Two or more mentions count as a full match.', SOFT)}
+              {list('signals', modeCopy(mode).signals[0], modeCopy(mode).signals[1], 'Absence of a signal is unknown, not a negative.', SOFT)}
             </>
           )}
         </div>

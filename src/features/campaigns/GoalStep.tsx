@@ -13,6 +13,7 @@ import {
   MODES,
   NAME_MAX,
   type SupportedMode,
+  modeCopy,
 } from './campaignModel'
 
 interface Props {
@@ -32,13 +33,6 @@ const JOB_STEPS = [
   ['Score against your criteria', 'Hard filters exclude. Scored criteria give points. Unknown never passes.'],
   ['Suggest what clears the threshold', 'Those land in Approvals, not in your inbox.'],
   ['Apply only after you approve', 'LinkedIn and Naukri go through the local agent; the rest you open and apply yourself.'],
-]
-
-const CUSTOMER_STEPS = [
-  ['Read every source you add', 'CSV rows, public pages, feeds or pasted lists — de-duplicated first.'],
-  ['Score against your criteria', 'Industries, problems and buying signals, each with the sentence that matched.'],
-  ['Shortlist with the evidence', 'You pick which companies to keep; nothing is contacted.'],
-  ['Prepare reviewed outreach', 'Create an evidence-safe draft, approve its exact version, and track the next action.'],
 ]
 
 export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, fieldErrors, onEditCriteria }: Props) {
@@ -136,7 +130,7 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
             id="campaign-name"
             value={draft.name}
             maxLength={NAME_MAX}
-            placeholder={mode === 'Job' ? 'e.g. Pune .NET backend roles' : 'e.g. EU logistics software companies'}
+            placeholder={mode === 'Job' ? 'e.g. Pune .NET backend roles' : `e.g. ${modeCopy(mode).industries[1].replace('e.g. ', '')} — ${mode.toLowerCase()} search`}
             aria-invalid={nameError ? true : undefined}
             aria-describedby={nameError ? 'campaign-name-error' : undefined}
             onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
@@ -158,9 +152,7 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
             aria-describedby="campaign-goal-hint"
             aria-invalid={goalError ? true : undefined}
             placeholder={
-              mode === 'Job'
-                ? 'e.g. Senior .NET backend roles in Pune or remote, 4–6 years, Azure a plus.'
-                : 'e.g. Mid-sized logistics software companies in Germany and the Netherlands that are hiring .NET developers.'
+              mode === 'Job' ? 'e.g. Senior .NET backend roles in Pune or remote, 4–6 years, Azure a plus.' : modeCopy(mode).goal
             }
             onChange={(e) => setDraft((d) => ({ ...d, goal: e.target.value }))}
           />
@@ -177,7 +169,7 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
             <h4 className="eyebrow">What this mode will do</h4>
           </header>
           <ol className="mode-steps panel-body">
-            {(mode === 'Job' ? JOB_STEPS : CUSTOMER_STEPS).map(([t, d]) => (
+            {(mode === 'Job' ? JOB_STEPS : modeCopy(mode).steps).map(([t, d]) => (
               <li key={t}>
                 <strong>{t}</strong>
                 <span className="muted-small">{d}</span>

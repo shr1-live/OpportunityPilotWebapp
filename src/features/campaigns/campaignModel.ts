@@ -599,3 +599,73 @@ export const CADENCES = [
 export function cadenceLabel(minutes: number): string {
   return CADENCES.find((c) => c.minutes === minutes)?.label ?? `Every ${minutes} minutes`
 }
+
+type ModeCopy = {
+  goal: string
+  steps: [string, string][]
+  keywords: [label: string, placeholder: string, hint: string]
+  industries: [label: string, placeholder: string]
+  problems: [label: string, placeholder: string]
+  signals: [label: string, placeholder: string]
+}
+
+/** Wording per non-Job mode, so a Partner, Investor or Freelance campaign never reads like a customer search. */
+export const MODE_COPY: Record<Exclude<OpportunityMode, 'Job'>, ModeCopy> = {
+  Customer: {
+    goal: 'e.g. Mid-sized logistics software companies in Germany and the Netherlands that are hiring .NET developers.',
+    steps: [
+      ['Read every source you add', 'CSV rows, public pages, feeds or pasted lists — de-duplicated first.'],
+      ['Score against your criteria', 'Industries, problems and buying signals, each with the sentence that matched.'],
+      ['Shortlist with the evidence', 'You pick which companies to keep; nothing is contacted.'],
+      ['Prepare reviewed outreach', 'Create an evidence-safe draft, approve its exact version, and track the next action.'],
+    ],
+    keywords: ['Product and search words', 'e.g. warehouse management', 'Words that describe what you sell.'],
+    industries: ['Industries', 'e.g. Logistics software'],
+    problems: ['Problems you solve', 'e.g. manual dispatch'],
+    signals: ['Buying signals', 'e.g. hiring, funding, expansion'],
+  },
+  Partner: {
+    goal: 'e.g. Systems integrators in the UK that implement Dynamics 365 and lack an in-house .NET team.',
+    steps: [
+      ['Read every source you add', 'Partner directories, public pages, feeds or your CSV — de-duplicated first.'],
+      ['Score partnership fit', 'Complementary industry, the gap you fill and partner signals, each with its evidence.'],
+      ['Shortlist with the evidence', 'You choose who to approach; nothing is contacted.'],
+      ['Prepare a reviewed partnership note', 'Draft, approve the exact version, send it yourself, track the reply.'],
+    ],
+    keywords: ['What you would build or resell together', 'e.g. Dynamics 365 integration', 'Words a good partner would publish about itself.'],
+    industries: ['Partner industries', 'e.g. Systems integration'],
+    problems: ['Gap you fill for them', 'e.g. no .NET delivery team'],
+    signals: ['Partner signals', 'e.g. partner programme, new practice, reseller'],
+  },
+  Investor: {
+    goal: 'e.g. Seed funds in Europe that back B2B logistics software and have invested in the last 12 months.',
+    steps: [
+      ['Read every source you add', 'Fund pages, portfolio lists, feeds or your CSV — de-duplicated first.'],
+      ['Score thesis fit', 'Sector, stage and recent activity, each with the sentence that matched.'],
+      ['Shortlist with the evidence', 'You choose who to approach; nothing is contacted.'],
+      ['Prepare a reviewed investor note', 'Draft from your confirmed traction, approve it, send it yourself.'],
+    ],
+    keywords: ['Thesis and search words', 'e.g. supply chain software', 'Words a fitting fund uses for its thesis.'],
+    industries: ['Sectors they back', 'e.g. B2B SaaS, logistics'],
+    problems: ['Stage and cheque fit', 'e.g. seed, pre-seed'],
+    signals: ['Investment signals', 'e.g. new fund, recent investment'],
+  },
+  Freelance: {
+    goal: 'e.g. Fixed-scope .NET API projects for small businesses, remote, two to eight weeks.',
+    steps: [
+      ['Read every source you add', 'Project boards, tenders, feeds or pasted briefs — de-duplicated first.'],
+      ['Score project fit', 'Skills, scope and budget signals, each with the sentence that matched.'],
+      ['Shortlist with the evidence', 'You choose which projects to bid on; nothing is submitted.'],
+      ['Prepare a reviewed proposal', 'Draft from your confirmed skills and rates, approve it, submit it yourself.'],
+    ],
+    keywords: ['Project search words', 'e.g. ASP.NET Core API', 'Words that appear in briefs you want.'],
+    industries: ['Client industries', 'e.g. Retail, healthcare'],
+    problems: ['Work you deliver', 'e.g. API integration, migration'],
+    signals: ['Project signals', 'e.g. fixed price, urgent, long term'],
+  },
+}
+
+/** Copy for any mode; Job campaigns use their own wording elsewhere, so they fall back to Customer here. */
+export function modeCopy(mode: OpportunityMode): ModeCopy {
+  return MODE_COPY[mode === 'Job' ? 'Customer' : mode]
+}

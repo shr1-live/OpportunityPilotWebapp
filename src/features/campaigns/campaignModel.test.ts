@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   cadenceLabel,
+  modeCopy,
   campaignFilterCounts,
   filterCampaigns,
   isRunning,
@@ -283,5 +284,16 @@ describe('cadenceLabel', () => {
   it('names known cadences and falls back to minutes', () => {
     expect(cadenceLabel(1440)).toBe('Daily')
     expect(cadenceLabel(90)).toBe('Every 90 minutes')
+  })
+})
+
+describe('modeCopy', () => {
+  it('gives every Sales mode its own wording', () => {
+    const modes = ['Customer', 'Partner', 'Investor', 'Freelance'] as const
+    const goals = new Set(modes.map((m) => modeCopy(m).goal))
+    const signals = new Set(modes.map((m) => modeCopy(m).signals[0]))
+    expect(goals.size).toBe(4)
+    expect(signals.size).toBe(4)
+    for (const m of modes) expect(modeCopy(m).steps).toHaveLength(4)
   })
 })
