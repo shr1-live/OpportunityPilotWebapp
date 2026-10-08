@@ -1,0 +1,139 @@
+import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
+import { ErrorNotice } from '../../components/ErrorNotice'
+import { PageHeader } from '../../components/PageHeader'
+import { EmptyState, LoadingState } from '../../components/States'
+import { Badge } from '../../components/StatusBadge'
+import { api } from '../../lib/api'
+import { useApi } from '../../lib/useApi'
+import { FORWARD, isClosed, money, percent, SOURCE_LABELS, STAGE_LABELS } from './staffingModel'
+import type { DealSource, DealStage, StaffingAccount, StaffingDeal, StaffingKpis } from './staffingTypes'
+
+function Kpi({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return <div className="kpi"><span className="kpi-label">{label}</span><strong className="kpi-value op-numeric">{value}</strong>{sub && <span className="muted-small">{sub}</span>}</div>
+}
+
+export function StaffingDealsPage() {
+  const deals = useApi<StaffingDeal[]>('/api/v1/staffing/deals?take=200')
+  const accounts = useApi<StaffingAccount[]>('/api/v1/staffing/accounts?take=200')
+  const kpis = useApi<StaffingKpis>('/api/v1/staffing/kpis')
+  const [stage, setStage] = useState<DealStage | ''>('')
+  const [creating, setCreating] = useState(false)
+  const [now] = useState(() => Date.now())
+
+  const accountName = new Map((accounts.data ?? []).map((a) => [a.id, a.name]))
+  const visible = (deals.data ?? []).filter((d) => !stage || d.stage === stage)
+  const k = kpis.data
+
+  function reload() { deals.reload(); accounts.reload(); kpis.reload() }
+
+  return <div className="page page-wide stack-4">
+    <PageHeader title="Staffing deals" subtitle="Client requirements from first contact to a signed placement. Stages move when you act or when a recorded step proves it."
+      actions={<button className="btn btn-primary" type="button" onClick={() => setCreating((v) => !v)}>{creating ? 'Close' : '+ New deal'}</button>} />
+
+    {creating && <NewDealForm accounts={accounts.data ?? []} onCreated={() => { setCreating(false); reload() }} />}
+
+    {kpis.error ? <ErrorNotice error={kpis.error} onRetry={kpis.reload} what="staffing KPIs" /> : k && <section className="panel">
+      <header className="panel-head"><h3 className="eyebrow">Funnel</h3><span className="grow" /><span className="muted-small">Counted from stored deals and records; nothing is estimated.</span></header>
+      <div className="kpi-strip">
+        <Kpi label="Open deals" value={k.openDeals} sub={k.overdueNextActions ? `${k.overdueNextActions} next actions overdue` : 'none overdue'} />
+        <Kpi label="Pipeline value" value={k.openPipelineValue.map((m) => money(m.amount, m.currency)).join(' · ') || '—'} sub="open deals with a value" />
+        <Kpi label="Submitted" value={k.submissionsSent} sub={`${k.submissionsApproved} approved, ${k.submissionsDraft} drafts`} />
+        <Kpi label="Interviews" value={k.interviewsUpcoming} sub={`upcoming · ${k.interviewsNotNotified} candidate not told`} />
+        <Kpi label="Offers" value={k.offersExtended + k.offersAccepted} sub={`${k.offersAccepted} accepted`} />
+        <Kpi label="Placements" value={k.placements} sub={k.placementValue.map((m) => money(m.amount, m.currency)).join(' · ') || `${k.contractsSigned} contracts signed`} />
+      </div>
+      <div className="panel-body">
+        <table className="table">
+          <thead><tr><th>Step</th><th className="num">Reached</th><th className="num">Then</th><th className="num">Conversion</th></tr></thead>
+          <tbody>{k.conversions.map((c) => <tr key={c.from}>
+            <td>{STAGE_LABELS[c.from as DealStage]} → {STAGE_LABELS[c.to as DealStage]}</td>
+            <td className="num op-numeric">{c.fromCount}</td><td className="num op-numeric">{c.toCount}</td><td className="num op-numeric">{percent(c.rate)}</td>
+          </tr>)}</tbody>
+        </table>
+        <p className="muted-small">
+          Average time in the current stage: {k.averageDaysInStage == null ? '—' : `${k.averageDaysInStage} days`}. Average time from contact to reply:{' '}
+          {k.averageHoursToReply == null ? '—' : `${k.averageHoursToReply} hours`}. Candidates: {k.candidates} on the bench, {k.candidatesWithConsent} with consent, {k.candidatesAvailable} available.
+        </p>
+      </div>
+    </section>}
+
+    <section className="panel">
+      <header className="panel-head">
+        <h3 className="eyebrow">{visible.length} deals</h3><span className="grow" />
+        <label className="pill-select"><span>Stage</span>
+          <select value={stage} onChange={(e) => setStage(e.target.value as DealStage | '')}>
+            <option value="">All</option>
+            {[...FORWARD, 'OnHold', 'Lost', 'Disqualified'].map((s) => <option key={s} value={s}>{STAGE_LABELS[s as DealStage]}</option>)}
+          </select>
+        </label>
+      </header>
+      {deals.error ? <ErrorNotice error={deals.error} onRetry={deals.reload} what="deals" />
+        : !deals.data ? <LoadingState label="Loading deals…" waking={deals.waking} />
+        : deals.data.length === 0 ? <EmptyState title="No staffing deals yet">Create a deal for a client requirement, then add candidates, submissions and interviews to it.</EmptyState>
+        : <table className="table">
+          <thead><tr><th>Deal</th><th>Client</th><th>Stage</th><th>Source</th><th className="num">Value</th><th>Next action</th></tr></thead>
+          <tbody>{visible.map((d) => {
+            const overdue = d.nextActionAt && !isClosed(d.stage) && new Date(d.nextActionAt).getTime() < now
+            return <tr key={d.id}>
+              <td><Link to={`/staffing/deals/${d.id}`}><strong>{d.title}</strong></Link></td>
+              <td>{accountName.get(d.accountId) ?? '—'}</td>
+              <td><Badge tone={d.stage === 'Won' ? 'success' : isClosed(d.stage) ? 'neutral' : 'primary'}>{STAGE_LABELS[d.stage]}</Badge></td>
+              <td>{SOURCE_LABELS[d.source]}</td>
+              <td className="num op-numeric">{money(d.estimatedValue, d.currency)}</td>
+              <td className={overdue ? 'text-danger' : undefined}>{d.nextAction ?? '—'}{d.nextActionAt ? ` · ${new Date(d.nextActionAt).toLocaleDateString()}` : ''}</td>
+            </tr>
+          })}</tbody>
+        </table>}
+    </section>
+  </div>
+}
+
+function NewDealForm({ accounts, onCreated }: { accounts: StaffingAccount[]; onCreated: () => void }) {
+  const [accountId, setAccountId] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [title, setTitle] = useState('')
+  const [source, setSource] = useState<DealSource>('Manual')
+  const [value, setValue] = useState('')
+  const [currency, setCurrency] = useState('USD')
+  const [nextAction, setNextAction] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<Error>()
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true); setError(undefined)
+    try {
+      let id = accountId
+      if (!id) {
+        const created = await api<StaffingAccount>('/api/v1/staffing/accounts', { method: 'POST', body: JSON.stringify({ name: accountName.trim(), source }) })
+        id = created.id
+      }
+      await api<StaffingDeal>(`/api/v1/staffing/accounts/${id}/deals`, {
+        method: 'POST',
+        body: JSON.stringify({ title: title.trim(), source, estimatedValue: value ? Number(value) : null, currency: value ? currency : null, nextAction: nextAction.trim() || null }),
+      })
+      onCreated()
+    } catch (err) { setError(err as Error) } finally { setBusy(false) }
+  }
+
+  return <form className="panel stack-3" onSubmit={(e) => void submit(e)}>
+    <header className="panel-head"><h3 className="eyebrow">New deal</h3></header>
+    <div className="panel-body filters">
+      <label className="field"><span>Client</span>
+        <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+          <option value="">New client…</option>
+          {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+      </label>
+      {!accountId && <label className="field"><span>Client name</span><input required value={accountName} maxLength={300} onChange={(e) => setAccountName(e.target.value)} placeholder="Acme Logistics" /></label>}
+      <label className="field field-wide"><span>Requirement</span><input required value={title} maxLength={300} onChange={(e) => setTitle(e.target.value)} placeholder="3 senior .NET engineers, 6 months" /></label>
+      <label className="field"><span>Source</span><select value={source} onChange={(e) => setSource(e.target.value as DealSource)}>{Object.entries(SOURCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+      <label className="field"><span>Estimated value</span><input type="number" min={0} value={value} onChange={(e) => setValue(e.target.value)} /></label>
+      <label className="field"><span>Currency</span><input value={currency} maxLength={3} onChange={(e) => setCurrency(e.target.value.toUpperCase())} /></label>
+      <label className="field field-wide"><span>Next action</span><input value={nextAction} maxLength={500} onChange={(e) => setNextAction(e.target.value)} placeholder="Call the hiring manager" /></label>
+    </div>
+    {error && <ErrorNotice error={error} />}
+    <div className="panel-foot"><button className="btn btn-primary" type="submit" disabled={busy || !title.trim() || (!accountId && !accountName.trim())}>{busy ? 'Creating…' : 'Create deal'}</button></div>
+  </form>
+}

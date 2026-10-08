@@ -1270,3 +1270,12 @@ p { margin: 0; }
 
 /* R13: on phones a panel header with filters wraps instead of pushing the page sideways. */
 @media (max-width: 600px) { .panel-head { flex-wrap: wrap; } }
+
+/* Staffing CRM (X4, X8–X14) */
+.table .num, .table th.num { text-align: right; }
+.subtle-box { padding: var(--op-space-3); border: 1px dashed var(--op-line); border-radius: 8px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: var(--op-text-meta); }
+.pre-wrap { white-space: pre-wrap; }
+.activity-list { list-style: none; margin: 0; padding: 0 var(--op-space-4) var(--op-space-3); display: flex; flex-direction: column; gap: 6px; }
+.activity-list li { font-size: var(--op-text-meta); }
+.panel-body.row { flex-direction: row; flex-wrap: wrap; align-items: center; }

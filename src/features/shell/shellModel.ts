@@ -116,6 +116,15 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
       { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps' },
     ],
   },
+  {
+    id: 'staffing',
+    label: 'Staffing',
+    items: [
+      { to: '/staffing', label: 'Deals', icon: 'bids' },
+      { to: '/staffing/candidates', label: 'Candidates', icon: 'profiles' },
+      { to: '/staffing/rate-cards', label: 'Rate cards', icon: 'applications' },
+    ],
+  },
   SETUP_GROUP,
 ]
 
