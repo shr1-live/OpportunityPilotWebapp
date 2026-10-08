@@ -132,6 +132,9 @@ export function SalesProjectDetailPage() {
   const current = project.data
   const sourceUrl = safeHref(current.url)
   const provider = salesProviderEvidence(current)
+  const evidenceBasis = current.source === 'Manual'
+    ? (current.description ? 'User-provided project brief' : 'Missing project brief')
+    : (current.evidenceJson !== '[]' && current.evidenceJson !== '{}' ? 'Stored provider/source evidence' : 'Missing source evidence')
 
   return (
     <div className="page page-wide stack-4">
@@ -153,6 +156,8 @@ export function SalesProjectDetailPage() {
             {provider.connectsCost !== undefined && provider.connectsCost !== null ? <p><strong>{provider.connectsCost} Connects</strong> required at the time of import.</p> : null}
             {provider.budget ? <p>Budget/rate: {provider.budget}</p> : null}
             {provider.experienceLevel ? <p>Experience level: {provider.experienceLevel}</p> : null}
+            <p><strong>Approval basis:</strong> {evidenceBasis}</p>
+            <p className="muted-small">Approval binds the exact proposal, price, delivery time and this source evidence. Editing any bound value clears approval.</p>
             <p className="muted-small">This manual slice never invents an amount, timeline, or claim.</p>
           </div>
         </section>

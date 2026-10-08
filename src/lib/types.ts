@@ -696,3 +696,15 @@ export interface AnalyticsOverview {
   qualifiedByIndustry: { industry: string; count: number }[] | null
   signalsFound: { signal: string; count: number }[] | null
 }
+
+/** GET/POST /api/v1/demo/sales — owner-scoped, fictional replayable Sales workspace. */
+export interface SalesDemoStatus {
+  exists: boolean
+  researchDone: boolean
+  campaigns: number
+  opportunities: number
+  shortlisted: number
+  drafts: number
+  staffingDeals: number
+  jobIds: string[]
+}

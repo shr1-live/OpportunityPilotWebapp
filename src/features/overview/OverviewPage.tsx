@@ -21,6 +21,7 @@ import {
   type SalesModeFilter,
 } from './analyticsModel'
 import { SampleRunCard } from './SampleRunCard'
+import { SalesDemoCard } from './SalesDemoCard'
 
 /**
  * Design round 3: OverviewFirstRun (nothing set up), Main (Candidate) and OverviewSales.
@@ -34,7 +35,7 @@ export function OverviewPage() {
 
   if (overview.error) return <div className="page"><ErrorNotice error={overview.error} onRetry={overview.reload} what="your overview" /></div>
   if (!overview.data) return <div className="page"><LoadingState label="Loading your overview…" waking={overview.waking} stats={5} rows={4} /></div>
-  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} />
+  if (isFirstRun(overview.data)) return <FirstRun overview={overview.data} onChanged={overview.reload} />
 
   const a = analytics.data
   return (
@@ -72,7 +73,7 @@ export function OverviewPage() {
         </p>
       )}
       {a && !hasAnyActivity(a) && workspace === 'candidate' && <SampleRunCard />}
-      {a && (workspace === 'sales' ? <SalesOverview a={a} /> : <CandidateOverview a={a} overview={overview.data} />)}
+      {a && (workspace === 'sales' ? <SalesOverview a={a} onChanged={() => { overview.reload(); analytics.reload() }} /> : <CandidateOverview a={a} overview={overview.data} />)}
     </div>
   )
 }
@@ -298,10 +299,12 @@ function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Ov
   )
 }
 
-function SalesOverview({ a }: { a: AnalyticsOverview }) {
+function SalesOverview({ a, onChanged }: { a: AnalyticsOverview; onChanged: () => void }) {
   const k = a.kpis
   if (a.campaignCount === 0)
     return (
+      <>
+      <SalesDemoCard onChanged={onChanged} />
       <EmptyState
         icon="▦"
         title="No Sales campaign yet"
@@ -319,10 +322,12 @@ function SalesOverview({ a }: { a: AnalyticsOverview }) {
         The Sales overview counts what Customer, Partner, Investor and Freelance campaigns find: from a CSV, public pages,
         feeds, job-board hiring signals or a pasted list. Your Job campaigns stay in the Candidate workspace.
       </EmptyState>
+      </>
     )
   const industryTotal = (a.qualifiedByIndustry ?? []).reduce((n, x) => n + x.count, 0)
   return (
     <>
+      <SalesDemoCard onChanged={onChanged} />
       <div className="kpi-strip kpi-strip-5">
         <Kpi label="Companies found" value={k.found} sub={`across ${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'}`} />
         <Kpi label="Qualified" value={k.qualified} sub={`${percent(k.qualifyRate)} of what was found`} />
@@ -390,7 +395,7 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; poi
 ]
 
 /** Design OverviewFirstRun: pick a workspace, then three steps in order. Tiles stay at zero rather than sample data. */
-function FirstRun({ overview }: { overview: Overview }) {
+function FirstRun({ overview, onChanged }: { overview: Overview; onChanged: () => void }) {
   const { workspace, setWorkspace } = useShell()
   const navigate = useNavigate()
   return (
@@ -464,7 +469,7 @@ function FirstRun({ overview }: { overview: Overview }) {
         </li>
       </ol>
 
-      {workspace === 'candidate' && <SampleRunCard />}
+      {workspace === 'candidate' ? <SampleRunCard /> : <SalesDemoCard onChanged={onChanged} />}
 
       <div className="kpi-strip kpi-strip-5">
         <Kpi label="Profiles" value={overview.profiles} sub="none yet" />
