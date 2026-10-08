@@ -135,3 +135,20 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 - **Validation:** Every item is revalidated independently for ownership, version, suppression, required recipient and placeholders. Nothing is sent or placed by approval.
 - **Status:** outreach batch approval built.
 - **TODOs:** Add sales bids to a combined outgoing review queue when provider placement is implemented (OQ-FE-002).
+
+### Update 2026-10-08 — Sales journey and staffing CRM (P2–P8, X2–X15)
+
+- **Profile (P2):** Product/Services/Business profiles carry ideal customer, regions, capacity, approved case studies and
+  an outreach identity (draft sign-off); the editor shows what is still needed; every draft claim names "Profile vN".
+- **Campaigns (P3):** Customer, Partner, Investor and Freelance each have their own goal example, steps and criteria
+  labels. Sources include Job board search (Indeed, LinkedIn, SEEK via JSearch): hiring companies become leads.
+- **Decide (P4):** the opportunity page states the next permitted action; shortlisted companies lead to outreach;
+  "Make a staffing lead" turns a company into a staffing account + deal (X3).
+- **Act (P6, S13):** drafts go Draft → Approved → Sent; "Send this approved version" starts one execution (approval,
+  suppression, daily limit, idempotency), you send it yourself and record the receipt, or record that it failed. Bids use
+  the same gateway. Nothing is sent by the server.
+- **Overview (P5):** all four Sales modes with a mode filter; Contacted/Responded from stored status changes; outreach
+  panel (drafts, bids, follow-ups, reply rate). A demo card builds a replayable fictional Sales + staffing demo (P8).
+- **Staffing (rail → Staffing):** Deals (funnel KPIs), deal page (stages, conversation and meetings, submissions,
+  interviews, feedback, offers/contract/placement, proposals from rate cards), Candidates (consent and shareable fields),
+  Rate cards. Routes: `/staffing`, `/staffing/deals/:id`, `/staffing/candidates`, `/staffing/rate-cards`.

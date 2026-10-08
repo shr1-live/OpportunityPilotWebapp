@@ -105,8 +105,9 @@ export function HowItWorksPage() {
             </header>
             <div className="panel-body">
               <p className="muted-small">
-                For Sales, build a Customers campaign with a CSV of companies or a pasted list, then queue a run. Proposals, bids
-                and email are not built yet.
+                For Sales, build a Customer, Partner, Investor or Freelance campaign from a CSV, a pasted list or a job board
+                search, queue a run, shortlist with the evidence, then draft, approve and send outreach yourself. Staffing deals
+                (candidates, submissions, interviews, offers) live under Staffing.
               </p>
               <Link className="btn btn-primary btn-sm cap-action" to="/campaigns/new">
                 Build a Customers campaign

@@ -23,12 +23,12 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; ton
     key: 'sales',
     title: 'Sales',
     sub: 'I am looking for customers',
-    status: 'Partly built',
+    status: 'Built — you send',
     tone: 'badge-warning',
     points: [
       'Companies from CSVs, public pages, feeds or pasted lists',
       'Shortlist with the evidence attached',
-      'Proposals and email are not built yet',
+      'Draft and approve outreach and bids here; you send them and record the receipt',
     ],
   },
 ]

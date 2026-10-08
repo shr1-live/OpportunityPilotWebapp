@@ -389,7 +389,7 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; poi
     key: 'sales',
     title: 'Sales',
     sub: 'I am looking for customers',
-    status: 'Partly built',
+    status: 'Built — you send',
     points: ['Find businesses that need what your company sells', 'Companies from CSVs, public pages, feeds or pasted lists', 'Shortlist with evidence — proposals and email come later'],
   },
 ]

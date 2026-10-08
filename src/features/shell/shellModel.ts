@@ -173,7 +173,7 @@ export const WORKSPACES: Record<Workspace, { label: string; tagline: string; opt
     label: 'Sales',
     tagline: 'Finding businesses to sell to',
     option: 'Companies, projects and tenders to bid on',
-    status: 'Partly built',
+    status: 'Built — you send',
     icon: 'sales',
   },
 }

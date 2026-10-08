@@ -189,7 +189,7 @@ export function CampaignsPage() {
               </p>
               <p className="flow-chips">
                 <span className="chip">Run</span>›<span className="chip">Qualified</span>›<span className="chip chip-ok">You shortlist</span>›
-                <span className="chip chip-off">Contact — not built yet</span>
+                <span className="chip">You contact (approved draft, receipt)</span>
               </p>
             </div>
           </section>

@@ -215,8 +215,8 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
         <ul className="plain-list cap-mini">
           <li className="row wrap">
             <span className="grow">
-              <strong>Company discovery provider</strong>
-              <span className="muted-small"> — searching beyond the sources you add</span>
+              <strong>Paid company databases</strong>
+              <span className="muted-small"> — e.g. sales-intelligence providers; use Job board search for hiring companies today</span>
             </span>
             <Badge>Not built yet</Badge>
           </li>
