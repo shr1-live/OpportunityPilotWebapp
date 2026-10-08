@@ -80,7 +80,7 @@ export function SalesDemoCard({ onChanged }: { onChanged: () => void }) {
       </p>
       {error && <ErrorNotice error={error} onRetry={reload} />}
       {value?.exists && (
-        <dl className="criteria-list">
+        <dl className="criteria-list criteria-row">
           <div><dt>Campaigns</dt><dd className="op-numeric">{value.campaigns}</dd></div>
           <div><dt>Opportunities</dt><dd className="op-numeric">{value.opportunities}</dd></div>
           <div><dt>Shortlisted</dt><dd className="op-numeric">{value.shortlisted}</dd></div>
