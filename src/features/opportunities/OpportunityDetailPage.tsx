@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { LoadingState } from '../../components/States'
 import { Badge } from '../../components/StatusBadge'
@@ -64,6 +64,7 @@ export function OpportunityDetailPage() {
 function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: OpportunityDetail) => void }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()
+  const navigate = useNavigate()
   const [announcement, setAnnouncement] = useState('')
   const [chosen, setChosen] = useState<OpportunityStatus>(o.status)
   const { refreshOverview } = useShell()
@@ -80,6 +81,20 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
   const platform = platformLabel(o.platform)
   const suggested = o.status === 'Suggested'
   const evidenceById = new Map(o.evidence.map((e) => [e.id, e]))
+
+  /** X3: turn this company into a staffing lead (account de-duplicated by website, then name) and open the deal. */
+  async function makeStaffingLead() {
+    setBusy(true)
+    setError(undefined)
+    try {
+      const lead = await api<{ deal: { id: string } }>(`/api/v1/staffing/from-opportunity/${o.id}`, { method: 'POST' })
+      navigate(`/staffing/deals/${lead.deal.id}`)
+    } catch (e) {
+      setError(e as Error)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   async function setStatus(next: OpportunityStatus) {
     if (next === o.status) return
@@ -169,7 +184,10 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
           }
           actions={decisions}
         />
-          <p className="notice notice-neutral small" aria-live="polite"><strong>Next:</strong> {nextPermittedAction(o)}</p>
+          <p className="notice notice-neutral small" aria-live="polite"><strong>Next:</strong> {nextPermittedAction(o)}
+            {o.mode !== 'Job' && (o.status === 'Shortlisted' || o.status === 'Contacted' || o.status === 'Responded' || o.status === 'Interested') && (
+              <> <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void makeStaffingLead()}>Make a staffing lead</button></>
+            )}</p>
       </div>
 
       <span className="sr-only" role="status" aria-live="polite">
