@@ -16,7 +16,7 @@ export function BoardLiveResults({ board, path, searchUrl }: { board: JobBoard; 
   if (r.status !== 'Ready') {
     return <section className="result-blocked">
       <Badge tone="warning">{r.status === 'NotConfigured' ? 'Live listings not set up' : 'Live listings unavailable'}</Badge>
-      <p className="grow">{r.message}</p>
+      <p className="grow">{r.message}{r.quotaRemaining != null ? ` ${r.quotaRemaining} free searches left this period.` : ''}</p>
       <a className="btn btn-secondary btn-sm" href={searchUrl} target="_blank" rel="noopener noreferrer">See these results on {name} ↗<span className="sr-only"> (opens in a new tab)</span></a>
     </section>
   }
@@ -26,7 +26,7 @@ export function BoardLiveResults({ board, path, searchUrl }: { board: JobBoard; 
       <h3 className="results-title">{r.jobs.length} live {name} job{r.jobs.length === 1 ? '' : 's'}</h3>
       <Badge tone="success">Live</Badge>
       <span className="grow" />
-      <span className="muted-small">{r.jobs.length} of {r.providerResults} matches are on {name} · retrieved {observed}{r.fromCache ? ' (cached)' : ''}</span>
+      <span className="muted-small">{r.jobs.length} of {r.providerResults} matches are on {name} · retrieved {observed}{r.fromCache ? ' (cached, no search used)' : ''}{r.quotaRemaining != null ? ` · ${r.quotaRemaining} searches left` : ''}</span>
     </div>
     {r.jobs.length === 0
       ? <p className="muted-small">{r.message}</p>
