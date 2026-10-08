@@ -7,7 +7,11 @@ export interface FieldDef {
   rows: number
   /** Claims about you or your product: must be explicitly confirmed, never strengthened for you. */
   confirmable?: boolean
+  /** Needed before campaigns and outreach can use this profile well. */
+  required?: boolean
 }
+
+const IDENTITY_HINT = 'Name, role, company and signature exactly as outreach should be signed. Used as the sign-off of every draft.'
 
 const OFFER_HINT = 'This is the sentence a match is judged against. Concrete beats broad.'
 const PLACEHOLDER_HINT = 'Square-bracket placeholders stay as written — a figure is never invented for you.'
@@ -21,31 +25,40 @@ export const PROFILE_TYPES: { type: ProfileType; label: string; description: str
 
 export const FIELDS: Record<ProfileType, FieldDef[]> = {
   Product: [
-    { key: 'offer', label: 'What the product does', hint: OFFER_HINT, rows: 3 },
+    { key: 'offer', label: 'What the product does', hint: OFFER_HINT, rows: 3, required: true },
+    { key: 'idealCustomer', label: 'Ideal customer', hint: 'Company size, industry, role you sell to, and the problem they have.', rows: 2, required: true },
     { key: 'capabilities', label: 'Capabilities', rows: 3, confirmable: true },
     { key: 'integrations', label: 'Supported integrations', rows: 2, confirmable: true },
     { key: 'targetSectors', label: 'Target sectors and regions', rows: 2 },
     { key: 'pricing', label: 'Pricing', hint: PLACEHOLDER_HINT, rows: 2 },
     { key: 'proof', label: 'Proof you approve for outreach', hint: 'Customers, metrics or case studies you are allowed to cite.', rows: 3, confirmable: true },
+    { key: 'outreachIdentity', label: 'Outreach identity', hint: IDENTITY_HINT, rows: 2, required: true },
   ],
   Business: [
-    { key: 'offer', label: 'What the business does', hint: OFFER_HINT, rows: 3 },
+    { key: 'offer', label: 'What the business does', hint: OFFER_HINT, rows: 3, required: true },
     { key: 'sector', label: 'Sector and stage', rows: 2 },
     { key: 'geography', label: 'Geography', rows: 1 },
     { key: 'traction', label: 'Traction', hint: 'Only figures you can stand behind.', rows: 3, confirmable: true },
     { key: 'goal', label: 'Fundraising or partnership goal', hint: PLACEHOLDER_HINT, rows: 2 },
+    { key: 'outreachIdentity', label: 'Outreach identity', hint: IDENTITY_HINT, rows: 2, required: true },
   ],
   Candidate: [
-    { key: 'offer', label: 'What you offer', hint: OFFER_HINT, rows: 3 },
+    { key: 'offer', label: 'What you offer', hint: OFFER_HINT, rows: 3, required: true },
     { key: 'experience', label: 'Experience', rows: 4, confirmable: true },
     { key: 'skills', label: 'Skills', rows: 2, confirmable: true },
     { key: 'availability', label: 'Availability and terms', hint: PLACEHOLDER_HINT, rows: 2 },
   ],
   Services: [
-    { key: 'offer', label: 'Services you deliver', hint: OFFER_HINT, rows: 3 },
+    { key: 'offer', label: 'Services you deliver', hint: OFFER_HINT, rows: 3, required: true },
+    { key: 'industries', label: 'Industries you serve', rows: 1 },
+    { key: 'idealCustomer', label: 'Ideal customer', hint: 'Who buys this: company type, size, region, the problem they have.', rows: 2, required: true },
+    { key: 'regions', label: 'Regions and time zones', rows: 1 },
     { key: 'portfolio', label: 'Portfolio and past work', rows: 3, confirmable: true },
     { key: 'skills', label: 'Skills', rows: 2, confirmable: true },
     { key: 'availability', label: 'Availability and rates', hint: PLACEHOLDER_HINT, rows: 2 },
+    { key: 'capacity', label: 'Capacity', hint: 'Team size and how much new work you can take on.', rows: 1 },
+    { key: 'proof', label: 'Case studies you approve for outreach', hint: 'Clients, results or links you are allowed to cite.', rows: 3, confirmable: true },
+    { key: 'outreachIdentity', label: 'Outreach identity', hint: IDENTITY_HINT, rows: 2, required: true },
   ],
 }
 
@@ -119,3 +132,18 @@ export const NEW_PROFILE_TYPES: { type: ProfileType; label: string; description:
   { type: 'Product', label: 'Product', description: 'Something you sell — scores companies' },
   { type: 'Business', label: 'Business', description: 'Your company — for partner and investor work' },
 ]
+
+/** How ready a profile is: required fields filled, and claims confirmed (a claim is only usable once confirmed). */
+export function readiness(type: ProfileType, data: ProfileData) {
+  const required = FIELDS[type].filter((f) => f.required)
+  const missingRequired = required.filter((f) => !data.fields[f.key]?.trim()).map((f) => f.label)
+  const claims = confirmationState(type, data)
+  return {
+    requiredFilled: required.length - missingRequired.length,
+    requiredTotal: required.length,
+    missingRequired,
+    claimsConfirmed: claims.confirmed.length,
+    claimsAwaiting: claims.awaiting,
+    ready: missingRequired.length === 0 && claims.awaiting.length === 0,
+  }
+}

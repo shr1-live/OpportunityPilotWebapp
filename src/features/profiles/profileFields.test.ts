@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildSummary, confirmationState, createFields, FIELDS as ALL_FIELDS, isFullyConfirmed, isWideField, joinTags, splitTags } from './profileFields'
+import { buildSummary, confirmationState, createFields, FIELDS as ALL_FIELDS, isFullyConfirmed, isWideField, joinTags, splitTags, readiness } from './profileFields'
 
 describe('profile confirmation', () => {
   it('is not confirmed when no claims are filled in', () => {
@@ -47,5 +47,22 @@ describe('round-3 profile editor', () => {
 
   it('makes the offer full width', () => {
     expect(isWideField(ALL_FIELDS.Candidate[0])).toBe(true)
+  })
+})
+
+describe('readiness', () => {
+  it('lists missing required fields and unconfirmed claims', () => {
+    const r = readiness('Services', { fields: { offer: 'Fixed-scope .NET work', proof: 'Acme migration' }, confirmations: {} })
+    expect(r.missingRequired).toEqual(['Ideal customer', 'Outreach identity'])
+    expect(r.claimsAwaiting).toEqual(['Case studies you approve for outreach'])
+    expect(r.ready).toBe(false)
+  })
+  it('is ready when required fields are filled and every claim is confirmed', () => {
+    const r = readiness('Product', {
+      fields: { offer: 'Route planning SaaS', idealCustomer: 'Mid-size 3PLs in DACH', outreachIdentity: 'Asha Rao, Sales, RouteCo', proof: '20% fewer km at Acme' },
+      confirmations: { proof: true },
+    })
+    expect(r.ready).toBe(true)
+    expect(r.requiredFilled).toBe(r.requiredTotal)
   })
 })
