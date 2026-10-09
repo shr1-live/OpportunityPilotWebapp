@@ -32,7 +32,11 @@ export type BoardSearchResult = {
   nextCursor?: string | null
 }
 
-export type BoardSearch = { query: string; location: string; workMode: string; postedWithinDays: string; country: string }
+export type BoardSearch = {
+  query: string; location: string; workMode: string; postedWithinDays: string; country: string
+  /** Optional provider filters: FULLTIME, PARTTIME, CONTRACTOR, INTERN (comma-separated), a JSearch job_requirements value, a radius in km. */
+  employmentType?: string; experience?: string; radiusKm?: string
+}
 
 type BoardInfo = {
   name: string
@@ -94,7 +98,8 @@ export function datePostedFor(postedWithinDays: string): string {
     case '1': return 'today'
     case '3': return '3days'
     case '7': return 'week'
-    case '14': return 'month'
+    case '14':
+    case '30': return 'month'
     default: return 'all'
   }
 }
@@ -107,6 +112,9 @@ export function boardJobsPath(board: JobBoard, s: BoardSearch): string | null {
   if (s.location.trim()) params.set('location', s.location.trim().slice(0, 100))
   if (s.workMode === 'remote') params.set('remoteOnly', 'true')
   if (board === 'Seek' && s.country) params.set('country', s.country)
+  if (s.employmentType) params.set('employmentType', s.employmentType)
+  if (s.experience) params.set('experience', s.experience)
+  if (s.radiusKm && s.location.trim() && Number(s.radiusKm) > 0) params.set('radiusKm', String(Math.min(500, Math.floor(Number(s.radiusKm)))))
   return `/api/v1/jobboards/jobs?${params}`
 }
 
