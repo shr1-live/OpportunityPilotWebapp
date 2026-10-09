@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BOARDS, campaignFromSearchPath, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
+import { BOARDS, campaignFromSearchPath, recruiterSearchUrl, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
 
 const base: BoardSearch = { query: 'react developer', location: 'Bengaluru', workMode: 'remote', postedWithinDays: '7', country: '' }
 const params = (path: string) => new URL(path, 'http://x').searchParams
@@ -18,6 +18,14 @@ describe('boardJobsPath', () => {
   it('sends the country only for SEEK', () => {
     expect(params(boardJobsPath('Seek', { ...base, country: 'nz' })!).get('country')).toBe('nz')
     expect(params(boardJobsPath('Indeed', { ...base, country: 'nz' })!).get('country')).toBeNull()
+  })
+  it('sends the optional provider filters and ignores a radius without a location', () => {
+    const p = params(boardJobsPath('Indeed', { ...base, employmentType: 'FULLTIME,CONTRACTOR', experience: 'under_3_years_experience', radiusKm: '25' })!)
+    expect(p.get('employmentType')).toBe('FULLTIME,CONTRACTOR')
+    expect(p.get('experience')).toBe('under_3_years_experience')
+    expect(p.get('radiusKm')).toBe('25')
+    expect(params(boardJobsPath('Indeed', { ...base, location: '', radiusKm: '25' })!).get('radiusKm')).toBeNull()
+    expect(params(boardJobsPath('Indeed', base)!).get('employmentType')).toBeNull()
   })
   it('leaves remote off for other modes', () => expect(boardJobsPath('Indeed', { ...base, workMode: 'hybrid' })).not.toContain('remoteOnly'))
 })
@@ -55,4 +63,13 @@ describe('campaignFromSearchPath', () => {
     expect(sales).toContain('mode=Customer')
     expect(sales).not.toContain('location=')
   })
+})
+
+describe('recruiterSearchUrl', () => {
+  it('searches people at the company for recruiters and adds the skill', () => {
+    const u = new URL(recruiterSearchUrl('Acme "Labs"', '.NET'))
+    expect(u.origin + u.pathname).toBe('https://www.linkedin.com/search/results/people/')
+    expect(u.searchParams.get('keywords')).toBe('"Acme Labs" (recruiter OR "talent acquisition" OR "hiring manager") .NET')
+  })
+  it('still works without a company', () => expect(new URL(recruiterSearchUrl('')).searchParams.get('keywords')).toBe('(recruiter OR "talent acquisition" OR "hiring manager")'))
 })

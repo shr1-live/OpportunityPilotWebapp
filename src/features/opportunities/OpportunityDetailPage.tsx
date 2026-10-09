@@ -26,6 +26,7 @@ import {
   valueLabel,
   nextPermittedAction,
 } from './opportunityModel'
+import { recruiterSearchUrl } from '../wellfound/boardModel'
 
 const dateFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 const formatDate = (iso: string) => {
@@ -194,6 +195,15 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
                   <a href={postingHref} target="_blank" rel="noopener noreferrer">
                     {o.mode === 'Job' ? 'Open posting ↗' : 'Open website ↗'}
                     <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </>
+              )}
+              {o.organization && (
+                <>
+                  {' · '}
+                  <a href={recruiterSearchUrl(o.organization)} target="_blank" rel="noopener noreferrer">
+                    Find recruiters at {o.organization} ↗
+                    <span className="sr-only"> (opens LinkedIn in a new tab)</span>
                   </a>
                 </>
               )}

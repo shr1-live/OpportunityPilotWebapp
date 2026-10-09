@@ -56,3 +56,13 @@ The owner asked for one click to apply (Candidate) and one click to send (Sales)
 A draft with an unfilled `[PLACEHOLDER]` cannot be approved; the button says which one to replace.
 
 **Not built (needs the owner / future):** unattended auto-apply or auto-send. Indeed and LinkedIn offer no apply API; the local agent (LinkedIn / Naukri / InstaHyre) is built but unverified (U3); true one-click email needs Gmail OAuth (N6).
+
+## Reaching the hiring people (built 2026-10-09, local branch `feature/board-filters`)
+
+No data source may list LinkedIn people, and LinkedIn offers no connect API, so the app guides the manual steps:
+
+1. **Find recruiters ↗** on every job-board result and **Find recruiters at <company> ↗** on every opportunity opens a LinkedIn people search for that company (recruiter / talent acquisition / hiring manager, plus the searched skill). The user connects there.
+2. **Connection note:** create a *LinkedIn message* draft; the template is a whole-sentence note of at most 300 characters (`LinkedInNote`), shown with a character counter. **Approve & send →** copies it and opens LinkedIn Messages.
+3. **Follow-up email:** after they accept, the draft editor links to the opportunity where an email draft is created, approved and sent with the same one-click flow, then a receipt is pasted.
+
+Not possible without a paid licensed contact-data API (Apollo, Hunter, People Data Labs): listing people by skill and finding their email addresses.
