@@ -450,9 +450,9 @@ function FirstRun() {
           <span className="step-num">2</span>
           <div className="stack-2">
             <strong>Add sources</strong>
-            <span className="muted-small">Greenhouse or Lever boards, a CSV, a feed, or pasted text.</span>
-            <Link className="btn btn-secondary btn-sm" to="/integrations">
-              See sources
+            <span className="muted-small">Greenhouse or Lever boards, a job-board search, a CSV, or pasted text.</span>
+            <Link className="btn btn-secondary btn-sm" to="/campaigns/new">
+              Add sources
             </Link>
           </div>
         </li>

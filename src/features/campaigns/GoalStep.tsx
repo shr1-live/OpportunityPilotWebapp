@@ -94,7 +94,7 @@ export function GoalStep({ draft, setDraft, profiles, profileId, mode, locked, f
         <fieldset className="field">
           <legend>Mode</legend>
           <div className="type-grid">
-            {MODES.map((m) => {
+            {MODES.filter((m) => m.supported && (m.mode === 'Job' || m.mode === 'Customer' || m.mode === draft.mode)).map((m) => {
               const checked = mode === m.mode
               const disabled = !m.supported || (locked && !checked)
               return (

@@ -376,6 +376,17 @@ export function jobSearchTerms(criteria: Pick<CampaignCriteria, 'keywords' | 'si
   return { terms, location, remoteOnly: location === null && criteria.locations.length > 0 }
 }
 
+/** Why a run would find nothing: a job-board search source with no keywords (or signals) to search for. */
+export function searchSourceBlocker(
+  sourceKinds: string[],
+  criteria: Pick<CampaignCriteria, 'keywords' | 'signals' | 'locations'>,
+  mode: OpportunityMode,
+): string | null {
+  if (!sourceKinds.includes('JobSearch')) return null
+  return jobSearchTerms(criteria, mode).terms.length > 0 ? null
+    : `The job-board search source has nothing to search for. Go back to step 2 and add ${mode === 'Job' ? 'job titles or search phrases' : 'keywords or buying signals'}, then save.`
+}
+
 /** Same pattern the API validates a board token / company slug with. */
 export const BOARD_TOKEN_PATTERN = /^[a-z0-9-]{1,100}$/
 

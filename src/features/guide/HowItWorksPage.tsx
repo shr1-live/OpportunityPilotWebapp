@@ -78,8 +78,7 @@ export function HowItWorksPage() {
         </div>
         <p className="muted-small panel-note">
           A source that fails or is not configured is a <strong>gap, not a failure</strong>: the run finishes as “Completed with
-          gaps” and the event log says which source and why. See every source's status on{' '}
-          <Link to="/integrations">Sources &amp; integrations</Link>.
+          gaps” and the event log says which source and why.
         </p>
       </section>
 

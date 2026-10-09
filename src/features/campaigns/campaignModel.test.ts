@@ -6,6 +6,7 @@ import {
   filterCampaigns,
   isRunning,
   jobSearchTerms,
+  searchSourceBlocker,
   addTags,
   adzunaSearch,
   applicableCriteria,
@@ -303,5 +304,17 @@ describe('modeCopy', () => {
     expect(goals.size).toBe(4)
     expect(signals.size).toBe(4)
     for (const m of modes) expect(modeCopy(m).steps).toHaveLength(4)
+  })
+})
+
+describe('searchSourceBlocker', () => {
+  const empty = { keywords: [], signals: [], locations: [] }
+  it('blocks a job-board source with nothing to search for', () => {
+    expect(searchSourceBlocker(['JobSearch'], empty, 'Customer')).toContain('nothing to search for')
+    expect(searchSourceBlocker(['JobSearch'], empty, 'Job')).toContain('job titles')
+  })
+  it('lets a run through with keywords or other sources', () => {
+    expect(searchSourceBlocker(['JobSearch'], { ...empty, keywords: ['react'] }, 'Job')).toBeNull()
+    expect(searchSourceBlocker(['Greenhouse'], empty, 'Job')).toBeNull()
   })
 })
