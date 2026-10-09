@@ -53,12 +53,6 @@ export const NAV_GROUPS: NavGroup[] = [
     id: 'act',
     label: 'Act',
     items: [
-      {
-        to: '/applications',
-        label: 'Applications',
-        icon: 'applications',
-        count: { key: 'needsManual', tone: 'attention', srLabel: 'need you' },
-      },
       { to: '/outreach', label: 'Outreach', icon: 'outreach' },
     ],
   },
@@ -88,7 +82,6 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     label: 'Find',
     items: [
       { to: '/campaigns', label: 'Campaigns', icon: 'campaigns', count: { key: 'campaigns', tone: 'muted', srLabel: 'campaigns' } },
-      { to: '/projects', label: 'Projects & tenders', icon: 'projects' },
       { to: '/wellfound', label: 'Hiring signals', icon: 'opportunities' },
       { to: '/opportunities', label: 'Companies', icon: 'opportunities' },
     ],
@@ -104,7 +97,6 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     id: 'act',
     label: 'Act',
     items: [
-      { to: '/proposals', label: 'Proposals & bids', icon: 'applications' },
       { to: '/outreach', label: 'Outreach', icon: 'outreach' },
     ],
   },
@@ -112,7 +104,6 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     id: 'track',
     label: 'Track',
     items: [
-      { to: '/bids', label: 'Bids sent', icon: 'bids' },
       { to: '/follow-ups', label: 'Follow-ups', icon: 'followUps' },
     ],
   },
@@ -122,7 +113,6 @@ export const SALES_NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/staffing', label: 'Deals', icon: 'bids' },
       { to: '/staffing/candidates', label: 'Candidates', icon: 'profiles' },
-      { to: '/staffing/rate-cards', label: 'Rate cards', icon: 'applications' },
     ],
   },
   SETUP_GROUP,

@@ -10,7 +10,6 @@ import { SignUpPage } from './features/auth/SignUpPage'
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage'
 import { EmptyState } from './components/States'
 
-const ApplicationsPage = lazy(() => import('./features/applications/ApplicationsPage').then((m) => ({ default: m.ApplicationsPage })))
 const ApprovalQueuePage = lazy(() => import('./features/approvals/ApprovalQueuePage').then((m) => ({ default: m.ApprovalQueuePage })))
 const CampaignBuilder = lazy(() => import('./features/campaigns/CampaignBuilder').then((m) => ({ default: m.CampaignBuilder })))
 const CampaignsPage = lazy(() => import('./features/campaigns/CampaignsPage').then((m) => ({ default: m.CampaignsPage })))
@@ -23,14 +22,9 @@ const FollowUpsPage = lazy(() => import('./features/follow-ups/FollowUpsPage').t
 const ProfilesPage = lazy(() => import('./features/profiles/ProfilesPage').then((m) => ({ default: m.ProfilesPage })))
 const ResearchProgressPage = lazy(() => import('./features/research/ResearchProgressPage').then((m) => ({ default: m.ResearchProgressPage })))
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })))
-const SalesProjectDetailPage = lazy(() => import('./features/sales/SalesProjectDetailPage').then((m) => ({ default: m.SalesProjectDetailPage })))
-const SalesProjectsPage = lazy(() => import('./features/sales/SalesProjectsPage').then((m) => ({ default: m.SalesProjectsPage })))
-const SalesProposalsPage = lazy(() => import('./features/sales/SalesProposalsPage').then((m) => ({ default: m.SalesProposalsPage })))
 const StaffingDealsPage = lazy(() => import('./features/staffing/StaffingDealsPage').then((m) => ({ default: m.StaffingDealsPage })))
 const StaffingDealPage = lazy(() => import('./features/staffing/StaffingDealPage').then((m) => ({ default: m.StaffingDealPage })))
 const StaffingCandidatesPage = lazy(() => import('./features/staffing/StaffingCandidatesPage').then((m) => ({ default: m.StaffingCandidatesPage })))
-const StaffingRateCardsPage = lazy(() => import('./features/staffing/StaffingRateCardsPage').then((m) => ({ default: m.StaffingRateCardsPage })))
-const SalesBidsPage = lazy(() => import('./features/sales/SalesBidsPage').then((m) => ({ default: m.SalesBidsPage })))
 const AppShell = lazy(() => import('./features/shell/AppShell').then((m) => ({ default: m.AppShell })))
 const HowItWorksPage = lazy(() => import('./features/guide/HowItWorksPage').then((m) => ({ default: m.HowItWorksPage })))
 const WellfoundPage = lazy(() => import('./features/wellfound/WellfoundPage').then((m) => ({ default: m.WellfoundPage })))
@@ -94,7 +88,6 @@ const router = createBrowserRouter([
     element: <AuthGate />,
     children: [
       { index: true, element: <OverviewPage />, handle: { title: 'Overview' } },
-      { path: 'applications', element: <ApplicationsPage />, handle: { title: 'Applications' } },
       { path: 'campaigns', element: <CampaignsPage />, handle: { title: 'Campaigns' } },
       { path: 'campaigns/new', element: <CampaignBuilder />, handle: { title: 'New campaign' } },
       { path: 'campaigns/:id/edit', element: <CampaignBuilder />, handle: { title: 'Campaign builder' } },
@@ -105,26 +98,9 @@ const router = createBrowserRouter([
       { path: 'approvals', element: <ApprovalQueuePage />, handle: { title: 'Approvals' } },
       { path: 'outreach', handle: { title: 'Outreach' }, element: <OutreachPage /> },
       { path: 'follow-ups', handle: { title: 'Follow-ups' }, element: <FollowUpsPage /> },
-      {
-        path: 'projects',
-        handle: { title: 'Projects & tenders' },
-        element: <SalesProjectsPage />,
-      },
-      { path: 'projects/:id', element: <SalesProjectDetailPage />, handle: { title: 'Project detail' } },
-      {
-        path: 'proposals',
-        handle: { title: 'Proposals & bids' },
-        element: <SalesProposalsPage />,
-      },
-      {
-        path: 'bids',
-        handle: { title: 'Bids sent' },
-        element: <SalesBidsPage />,
-      },
       { path: 'staffing', element: <StaffingDealsPage />, handle: { title: 'Staffing deals' } },
       { path: 'staffing/deals/:id', element: <StaffingDealPage />, handle: { title: 'Staffing deal' } },
       { path: 'staffing/candidates', element: <StaffingCandidatesPage />, handle: { title: 'Candidates' } },
-      { path: 'staffing/rate-cards', element: <StaffingRateCardsPage />, handle: { title: 'Rate cards' } },
       { path: 'how-it-works', element: <HowItWorksPage />, handle: { title: 'How it works' } },
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
