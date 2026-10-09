@@ -122,6 +122,18 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
     }
   }
 
+  /** One click for a job: approve it (shortlist) and open its application page. The user applies there, then marks it applied. */
+  async function approveAndApply() {
+    const target = applyHref ?? postingHref
+    if (!target) return
+    const tab = window.open('about:blank', '_blank')
+    if (tab) tab.opener = null
+    if (o.status !== 'Shortlisted') await setStatus('Shortlisted')
+    if (tab) tab.location.href = target
+    setAnnouncement('Approved. Apply on the page that opened, then come back and click "I applied".')
+  }
+
+  const canApplyNow = o.mode === 'Job' && Boolean(applyHref ?? postingHref) && ['New', 'Suggested', 'Shortlisted', 'Dismissed'].includes(o.status)
   const unknown = o.breakdown.filter((b) => b.value === null)
   const decisions = (
     <>
@@ -143,6 +155,16 @@ function Detail({ o, onUpdated }: { o: OpportunityDetail; onUpdated: (o: Opportu
       {suggested && (
         <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void setStatus('Shortlisted')}>
           ✓ Approve — adds to shortlist
+        </button>
+      )}
+      {canApplyNow && (
+        <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={() => void approveAndApply()}>
+          {o.status === 'Shortlisted' ? 'Open application page →' : 'Approve & apply →'}
+        </button>
+      )}
+      {o.mode === 'Job' && o.status === 'Shortlisted' && (
+        <button type="button" className="btn btn-secondary btn-sm" disabled={busy} onClick={() => void setStatus('Applied')}>
+          I applied ✓
         </button>
       )}
     </>
