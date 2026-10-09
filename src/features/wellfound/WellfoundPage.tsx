@@ -9,8 +9,6 @@ import type { WellfoundApplication, WellfoundApplicationState, WellfoundActivity
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
 import { useShell } from '../shell/ShellContext'
-import { BoardSearchPanel } from './BoardSearchPanel'
-import type { JobBoard } from './boardModel'
 
 function money(value: number | null, currency: string | null) {
   if (value === null) return '—'
@@ -20,7 +18,6 @@ function money(value: number | null, currency: string | null) {
 export function WellfoundPage() {
   const { workspace } = useShell()
   const ws = workspace === 'sales' ? 'Sales' : 'Candidate'
-  const [provider, setProvider] = useState<'wellfound' | JobBoard>('wellfound')
   const [keyword, setKeyword] = useState('')
   const [company, setCompany] = useState('')
   const [location, setLocation] = useState('')
@@ -113,21 +110,16 @@ export function WellfoundPage() {
     setJobState(''); setSort('newest')
   }
 
-  const tabs = <div className="segmented" role="group" aria-label="Job source">
-    <button type="button" className={provider === 'wellfound' ? 'active' : ''} aria-pressed={provider === 'wellfound'} onClick={() => setProvider('wellfound')}>Wellfound</button>
-    {(['Indeed', 'LinkedIn', 'Seek'] as const).map((board) => <button key={board} type="button" className={provider === board ? 'active' : ''} aria-pressed={provider === board} onClick={() => setProvider(board)}>{board === 'Seek' ? 'SEEK' : board}</button>)}
-  </div>
   const extraCount = [company, techStack, workMode, minSalary, fundingStage, industry, employmentType, postedWithinDays, jobState, equityOnly ? 'equity' : ''].filter(Boolean).length
 
   return <div className="page page-wide stack-4">
     <PageHeader title="Job discovery" subtitle={workspace === 'sales'
-      ? 'See which companies are hiring right now — live hiring signals from Wellfound, Indeed, LinkedIn and SEEK.'
-      : 'Live jobs from Wellfound, Indeed, LinkedIn and SEEK, each linked to the original posting.'} />
+      ? 'See which companies are hiring right now — live hiring signals from Wellfound.'
+      : 'Live jobs from Wellfound, each linked to the original posting.'} />
 
-    {provider !== 'wellfound' ? <BoardSearchPanel key={provider} board={provider} workspace={workspace} tabs={tabs} /> : <>
+    <>
 
     <form className="search-hero" aria-label="Search Wellfound" onSubmit={(e) => e.preventDefault()}>
-      {tabs}
       <div className="search-bar">
         <label className="search-field search-field-main"><span className="sr-only">Role or keywords</span><input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder={workspace === 'sales' ? 'Role companies are hiring, e.g. React developer' : 'Role or keywords, e.g. Backend engineer'} /></label>
         <label className="search-field"><span className="sr-only">Location</span><input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location, e.g. India, Remote" /></label>
@@ -196,6 +188,6 @@ export function WellfoundPage() {
 
 
     {activities.data && activities.data.length > 0 && <section className="panel"><header className="panel-head"><h3 className="eyebrow">Wellfound activity</h3><span className="muted-small">{activities.data.length} recent events</span></header><ul className="state-list panel-body">{activities.data.map((item) => <li key={item.id}><span><strong>{item.kind}</strong><br /><span className="muted-small">{item.detail}</span></span><time className="muted-small" dateTime={item.occurredAt}>{new Date(item.occurredAt).toLocaleString()}</time></li>)}</ul></section>}
-    </>}
+    </>
   </div>
 }
