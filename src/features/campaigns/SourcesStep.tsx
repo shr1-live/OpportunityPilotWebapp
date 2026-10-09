@@ -17,7 +17,7 @@ import {
   SOURCE_STATUS_LABELS,
   sourceKindAllowed,
 } from './campaignModel'
-import { AdzunaForm, AggregateBoardForm, BoardForm, JobSearchForm, WorkdayForm } from './JobBoardSources'
+import { BoardForm, JobSearchForm } from './JobBoardSources'
 
 /** Sources the server reads afresh on every run; they have no items until a run has read them. */
 const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Workday', 'JobSearch', 'Remotive', 'RemoteOk'])
@@ -33,19 +33,10 @@ type AddKind = 'Paste' | 'Url' | 'Feed' | 'Csv' | JobSourceKind
 const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'Paste', label: 'Paste text', description: 'Postings or company notes you copied' },
   { kind: 'Url', label: 'Public URL', description: 'A careers page or listing, no login needed' },
-  { kind: 'Feed', label: 'RSS / Atom feed', description: 'A feed you are allowed to read' },
   { kind: 'Csv', label: 'CSV file', description: 'A spreadsheet export, previewed first' },
   { kind: 'Greenhouse', label: 'Company careers board — Greenhouse', description: 'Every open job of one company on Greenhouse' },
   { kind: 'Lever', label: 'Company careers board — Lever', description: 'Every open job of one company on Lever' },
-  { kind: 'Adzuna', label: 'Adzuna job search (India)', description: 'Searches Adzuna with your job titles' },
   { kind: 'JobSearch', label: 'Job board search — Indeed, LinkedIn, SEEK', description: 'Live postings; in Sales, the companies that are hiring' },
-  { kind: 'Ashby', label: 'Company careers board — Ashby', description: 'Open jobs from one Ashby company board' },
-  { kind: 'SmartRecruiters', label: 'Company careers board — SmartRecruiters', description: 'Open jobs from one company' },
-  { kind: 'Recruitee', label: 'Company careers board — Recruitee', description: 'Open jobs from one company' },
-  { kind: 'Workable', label: 'Company careers board — Workable', description: 'Open jobs from one company' },
-  { kind: 'Workday', label: 'Company careers site — Workday', description: 'Search one public Workday careers site' },
-  { kind: 'Remotive', label: 'Remotive remote jobs', description: 'Board-wide remote job feed' },
-  { kind: 'RemoteOk', label: 'Remote OK jobs', description: 'Board-wide remote job feed' },
 ]
 
 export function SourcesStep({ campaign, preferBoard }: { campaign: Campaign; preferBoard?: SearchBoard }) {
@@ -193,20 +184,11 @@ export function SourcesStep({ campaign, preferBoard }: { campaign: Campaign; pre
         <div className="card-muted">
           {adding === 'Paste' && <PasteForm campaign={campaign} onAdded={() => added('Pasted text')} />}
           {adding === 'Url' && <UrlForm campaign={campaign} kind="Url" onAdded={() => added('URL')} />}
-          {adding === 'Feed' && <UrlForm campaign={campaign} kind="Feed" onAdded={() => added('Feed')} />}
           {adding === 'Csv' && <CsvImport campaign={campaign} onAdded={() => added('CSV import')} />}
-          {(adding === 'Greenhouse' || adding === 'Lever' || adding === 'Ashby' || adding === 'SmartRecruiters' ||
-            adding === 'Recruitee' || adding === 'Workable') && campaign.mode === 'Job' && (
+          {(adding === 'Greenhouse' || adding === 'Lever') && campaign.mode === 'Job' && (
             <BoardForm key={adding} campaign={campaign} kind={adding} onAdded={() => added(`${adding} board`)} />
           )}
-          {adding === 'Workday' && campaign.mode === 'Job' && <WorkdayForm campaign={campaign} onAdded={() => added('Workday site')} />}
-          {adding === 'Adzuna' && campaign.mode === 'Job' && (
-            <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
-          )}
           {adding === 'JobSearch' && <JobSearchForm campaign={campaign} initialBoard={preferBoard} onAdded={(label) => added(label)} />}
-          {(adding === 'Remotive' || adding === 'RemoteOk') && campaign.mode === 'Job' && (
-            <AggregateBoardForm campaign={campaign} kind={adding} onAdded={() => added(SOURCE_KIND_LABELS[adding])} />
-          )}
         </div>
       </section>
     </div>

@@ -304,28 +304,6 @@ function ResearchProgress({ jobId }: { jobId: string }) {
               Open list
             </Link>
           </section>
-          <section className="card stack-2" aria-labelledby="schedule-heading">
-            <div className="row wrap">
-              <h3 id="schedule-heading" className="section-heading">
-                Scheduling
-              </h3>
-              <Badge tone="warning">Schedule setup required</Badge>
-            </div>
-            <dl className="facts facts-compact">
-              <div>
-                <dt>Time zone</dt>
-                <dd>{timeZone}</dd>
-              </div>
-              <div>
-                <dt>Next run</dt>
-                <dd>Not scheduled</dd>
-              </div>
-            </dl>
-            <p className="hint">
-              There is no verified trigger in this build, so runs start only when you queue them. The host sleeps when
-              idle; nothing here claims 24/7 execution.
-            </p>
-          </section>
           {campaign.data && (
             <Link to={`/campaigns/${campaign.data.id}/edit?step=4`} className="small">
               Back to the campaign

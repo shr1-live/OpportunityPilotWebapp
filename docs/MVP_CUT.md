@@ -66,3 +66,21 @@ No data source may list LinkedIn people, and LinkedIn offers no connect API, so 
 3. **Follow-up email:** after they accept, the draft editor links to the opportunity where an email draft is created, approved and sent with the same one-click flow, then a receipt is pasted.
 
 Not possible without a paid licensed contact-data API (Apollo, Hunter, People Data Labs): listing people by skill and finding their email addresses.
+
+## Simplification round 2 (2026-10-09: "too complex — remove what is not working, keep track")
+
+Removed from the UI of the web app; all code is on `archive/pre-mvp-cut-2026-10-09` (web) and the API is untouched.
+
+| Removed | Why | Restore |
+|---|---|---|
+| Sources & integrations page (`/integrations`, nav entry, `features/integrations/*`) | A technical status matrix; no action a user needs | `git checkout archive/pre-mvp-cut-2026-10-09 -- src/features/integrations` + route + nav |
+| Campaign source options: RSS/Atom feed, Adzuna, Workday, Ashby, SmartRecruiters, Recruitee, Workable, Remotive, Remote OK | Not verified live (Adzuna needs a key; the rest never run on real data) | Restore the `ADD_OPTIONS` rows and `JobBoardSources` forms in `SourcesStep.tsx` |
+| Campaign modes Partner, Investor, Freelance for **new** campaigns (existing ones keep their mode) | Only Job (Candidate) and Customer (Sales) are used | Drop the mode filter in `GoalStep.tsx` |
+| "Scheduling — Schedule setup required" card on the run page | Stale text that contradicted the real schedule panel | — |
+
+Kept and kept working: paste text, public URL, CSV, Greenhouse, Lever and Job-board search (Indeed / LinkedIn / SEEK) sources.
+
+Fixed in the same round:
+- A job-board search source with no keywords now **blocks the run** with a clear reason (it used to "complete" with 0 items).
+- **Scheduled campaigns did not run** because the free Render instance sleeps and cannot poll. A GitHub Actions timer (`.github/workflows/keepalive.yml`, every 10 minutes, free because the repo is public) now keeps it awake.
+- Where data is stored and how to query it: API `docs/DATA_STORAGE.md`.

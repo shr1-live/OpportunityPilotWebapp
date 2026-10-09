@@ -12,6 +12,7 @@ import {
   applicableCriteria,
   type CampaignDraft,
   criteriaSummary,
+  searchSourceBlocker,
   MODE_LABELS,
   normaliseWeights,
   SOURCE_KIND_LABELS,
@@ -49,6 +50,7 @@ export function ReviewStep({ campaign, draft, mode, profile, profileLoading, dir
   let blocked: string | null = null
   if (dirty) blocked = 'Save your changes first — a run uses the saved campaign.'
   else if (sources.data && sourceList.length === 0) blocked = 'Add a source in step 3 first; a run with no sources finds nothing.'
+  else blocked = searchSourceBlocker(sourceList.map((s) => s.kind), draft.criteria, mode)
 
   async function queue() {
     if (inFlight.current || blocked) return

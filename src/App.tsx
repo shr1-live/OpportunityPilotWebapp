@@ -13,7 +13,6 @@ import { EmptyState } from './components/States'
 const ApprovalQueuePage = lazy(() => import('./features/approvals/ApprovalQueuePage').then((m) => ({ default: m.ApprovalQueuePage })))
 const CampaignBuilder = lazy(() => import('./features/campaigns/CampaignBuilder').then((m) => ({ default: m.CampaignBuilder })))
 const CampaignsPage = lazy(() => import('./features/campaigns/CampaignsPage').then((m) => ({ default: m.CampaignsPage })))
-const IntegrationsPage = lazy(() => import('./features/integrations/IntegrationsPage').then((m) => ({ default: m.IntegrationsPage })))
 const OpportunitiesPage = lazy(() => import('./features/opportunities/OpportunitiesPage').then((m) => ({ default: m.OpportunitiesPage })))
 const OpportunityDetailPage = lazy(() => import('./features/opportunities/OpportunityDetailPage').then((m) => ({ default: m.OpportunityDetailPage })))
 const OverviewPage = lazy(() => import('./features/overview/OverviewPage').then((m) => ({ default: m.OverviewPage })))
@@ -104,7 +103,6 @@ const router = createBrowserRouter([
       { path: 'how-it-works', element: <HowItWorksPage />, handle: { title: 'How it works' } },
       { path: 'profiles', element: <ProfilesPage />, handle: { title: 'Profiles' } },
       { path: 'profiles/:id', element: <ProfilesPage />, handle: { title: 'Profiles' } },
-      { path: 'integrations', element: <IntegrationsPage />, handle: { title: 'Sources & integrations' } },
       { path: 'wellfound', element: <WellfoundPage />, handle: { title: 'Job discovery' } },
       { path: 'settings', element: <SettingsPage />, handle: { title: 'Settings' } },
       { path: '*', element: <NotFound />, handle: { title: 'Not found' } },
