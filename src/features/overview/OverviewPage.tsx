@@ -21,7 +21,6 @@ import {
   type SalesModeFilter,
 } from './analyticsModel'
 import { SampleRunCard } from './SampleRunCard'
-import { SalesDemoCard } from './SalesDemoCard'
 
 /**
  * Design round 3: OverviewFirstRun (nothing set up), Main (Candidate) and OverviewSales.
@@ -35,7 +34,7 @@ export function OverviewPage() {
 
   if (overview.error) return <div className="page"><ErrorNotice error={overview.error} onRetry={overview.reload} what="your overview" /></div>
   if (!overview.data) return <div className="page"><LoadingState label="Loading your overview…" waking={overview.waking} stats={5} rows={4} /></div>
-  if (isFirstRun(overview.data)) return <FirstRun onChanged={overview.reload} />
+  if (isFirstRun(overview.data)) return <FirstRun />
 
   const a = analytics.data
   return (
@@ -73,7 +72,7 @@ export function OverviewPage() {
         </p>
       )}
       {a && !hasAnyActivity(a) && workspace === 'candidate' && <SampleRunCard />}
-      {a && (workspace === 'sales' ? <SalesOverview a={a} onChanged={() => { overview.reload(); analytics.reload() }} /> : <CandidateOverview a={a} overview={overview.data} />)}
+      {a && (workspace === 'sales' ? <SalesOverview a={a} /> : <CandidateOverview a={a} overview={overview.data} />)}
     </div>
   )
 }
@@ -299,12 +298,11 @@ function CandidateOverview({ a, overview }: { a: AnalyticsOverview; overview: Ov
   )
 }
 
-function SalesOverview({ a, onChanged }: { a: AnalyticsOverview; onChanged: () => void }) {
+function SalesOverview({ a }: { a: AnalyticsOverview }) {
   const k = a.kpis
   if (a.campaignCount === 0)
     return (
       <>
-      <SalesDemoCard onChanged={onChanged} />
       <EmptyState
         icon="▦"
         title="No Sales campaign yet"
@@ -319,15 +317,14 @@ function SalesOverview({ a, onChanged }: { a: AnalyticsOverview; onChanged: () =
           </>
         }
       >
-        The Sales overview counts what Customer, Partner, Investor and Freelance campaigns find: from a CSV, public pages,
-        feeds, job-board hiring signals or a pasted list. Your Job campaigns stay in the Candidate workspace.
+        Sales works on data you bring: a CSV of companies, a pasted list, a public page or feed, or the live hiring signals from
+        Wellfound (Job discovery). There is no built-in company database, so nothing appears until you add a source.
       </EmptyState>
       </>
     )
   const industryTotal = (a.qualifiedByIndustry ?? []).reduce((n, x) => n + x.count, 0)
   return (
     <>
-      <SalesDemoCard onChanged={onChanged} />
       <div className="kpi-strip kpi-strip-5">
         <Kpi label="Companies found" value={k.found} sub={`across ${a.campaignCount} ${a.campaignCount === 1 ? 'campaign' : 'campaigns'}`} />
         <Kpi label="Qualified" value={k.qualified} sub={`${percent(k.qualifyRate)} of what was found`} />
@@ -390,12 +387,12 @@ const CHOICES: { key: Workspace; title: string; sub: string; status: string; poi
     title: 'Sales',
     sub: 'I am looking for customers',
     status: 'Built — you send',
-    points: ['Find companies that need what you sell, with evidence', 'Hiring signals from Wellfound, Indeed, LinkedIn and SEEK', 'Drafts, bids and staffing deals you approve, then send yourself'],
+    points: ['Find companies that need what you sell, with evidence', 'Live hiring signals from Wellfound, plus your own CSV, list or page', 'Drafts and deals you approve, then send yourself'],
   },
 ]
 
 /** Design OverviewFirstRun: pick a workspace, then three steps in order. Tiles stay at zero rather than sample data. */
-function FirstRun({ onChanged }: { onChanged: () => void }) {
+function FirstRun() {
   const { workspace, setWorkspace } = useShell()
   const navigate = useNavigate()
   return (
@@ -435,7 +432,7 @@ function FirstRun({ onChanged }: { onChanged: () => void }) {
         ))}
       </div>
 
-      {workspace === 'candidate' ? <SampleRunCard /> : <SalesDemoCard onChanged={onChanged} />}
+      {workspace === 'candidate' && <SampleRunCard />}
 
       <h3 className="section-heading">Or set it up yourself — three steps</h3>
       <ol className="first-steps plain-list">
