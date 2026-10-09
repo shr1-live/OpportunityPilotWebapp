@@ -24,6 +24,7 @@ import {
   normaliseTags,
   normaliseWeights,
   parseBoardInput,
+  parseWorkdayInput,
   parseTagInput,
   sourceKindAllowed,
   weightsForMode,
@@ -212,6 +213,13 @@ describe('board tokens', () => {
     expect(parseBoardInput('Workable', 'https://apply.workable.com/mindex/j/ABC')).toEqual({ token: 'mindex' })
   })
 
+  it('normalizes public Workday careers URLs and rejects account paths', () => {
+    expect(parseWorkdayInput('https://nvidia.wd5.myworkdayjobs.com/en-US/NVIDIAExternalCareerSite/job/India/Engineer_R1')).toEqual({ token: 'nvidia.wd5/NVIDIAExternalCareerSite' })
+    expect(parseWorkdayInput('nvidia.wd5/NVIDIAExternalCareerSite')).toEqual({ token: 'nvidia.wd5/NVIDIAExternalCareerSite' })
+    expect(parseWorkdayInput('https://nvidia.wd5.myworkdayjobs.com/login').error).toContain('public Workday')
+    expect(parseWorkdayInput('https://evil.example/External').error).toContain('public Workday')
+  })
+
   it('rejects other hosts, including the other board provider', () => {
     expect(parseBoardInput('Greenhouse', 'https://jobs.lever.co/leverdemo').error).toMatch(/greenhouse\.io/)
     expect(parseBoardInput('Lever', 'https://boards.greenhouse.io/stripe').error).toMatch(/jobs\.lever\.co/)
@@ -236,7 +244,7 @@ describe('board tokens', () => {
 
 describe('job sources', () => {
   it('offers every public job source to Job campaigns only', () => {
-    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Remotive', 'RemoteOk'] as const) {
+    for (const kind of ['Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Workday', 'Remotive', 'RemoteOk'] as const) {
       expect(sourceKindAllowed(kind, 'Job')).toBe(true)
       expect(sourceKindAllowed(kind, 'Customer')).toBe(false)
     }

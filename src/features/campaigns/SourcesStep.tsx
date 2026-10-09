@@ -17,10 +17,10 @@ import {
   SOURCE_STATUS_LABELS,
   sourceKindAllowed,
 } from './campaignModel'
-import { AdzunaForm, AggregateBoardForm, BoardForm, JobSearchForm } from './JobBoardSources'
+import { AdzunaForm, AggregateBoardForm, BoardForm, JobSearchForm, WorkdayForm } from './JobBoardSources'
 
 /** Sources the server reads afresh on every run; they have no items until a run has read them. */
-const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'JobSearch', 'Remotive', 'RemoteOk'])
+const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Workday', 'JobSearch', 'Remotive', 'RemoteOk'])
 
 function sourceContent(s: Source): string {
   if (s.kind === 'Paste') return `${s.textLength.toLocaleString()} characters`
@@ -43,6 +43,7 @@ const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'SmartRecruiters', label: 'Company careers board — SmartRecruiters', description: 'Open jobs from one company' },
   { kind: 'Recruitee', label: 'Company careers board — Recruitee', description: 'Open jobs from one company' },
   { kind: 'Workable', label: 'Company careers board — Workable', description: 'Open jobs from one company' },
+  { kind: 'Workday', label: 'Company careers site — Workday', description: 'Search one public Workday careers site' },
   { kind: 'Remotive', label: 'Remotive remote jobs', description: 'Board-wide remote job feed' },
   { kind: 'RemoteOk', label: 'Remote OK jobs', description: 'Board-wide remote job feed' },
 ]
@@ -198,6 +199,7 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
             adding === 'Recruitee' || adding === 'Workable') && campaign.mode === 'Job' && (
             <BoardForm key={adding} campaign={campaign} kind={adding} onAdded={() => added(`${adding} board`)} />
           )}
+          {adding === 'Workday' && campaign.mode === 'Job' && <WorkdayForm campaign={campaign} onAdded={() => added('Workday site')} />}
           {adding === 'Adzuna' && campaign.mode === 'Job' && (
             <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
           )}

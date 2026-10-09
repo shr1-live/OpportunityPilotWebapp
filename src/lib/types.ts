@@ -50,6 +50,7 @@ export type SourceCapabilityKey =
   | 'smartrecruiters'
   | 'recruitee'
   | 'workable'
+  | 'workday'
   | 'remotive'
   | 'remoteok'
 
@@ -144,6 +145,7 @@ export type SourceKind =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Workday'
   | 'JobSearch'
   | 'Remotive'
   | 'RemoteOk'
@@ -174,6 +176,7 @@ export type JobPlatform =
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Workday'
   | 'Indeed'
   | 'Seek'
   | 'Remotive'
