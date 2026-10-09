@@ -44,14 +44,15 @@ All matching **API endpoints still exist and are tested** (`/api/v1/applications
 - Nothing is applied or sent automatically. Gmail sending is not connected (N6), so the user sends and records a receipt.
 - See the workspace `TASKS.md` for the items that need the owner (keys and accounts).
 
-## Open decision: "one-click auto-apply / auto-send"
+## One-click flows (built 2026-10-09, minimum MVP version)
 
-The owner asked (2026-10-09) for one click to apply for Candidates and one click to send for Sales. This conflicts with the implementation plan rule that nothing goes out without approval, and with what the providers allow:
+The owner asked for one click to apply (Candidate) and one click to send (Sales). Providers have no apply/send API the app may use, and the plan requires approval, so the MVP version is **"Approve & open"**: the app approves the exact item, records it, and opens the place where the user finishes it. Nothing is sent or applied by the app.
 
-| Channel | Can it be one click today? |
-|---|---|
-| Indeed / LinkedIn applications | No API exists to apply. The only route is browser automation by the local agent, which breaks their terms and is unverified (U3) |
-| Company-site applications (Greenhouse, Lever) | Possible only with per-company application APIs the app does not have |
-| Sales email | Possible after Gmail OAuth is connected (N6): approve → send in one click |
+| Who | Button | What one click does | What the user still does |
+|---|---|---|---|
+| Candidate | Opportunity → **Approve & apply →** (shortlisted: *Open application page →*) | Shortlists the job and opens its application page in a new tab | Applies there, then clicks **I applied ✓** (recorded in the activity history) |
+| Sales | Outreach → **Approve & send →** | Saves edits, approves that exact version, starts the send record, then: Email → opens the mail app pre-filled; LinkedIn message → copies the text and opens LinkedIn Messages; contact form → copies the text and opens the page | Sends it there, pastes a receipt, clicks **I sent it** (only then is it marked Sent) |
 
-Options recorded for the owner: (1) "Approve & open" — one click approves the item and opens the apply page / mail composer pre-filled, then one click records it; (2) wait for the first real local-agent run, then offer batch "Approve and let my agent apply" for LinkedIn / Naukri / InstaHyre only; (3) connect Gmail for true one-click Sales send. Not built; needs the owner's choice.
+A draft with an unfilled `[PLACEHOLDER]` cannot be approved; the button says which one to replace.
+
+**Not built (needs the owner / future):** unattended auto-apply or auto-send. Indeed and LinkedIn offer no apply API; the local agent (LinkedIn / Naukri / InstaHyre) is built but unverified (U3); true one-click email needs Gmail OAuth (N6).

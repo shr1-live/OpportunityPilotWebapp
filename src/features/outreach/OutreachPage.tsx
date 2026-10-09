@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { composerTarget, unresolvedPlaceholder } from './composer'
 import { SendPanel } from './SendPanel'
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
@@ -22,6 +23,7 @@ export function OutreachPage() {
   const [working, setWorking] = useState(false)
   const [error, setError] = useState<Error>()
   const [notice, setNotice] = useState('')
+  const [sendTick, setSendTick] = useState(0)
 
   const items = drafts.data?.items ?? []
   const filtered = items.filter((item) =>
@@ -80,6 +82,32 @@ export function OutreachPage() {
     finally { setWorking(false) }
   }
 
+  /** One click: save edits, approve this exact version, start the send record, then open the composer. The user sends and records a receipt. */
+  async function approveAndSend() {
+    if (!selected) return
+    const left = unresolvedPlaceholder(body, subject)
+    if (left) { setError(undefined); setNotice(`Replace ${left} in the message first — a draft with a placeholder cannot be approved.`); return }
+    const target = composerTarget(selected.channel, { recipient, subject, body })
+    // Open the tab inside the click so the browser does not block it; point it at the site once the server calls finish.
+    const tab = target.kind === 'site' ? window.open('about:blank', '_blank') : null
+    if (tab) tab.opener = null
+    setWorking(true); setError(undefined); setNotice('')
+    try {
+      let row = selected
+      const dirty = body !== row.body || recipient !== (row.recipient ?? '') || subject !== (row.subject ?? '')
+      if (dirty) row = await api<OutreachDraft>(`/api/v1/drafts/${row.id}`, { method: 'PUT', body: JSON.stringify({ recipient: recipient || null, subject: subject || null, body, expectedVersion: row.version }) })
+      if (row.state === 'Draft') row = await api<OutreachDraft>(`/api/v1/drafts/${row.id}/approve`, { method: 'POST', body: JSON.stringify({ version: row.version }) })
+      await api(`/api/v1/executions/drafts/${row.id}`, { method: 'POST', body: JSON.stringify({ version: row.version }) })
+      if (target.copy) await navigator.clipboard.writeText(row.body).catch(() => undefined)
+      if (target.kind === 'mailto' && target.url) window.location.href = target.url
+      else if (tab && target.url) tab.location.href = target.url
+      else tab?.close()
+      setNotice(`${target.label}. Send it there, then paste a receipt below and click "I sent it".`)
+      setSelected(row); setBody(row.body); setRecipient(row.recipient ?? ''); setSubject(row.subject ?? ''); setSendTick((n) => n + 1); drafts.reload()
+    } catch (e) { tab?.close(); setError(e as Error) }
+    finally { setWorking(false) }
+  }
+
   async function copyDraft() {
     if (!selected) return
     setError(undefined); setNotice('')
@@ -124,8 +152,9 @@ export function OutreachPage() {
           {selected.sendBlockers.length > 0 && <ul className="hint-list">{selected.sendBlockers.map((x) => <li key={x}>{x}</li>)}</ul>}
           <div className="row wrap"><button className="btn btn-secondary" type="button" disabled={working || !body.trim()} onClick={() => mutate('save')}>Save new version</button>
             {selected.state === 'Sent' ? null : selected.state === 'Approved' ? <button className="btn btn-secondary" type="button" disabled={working} onClick={() => mutate('revoke')}>Revoke approval</button> : <button className="btn btn-primary" type="button" disabled={working || !body.trim()} onClick={() => mutate('approve')}>Approve version {selected.version}</button>}
+            {selected.state === 'Draft' && <button className="btn btn-primary" type="button" disabled={working || !body.trim()} onClick={() => void approveAndSend()}>Approve &amp; send →</button>}
             <button className="btn btn-secondary" type="button" disabled={working} onClick={copyDraft}>Copy text</button></div>
-          <SendPanel key={selected.id} draftId={selected.id} version={selected.version} state={selected.state} onChange={() => { drafts.reload(); void open(selected) }} />
+          <SendPanel key={`${selected.id}:${sendTick}`} draftId={selected.id} version={selected.version} state={selected.state} onChange={() => { drafts.reload(); void open(selected) }} />
         </div>}
       </section>
     </div>}
