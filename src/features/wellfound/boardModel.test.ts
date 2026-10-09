@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BOARDS, campaignFromSearchPath, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
+import { BOARDS, campaignFromSearchPath, recruiterSearchUrl, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
 
 const base: BoardSearch = { query: 'react developer', location: 'Bengaluru', workMode: 'remote', postedWithinDays: '7', country: '' }
 const params = (path: string) => new URL(path, 'http://x').searchParams
@@ -63,4 +63,13 @@ describe('campaignFromSearchPath', () => {
     expect(sales).toContain('mode=Customer')
     expect(sales).not.toContain('location=')
   })
+})
+
+describe('recruiterSearchUrl', () => {
+  it('searches people at the company for recruiters and adds the skill', () => {
+    const u = new URL(recruiterSearchUrl('Acme "Labs"', '.NET'))
+    expect(u.origin + u.pathname).toBe('https://www.linkedin.com/search/results/people/')
+    expect(u.searchParams.get('keywords')).toBe('"Acme Labs" (recruiter OR "talent acquisition" OR "hiring manager") .NET')
+  })
+  it('still works without a company', () => expect(new URL(recruiterSearchUrl('')).searchParams.get('keywords')).toBe('(recruiter OR "talent acquisition" OR "hiring manager")'))
 })

@@ -8,7 +8,7 @@ import { api } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
 import type { Workspace } from '../shell/shellModel'
-import { BOARDS, campaignFromSearchPath, employmentLabel, formatSalary, type BoardJob, type BoardSearchResult, type JobBoard } from './boardModel'
+import { BOARDS, campaignFromSearchPath, employmentLabel, recruiterSearchUrl, formatSalary, type BoardJob, type BoardSearchResult, type JobBoard } from './boardModel'
 
 const SALES_STEPS = [
   'Click "Start a campaign from this search". The builder opens filled in; pick a Product or Services profile and save.',
@@ -99,6 +99,7 @@ export function BoardLiveResults({ board, path, searchUrl, workspace, query, loc
               {salary ? <strong className="op-numeric">{salary}</strong> : null}
               {job.postedAt ? <span className="muted-small">Posted {new Date(job.postedAt).toLocaleDateString()}</span> : null}
               <a className="btn btn-secondary btn-sm" href={href} target="_blank" rel="noopener noreferrer">Open on {name} ↗</a>
+              <a className="btn btn-ghost btn-sm" href={recruiterSearchUrl(job.companyName, query)} target="_blank" rel="noopener noreferrer">Find recruiters ↗<span className="sr-only"> at {job.companyName} (opens LinkedIn in a new tab)</span></a>
             </div>
           </li>
         })}

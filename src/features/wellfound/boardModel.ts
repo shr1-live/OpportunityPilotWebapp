@@ -134,3 +134,11 @@ export function campaignFromSearchPath(workspace: 'candidate' | 'sales', s: { qu
   if (s.location.trim()) p.set('location', s.location.trim().slice(0, 100))
   return `/campaigns/new?${p}`
 }
+
+/** A LinkedIn people search for the recruiters and hiring managers at a company, optionally narrowed by a role or skill. */
+export function recruiterSearchUrl(company: string, skill = ''): string {
+  const c = company.trim().replaceAll('"', '').slice(0, 80)
+  const k = skill.trim().replaceAll('"', '').slice(0, 60)
+  const keywords = `${c ? `"${c}" ` : ''}(recruiter OR "talent acquisition" OR "hiring manager")${k ? ` ${k}` : ''}`
+  return `https://www.linkedin.com/search/results/people/?${new URLSearchParams({ keywords })}`
+}
