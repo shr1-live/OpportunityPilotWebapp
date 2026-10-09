@@ -26,6 +26,7 @@ const CARD_ACTIONS: Record<string, { label: string; to: string }> = {
   'csv-import': { label: 'Add to a campaign', to: '/campaigns' },
   'public-urls': { label: 'Add to a campaign', to: '/campaigns' },
   feeds: { label: 'Add to a campaign', to: '/campaigns' },
+  'job-boards': { label: 'Open Job discovery', to: '/wellfound' },
 }
 
 function statusCounts(items: Capability[]) {

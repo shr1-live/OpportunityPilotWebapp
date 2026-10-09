@@ -17,7 +17,7 @@ import {
   SOURCE_STATUS_LABELS,
   sourceKindAllowed,
 } from './campaignModel'
-import { AdzunaForm, AggregateBoardForm, BoardForm, WorkdayForm } from './JobBoardSources'
+import { AdzunaForm, AggregateBoardForm, BoardForm, JobSearchForm, WorkdayForm } from './JobBoardSources'
 
 /** Sources the server reads afresh on every run; they have no items until a run has read them. */
 const FETCHED_EACH_RUN = new Set<Source['kind']>(['Url', 'Feed', 'Greenhouse', 'Lever', 'Adzuna', 'Ashby', 'SmartRecruiters', 'Recruitee', 'Workable', 'Workday', 'JobSearch', 'Remotive', 'RemoteOk'])
@@ -38,6 +38,7 @@ const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'Greenhouse', label: 'Company careers board — Greenhouse', description: 'Every open job of one company on Greenhouse' },
   { kind: 'Lever', label: 'Company careers board — Lever', description: 'Every open job of one company on Lever' },
   { kind: 'Adzuna', label: 'Adzuna job search (India)', description: 'Searches Adzuna with your job titles' },
+  { kind: 'JobSearch', label: 'Job board search — Indeed, LinkedIn, SEEK', description: 'Live postings; in Sales, the companies that are hiring' },
   { kind: 'Ashby', label: 'Company careers board — Ashby', description: 'Open jobs from one Ashby company board' },
   { kind: 'SmartRecruiters', label: 'Company careers board — SmartRecruiters', description: 'Open jobs from one company' },
   { kind: 'Recruitee', label: 'Company careers board — Recruitee', description: 'Open jobs from one company' },
@@ -202,6 +203,7 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
           {adding === 'Adzuna' && campaign.mode === 'Job' && (
             <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
           )}
+          {adding === 'JobSearch' && <JobSearchForm campaign={campaign} onAdded={(label) => added(label)} />}
           {(adding === 'Remotive' || adding === 'RemoteOk') && campaign.mode === 'Job' && (
             <AggregateBoardForm campaign={campaign} kind={adding} onAdded={() => added(SOURCE_KIND_LABELS[adding])} />
           )}
