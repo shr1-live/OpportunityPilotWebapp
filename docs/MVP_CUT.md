@@ -1,0 +1,57 @@
+# MVP cut — what was removed, where it is, how to bring it back
+
+_Decided by the owner on 2026-10-09 ("a lot of features are not required in the current MVP — remove them, keep them in a separate branch for integration in a few days, and write down what was done")._
+
+## Where the removed code lives (nothing was lost)
+
+| Repo | Branch | Contains |
+|---|---|---|
+| Web | `archive/pre-mvp-cut-2026-10-09` (`adb0b84`) | The full web app **just before** the cut, including the job-board tabs, paging and "start a campaign from a search" |
+| API | `archive/pre-mvp-cut-2026-10-09` (`8448701`) | The full API (the cut changed no API code) |
+| Both | `backup/full-featured-2026-10-09` | Older snapshot that also still has the fictional Sales demo and the first Workday code |
+
+To bring a screen back: `git checkout archive/pre-mvp-cut-2026-10-09 -- <paths below>`, restore its route in `src/App.tsx` and its nav entry in `src/features/shell/shellModel.ts` (and the nav tests), then `npm run typecheck && npm run lint && npm test`.
+
+## Removed from the product UI (web PR #30, `76a7f08`)
+
+| Screen / feature | Route | Files (web) | Why removed | What is needed to re-enable |
+|---|---|---|---|---|
+| Applications (local apply agent results, agent keys, setup steps) | `/applications` | `features/applications/ApplicationsPage.tsx` (the `applicationStatus.ts` helper stays) | The agent has never been run on the live LinkedIn / Naukri / InstaHyre sites (task U3); unofficial automation | A first real agent run by the owner on their own machine |
+| Sales: Projects & tenders | `/projects`, `/projects/:id` | `features/sales/SalesProjectsPage.tsx`, `SalesProjectDetailPage.tsx` | Needs Upwork / Freelancer.com API access (U6, N5) | Approved API keys |
+| Sales: Proposals & bids, Bids sent | `/proposals`, `/bids` | `features/sales/SalesProposalsPage.tsx`, `SalesBidsPage.tsx` | Same dependency; bids are placed by hand | Same |
+| Staffing: Rate cards | `/staffing/rate-cards` | `features/staffing/StaffingRateCardsPage.tsx` | Not needed to run a deal; proposals inside a deal still read rate cards via the API | None — restore when wanted |
+| "Other sources — not built yet" list in the campaign Sources step | — | `features/campaigns/SourcesStep.tsx` | Clutter | — |
+| Links to the above | — | `overview/analyticsModel.ts`, `integrations/IntegrationsPage.tsx`, `guide/guideModel.ts` | Dead after the cut | Restore with the screens |
+
+All matching **API endpoints still exist and are tested** (`/api/v1/applications`, `/api/v1/sales/projects`, `/api/v1/sales/bids`, `/api/v1/staffing/rate-cards`, agent keys). Only the screens were removed.
+
+## Removed earlier the same day
+
+| What | Where it went |
+|---|---|
+| Fictional Sales demo (the "Demo —" campaigns) | API #25 / web #27 removed it; code in `backup/full-featured-2026-10-09` |
+| Indeed / LinkedIn / SEEK tabs | Removed, then **restored** once the JSearch v5 path (`/search-v2`) was found — they are live now |
+
+## What is live in the MVP
+
+- **Candidate:** profile → campaign (Greenhouse, Lever, Ashby, Workday, Adzuna, Remotive, Remote OK, Wellfound, Indeed / LinkedIn / SEEK through JSearch) → scored opportunities with evidence → batch approval → apply yourself on the job's page and mark it applied.
+- **Sales:** hiring signals (job-board search) → "Start a campaign from this search" → scored company leads → outreach drafts (approve the exact version, send yourself, paste a receipt) → follow-ups → staffing deals and candidates.
+- **Data:** every source is real and live. There is no demo data.
+
+## Known limits (written down so nobody has to rediscover them)
+
+- JSearch free plan: 200 searches a month, ~17 s per live search, results are what Google for Jobs indexes (sparse for India and SEEK). Identical searches are cached 6 h.
+- Nothing is applied or sent automatically. Gmail sending is not connected (N6), so the user sends and records a receipt.
+- See the workspace `TASKS.md` for the items that need the owner (keys and accounts).
+
+## Open decision: "one-click auto-apply / auto-send"
+
+The owner asked (2026-10-09) for one click to apply for Candidates and one click to send for Sales. This conflicts with the implementation plan rule that nothing goes out without approval, and with what the providers allow:
+
+| Channel | Can it be one click today? |
+|---|---|
+| Indeed / LinkedIn applications | No API exists to apply. The only route is browser automation by the local agent, which breaks their terms and is unverified (U3) |
+| Company-site applications (Greenhouse, Lever) | Possible only with per-company application APIs the app does not have |
+| Sales email | Possible after Gmail OAuth is connected (N6): approve → send in one click |
+
+Options recorded for the owner: (1) "Approve & open" — one click approves the item and opens the apply page / mail composer pre-filled, then one click records it; (2) wait for the first real local-agent run, then offer batch "Approve and let my agent apply" for LinkedIn / Naukri / InstaHyre only; (3) connect Gmail for true one-click Sales send. Not built; needs the owner's choice.
