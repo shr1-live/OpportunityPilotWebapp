@@ -37,6 +37,7 @@ export function WellfoundPage() {
   const [busy, setBusy] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [actionError, setActionError] = useState<Error>()
+  const [syncWarning, setSyncWarning] = useState('')
   const autoSyncAttempted = useRef(false)
 
   const jobsPath = useMemo(() => {
@@ -69,9 +70,9 @@ export function WellfoundPage() {
 
   async function syncPublic() {
     if (busy) return
-    setBusy(true); setActionError(undefined)
+    setBusy(true); setSyncWarning('')
     try { await api('/api/v1/wellfound/public/sync', { method: 'POST' }); reloadAll() }
-    catch (e) { setActionError(e as Error) }
+    catch { setSyncWarning('Live refresh is temporarily unavailable. Stored public listings remain available below.') }
     finally { setBusy(false) }
   }
 
@@ -157,6 +158,7 @@ export function WellfoundPage() {
     </form>
 
     {actionError && <ErrorNotice error={actionError} onRetry={() => setActionError(undefined)} what="the Wellfound action" />}
+    {syncWarning && <p className="notice notice-warning" role="status">{syncWarning} <button className="btn btn-secondary btn-sm" type="button" onClick={syncPublic}>Try refresh again</button></p>}
 
     {jobs.data && jobs.data.length > 0 && <div className="results-head">
       <h3 className="results-title">{jobs.data.length} {workspace === 'sales' ? 'hiring signal' : 'role'}{jobs.data.length === 1 ? '' : 's'}</h3>

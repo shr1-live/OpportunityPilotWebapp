@@ -310,6 +310,7 @@ export const SOURCE_KIND_LABELS: Record<SourceKind, string> = {
   SmartRecruiters: 'SmartRecruiters careers board',
   Recruitee: 'Recruitee careers board',
   Workable: 'Workable careers board',
+  Workday: 'Workday careers site',
   JobSearch: 'Job board search (Indeed, LinkedIn, SEEK)',
   Remotive: 'Remotive remote jobs',
   RemoteOk: 'Remote OK jobs',
@@ -325,6 +326,7 @@ export type JobSourceKind = Extract<
   | 'SmartRecruiters'
   | 'Recruitee'
   | 'Workable'
+  | 'Workday'
   | 'JobSearch'
   | 'Remotive'
   | 'RemoteOk'
@@ -340,6 +342,7 @@ export const JOB_SOURCE_CAPABILITY: Record<JobSourceKind, SourceCapabilityKey> =
   SmartRecruiters: 'smartrecruiters',
   Recruitee: 'recruitee',
   Workable: 'workable',
+  Workday: 'workday',
   JobSearch: 'job-boards',
   Remotive: 'remotive',
   RemoteOk: 'remoteok',
@@ -395,6 +398,29 @@ export const BOARD_EXAMPLES: Record<BoardKind, { token: string; url: string }> =
 }
 
 export type BoardInput = { token: string; error?: undefined } | { token?: undefined; error: string }
+
+const WORKDAY_SITE_BLOCKLIST = new Set(['login', 'logout', 'userhome', 'job', 'jobs', 'details', 'apply', 'wday', 'cxs', 'signin', 'createaccount', 'introduceyourself'])
+
+/** Normalizes a public Workday careers URL to the server's tenant.instance/site form. */
+export function parseWorkdayInput(raw: string): BoardInput {
+  const input = raw.trim()
+  const invalid = { error: 'Enter a public Workday careers URL on myworkdayjobs.com; sign-in and account pages are not accepted.' } as const
+  if (!input || input.length > 300) return invalid
+  const stored = /^([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)\.(wd\d{1,3})\/([A-Za-z0-9_-]{1,100})$/i.exec(input)
+  if (stored) return WORKDAY_SITE_BLOCKLIST.has(stored[3].toLowerCase()) ? invalid : { token: `${stored[1].toLowerCase()}.${stored[2].toLowerCase()}/${stored[3]}` }
+  let url: URL
+  try { url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(input) ? input : `https://${input}`) } catch { return invalid }
+  if (url.protocol !== 'https:' || url.username || url.password || url.port) return invalid
+  const host = /^([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)\.(wd\d{1,3})\.myworkdayjobs\.com$/i.exec(url.hostname)
+  if (!host) return invalid
+  let segments: string[]
+  try { segments = url.pathname.split('/').filter(Boolean).map(decodeURIComponent) } catch { return invalid }
+  if (/^[a-z]{2}-[A-Za-z]{2}$/.test(segments[0] ?? '')) segments = segments.slice(1)
+  const site = segments[0]
+  if (!site || !/^[A-Za-z0-9_-]{1,100}$/.test(site) || WORKDAY_SITE_BLOCKLIST.has(site.toLowerCase())) return invalid
+  if (segments.length > 1 && !['job', 'details'].includes(segments[1].toLowerCase())) return invalid
+  return { token: `${host[1].toLowerCase()}.${host[2].toLowerCase()}/${site}` }
+}
 
 /**
  * Turns what the user typed — a bare token/slug or a board URL — into the token the API expects.

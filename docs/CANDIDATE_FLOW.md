@@ -96,7 +96,7 @@ Template fields per entry: Route, Component, What it shows, Actions, State (read
 - **State (writes):** the POST/DELETE calls above; the file is read in the browser (`File.text()`) and sent as text.
 - **Navigation out:** `?step=2`, `?step=4`, `/applications`.
 - **Validation:** Add pasted text disabled while busy or when the text is blank; text `maxLength` 50 000 with a counter. Add URL / feed disabled while busy or URL blank; URL `required`, `type=url`, `maxLength` 1000; label 200; permission note 500. Greenhouse/Lever: input normalised by `parseBoardInput` (URL → first path segment, embed `?for=`; lower-cased; must match `[a-z0-9-]{1,100}`; other hosts rejected); Add disabled while busy or when it does not parse, with the reason linked to the input. CSV over 1 MB rejected before upload; Import disabled while busy or with 0 valid rows; Discard disabled while busy. Remove disabled for the row being removed. Server `fieldErrors` for `text`/`url` shown under the field.
-- **Status:** built — against `CANDIDATE_PHASE1_CONTRACT.md`; not yet verified against a running API (OQ-FE-033)
+- **Status:** built — includes Workday public careers-site source (URL normalization, capability truth, first-three-keyword search); live tenant verification remains Y4
 - **TODOs:** Discovery provider hard-coded "Not built yet" (OQ-FE-021). Token lower-casing and Greenhouse embed links (`?for=`) are handled client-side only (OQ-FE-037). "India" for Adzuna is fixed in the copy (OQ-FE-038). Greenhouse / Lever / Adzuna built against the contract before the API implemented them (OQ-FE-033).
 
 ---
