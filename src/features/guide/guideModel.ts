@@ -49,9 +49,9 @@ export const PIPELINE_STEPS: GuideStep[] = [
   },
   {
     title: 'Apply',
-    what: 'LinkedIn and Naukri: your local agent applies to shortlisted jobs from your own browser, dry run first. Greenhouse, Lever, Adzuna: open the application page and submit yourself.',
-    where: 'Applications',
-    link: { to: '/applications', label: 'Applications' },
+    what: 'Open the application page of a shortlisted job, apply on the company or job-board site yourself, then mark it applied.',
+    where: 'Opportunities',
+    link: { to: '/opportunities', label: 'Opportunities' },
   },
   {
     title: 'Track',

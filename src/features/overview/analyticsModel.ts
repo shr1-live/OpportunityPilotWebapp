@@ -59,7 +59,7 @@ export function hasAnyActivity(a: AnalyticsOverview | undefined): boolean {
 const ATTENTION_LINKS: Record<AnalyticsOverview['attention'][number]['kind'], { to: string; action: string; tone: string }> = {
   Approvals: { to: '/approvals', action: 'Open approvals', tone: 'warning' },
   ShortlistedNotApplied: { to: '/opportunities', action: 'See them', tone: 'neutral' },
-  AgentNeedsYou: { to: '/applications', action: 'Review', tone: 'warning' },
+  AgentNeedsYou: { to: '/opportunities', action: 'Review', tone: 'warning' },
   SourceFailing: { to: '/campaigns', action: 'Fix source', tone: 'danger' },
   FollowUpsOverdue: { to: '/follow-ups', action: 'Open follow-ups', tone: 'warning' },
 }

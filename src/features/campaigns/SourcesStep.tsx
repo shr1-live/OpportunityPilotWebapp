@@ -1,5 +1,4 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { Badge } from '../../components/StatusBadge'
 import { api, ApiError } from '../../lib/api'
@@ -209,32 +208,6 @@ export function SourcesStep({ campaign, preferBoard }: { campaign: Campaign; pre
             <AggregateBoardForm campaign={campaign} kind={adding} onAdded={() => added(SOURCE_KIND_LABELS[adding])} />
           )}
         </div>
-      </section>
-
-      <section className="stack-3" aria-labelledby="sources-other">
-        <h4 id="sources-other" className="section-heading">
-          Other sources
-        </h4>
-        <ul className="plain-list cap-mini">
-          <li className="row wrap">
-            <span className="grow">
-              <strong>Paid company databases</strong>
-              <span className="muted-small"> — e.g. sales-intelligence providers; use Job board search for hiring companies today</span>
-            </span>
-            <Badge>Not built yet</Badge>
-          </li>
-          <li className="row wrap">
-            <span className="grow">
-              <strong>LinkedIn / Naukri</strong>
-              <span className="muted-small">
-                {' '}
-                — collected by your local agent from your own logged-in browser. Set it up on the{' '}
-                <Link to="/applications">Applications page</Link>.
-              </span>
-            </span>
-            <Badge tone="primary">Via your local agent</Badge>
-          </li>
-        </ul>
       </section>
     </div>
   )

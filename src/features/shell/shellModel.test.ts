@@ -49,7 +49,7 @@ describe('NAV_GROUPS', () => {
   it('keeps every top-level route reachable, each once', () => {
     const routes = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.to))
     expect([...routes].sort()).toEqual(
-      ['/', '/applications', '/approvals', '/campaigns', '/follow-ups', '/integrations', '/opportunities', '/outreach', '/profiles', '/settings', '/how-it-works', '/wellfound'].sort(),
+      ['/', '/approvals', '/campaigns', '/follow-ups', '/integrations', '/opportunities', '/outreach', '/profiles', '/settings', '/how-it-works', '/wellfound'].sort(),
     )
   })
 
@@ -66,7 +66,6 @@ describe('NAV_GROUPS', () => {
 describe('navCount', () => {
   it('shows a real positive count', () => {
     expect(navCount(item('/campaigns'), overview)).toBe(3)
-    expect(navCount(item('/applications'), overview)).toBe(2)
   })
 
   it('hides zero, unknown and items without a count', () => {
@@ -99,13 +98,12 @@ describe('navGroupFor / topbarHint', () => {
     expect(topbarHint('/', 'sales', undefined)).toBe('Sales workspace')
     expect(topbarHint('/approvals', 'candidate', overview)).toBe('Decide · Nothing waiting')
     expect(topbarHint('/approvals', 'candidate', undefined)).toBe('Decide')
-    expect(topbarHint('/applications', 'candidate', overview)).toBe('Act · 2 need you')
     expect(topbarHint('/profiles', 'candidate', overview)).toBe('Set up · 1 profile')
     expect(topbarHint('/outreach', 'candidate', overview)).toBe('Act')
     expect(topbarHint('/follow-ups', 'candidate', overview)).toBe('Track')
     // Sales-only pages opened from the Candidate workspace have no rail group: no "undefined" label.
-    expect(topbarHint('/projects', 'candidate', overview)).toBeNull()
-    expect(topbarHint('/projects', 'sales', overview)).toBe('Find')
+    expect(topbarHint('/staffing', 'candidate', overview)).toBeNull()
+    expect(topbarHint('/staffing', 'sales', overview)).toBe('Staffing')
     expect(topbarHint('/nowhere', 'candidate', overview)).toBeNull()
   })
 })
@@ -159,21 +157,19 @@ describe('labels', () => {
 describe('workspace rails', () => {
   it('gives Sales its own destinations and keeps Candidate unchanged', () => {
     const sales = navGroupsFor('sales').flatMap((g) => g.items.map((i) => i.label))
-    expect(sales).toContain('Projects & tenders')
+    expect(sales).toContain('Deals')
     expect(sales).toContain('Companies')
-    expect(sales).toContain('Bids sent')
+    expect(sales).not.toContain('Bids sent')
     expect(navGroupsFor('candidate')).toBe(NAV_GROUPS)
   })
 
   it('marks all sales destinations as built', () => {
     const notBuilt = navGroupsFor('sales').flatMap((g) => g.items).filter((i) => i.notBuilt).map((i) => i.to)
     expect(notBuilt).toEqual([])
-    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/projects')
-    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/proposals')
-    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/bids')
+    expect(navGroupsFor('sales').flatMap((g) => g.items).map((i) => i.to)).toContain('/staffing')
   })
 
   it('finds the Sales group for sales-only paths', () => {
-    expect(navGroupFor('/bids', navGroupsFor('sales'))?.label).toBe('Track')
+    expect(navGroupFor('/staffing', navGroupsFor('sales'))?.label).toBe('Staffing')
   })
 })

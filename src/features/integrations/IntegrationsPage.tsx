@@ -21,8 +21,6 @@ function groupByCategory(items: Capability[]) {
 const CARD_ACTIONS: Record<string, { label: string; to: string }> = {
   greenhouse: { label: 'Manage boards', to: '/campaigns' },
   lever: { label: 'Manage boards', to: '/campaigns' },
-  linkedin: { label: 'Set up the agent', to: '/applications' },
-  naukri: { label: 'Set up the agent', to: '/applications' },
   'csv-import': { label: 'Add to a campaign', to: '/campaigns' },
   'public-urls': { label: 'Add to a campaign', to: '/campaigns' },
   feeds: { label: 'Add to a campaign', to: '/campaigns' },

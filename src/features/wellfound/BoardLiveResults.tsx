@@ -2,12 +2,27 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { LoadingState } from '../../components/States'
+import { HowItWorks } from '../../components/HowItWorks'
 import { Badge } from '../../components/StatusBadge'
 import { api } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
 import type { Workspace } from '../shell/shellModel'
 import { BOARDS, campaignFromSearchPath, employmentLabel, formatSalary, type BoardJob, type BoardSearchResult, type JobBoard } from './boardModel'
+
+const SALES_STEPS = [
+  'Click "Start a campaign from this search". The builder opens filled in; pick a Product or Services profile and save.',
+  'Run it. Each company that is hiring becomes one lead, scored against your criteria, with its job postings as the evidence.',
+  'Open Companies, shortlist the best, then create an email, LinkedIn or contact-form draft for a company.',
+  'Approve the exact version, send it yourself from your own mailbox or LinkedIn, and paste a receipt — only then is it marked sent.',
+  'Set a follow-up (Follow-ups), and when a company replies click "Make a staffing lead" to track the deal stage by stage.',
+]
+const CANDIDATE_STEPS = [
+  'Open a job on the board to read it in full — every card links to the original posting.',
+  'To track jobs, click "Start a campaign from this search". The builder opens filled in; pick your profile and save.',
+  'Run it. Jobs are scored against your profile; the best are suggested in Approvals.',
+  'Approve in one click, then apply on the board yourself and mark the job applied so your numbers stay true.',
+]
 
 type Props = Readonly<{ board: JobBoard; path: string | null; searchUrl: string; workspace: Workspace; query: string; location: string }>
 
@@ -65,6 +80,9 @@ export function BoardLiveResults({ board, path, searchUrl, workspace, query, loc
       </div>
       <div className="row wrap hero-strip-actions"><Link className="btn btn-primary btn-sm" to={campaignFromSearchPath(workspace, { query, location }, board, name)}>Start a campaign from this search</Link></div>
     </div>}
+    {jobs.length > 0 && <HowItWorks summary="What happens next — step by step">
+      <ol className="guide-steps">{(workspace === 'sales' ? SALES_STEPS : CANDIDATE_STEPS).map((step) => <li key={step}>{step}</li>)}</ol>
+    </HowItWorks>}
     {jobs.length === 0
       ? <p className="muted-small">{r.message}</p>
       : <ul className="result-list">
