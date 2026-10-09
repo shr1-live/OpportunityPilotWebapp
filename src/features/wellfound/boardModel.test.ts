@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BOARDS, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
+import { BOARDS, campaignFromSearchPath, boardJobsPath, datePostedFor, employmentLabel, formatSalary, type BoardSearch } from './boardModel'
 
 const base: BoardSearch = { query: 'react developer', location: 'Bengaluru', workMode: 'remote', postedWithinDays: '7', country: '' }
 const params = (path: string) => new URL(path, 'http://x').searchParams
@@ -46,4 +46,13 @@ describe('formatSalary', () => {
   it('formats a range', () => expect(formatSalary({ salaryMin: 90000, salaryMax: 120000, salaryCurrency: 'USD', salaryPeriod: 'YEAR' })).toBe('USD 90K–120K / year'))
   it('uses compact large numbers', () => expect(formatSalary({ salaryMin: 1800000, salaryMax: 2600000, salaryCurrency: 'INR', salaryPeriod: 'YEAR' })).toBe('INR 1.8M–2.6M / year'))
   it('shows a single bound as given', () => expect(formatSalary({ ...none, salaryMax: 45 })).toBe('45'))
+})
+
+describe('campaignFromSearchPath', () => {
+  it('starts a Job campaign for candidates and a Customer campaign for sales', () => {
+    expect(campaignFromSearchPath('candidate', { query: '.NET developer', location: 'Pune' }, 'Indeed', 'Indeed')).toContain('mode=Job')
+    const sales = campaignFromSearchPath('sales', { query: 'react', location: '' }, 'LinkedIn', 'LinkedIn')
+    expect(sales).toContain('mode=Customer')
+    expect(sales).not.toContain('location=')
+  })
 })

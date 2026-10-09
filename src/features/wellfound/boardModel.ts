@@ -28,6 +28,8 @@ export type BoardSearchResult = {
   source: string
   /** Searches left on the JSearch plan this period (RapidAPI header); null when unknown. */
   quotaRemaining?: number | null
+  /** Cursor for the next page of results, or null/absent when there are no more. */
+  nextCursor?: string | null
 }
 
 export type BoardSearch = { query: string; location: string; workMode: string; postedWithinDays: string; country: string }
@@ -116,4 +118,11 @@ export function formatSalary(job: Pick<BoardJob, 'salaryMin' | 'salaryMax' | 'sa
   const range = min != null && max != null && min !== max ? `${k(min)}–${k(max)}` : k((min ?? max)!)
   const period = job.salaryPeriod ? ` / ${job.salaryPeriod.toLowerCase()}` : ''
   return `${job.salaryCurrency ? `${job.salaryCurrency} ` : ''}${range}${period}`
+}
+
+/** Campaign builder address that starts a campaign from a board search: Candidate → Job, Sales → Customer (hiring companies). */
+export function campaignFromSearchPath(workspace: 'candidate' | 'sales', s: { query: string; location: string }, board: JobBoard, boardName: string): string {
+  const p = new URLSearchParams({ board, mode: workspace === 'sales' ? 'Customer' : 'Job', keywords: s.query.trim().slice(0, 200), name: `${s.query.trim().slice(0, 60)} — ${boardName}` })
+  if (s.location.trim()) p.set('location', s.location.trim().slice(0, 100))
+  return `/campaigns/new?${p}`
 }
