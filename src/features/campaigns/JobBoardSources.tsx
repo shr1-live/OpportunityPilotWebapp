@@ -276,9 +276,9 @@ export function AdzunaForm({ campaign, onAdded }: { campaign: Campaign; onAdded:
   )
 }
 
-export function JobSearchForm({ campaign, onAdded }: { campaign: Campaign; onAdded: (label: string) => void }) {
+export function JobSearchForm({ campaign, onAdded, initialBoard }: { campaign: Campaign; onAdded: (label: string) => void; initialBoard?: SearchBoard }) {
   const { capabilities } = useShell()
-  const [board, setBoard] = useState<SearchBoard>('Indeed')
+  const [board, setBoard] = useState<SearchBoard>(initialBoard ?? 'Indeed')
   const [label, setLabel] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Error>()

@@ -80,7 +80,7 @@ export function BoardSearchPanel({ board, workspace, tabs }: { board: JobBoard; 
       </HowItWorks>
     </form>
 
-    {livePath ? <BoardLiveResults board={board} path={livePath} searchUrl={searchUrl} />
+    {livePath ? <BoardLiveResults key={livePath} board={board} path={livePath} searchUrl={searchUrl} workspace={workspace} query={query} location={location} />
       : <p className="muted-small search-hint">{workspace === 'candidate' ? `Type a role and press Search to see live ${info.name} jobs.` : `Type a role and press Search to see which companies are hiring on ${info.name}.`}</p>}
   </>
 }

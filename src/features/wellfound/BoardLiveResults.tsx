@@ -1,18 +1,37 @@
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ErrorNotice } from '../../components/ErrorNotice'
 import { LoadingState } from '../../components/States'
 import { Badge } from '../../components/StatusBadge'
+import { api } from '../../lib/api'
 import { useApi } from '../../lib/useApi'
 import { safeHref } from '../opportunities/opportunityModel'
-import { BOARDS, employmentLabel, formatSalary, type BoardSearchResult, type JobBoard } from './boardModel'
+import type { Workspace } from '../shell/shellModel'
+import { BOARDS, campaignFromSearchPath, employmentLabel, formatSalary, type BoardJob, type BoardSearchResult, type JobBoard } from './boardModel'
+
+type Props = Readonly<{ board: JobBoard; path: string | null; searchUrl: string; workspace: Workspace; query: string; location: string }>
 
 /** Live postings from one job board (through the licensed JSearch aggregator). Read-only; each card links to the board. */
-export function BoardLiveResults({ board, path, searchUrl }: { board: JobBoard; path: string | null; searchUrl: string }) {
-  const result = useApi<BoardSearchResult>(path)
+export function BoardLiveResults({ board, path, searchUrl, workspace, query, location }: Props) {
+  const first = useApi<BoardSearchResult>(path)
   const name = BOARDS[board].name
+  const [pages, setPages] = useState<BoardSearchResult[]>([])
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [moreError, setMoreError] = useState<Error>()
+
+  const jobs = useMemo(() => {
+    const seen = new Set<string>()
+    const all: BoardJob[] = []
+    for (const r of [first.data, ...pages]) for (const j of r?.jobs ?? []) if (!seen.has(j.providerJobId)) { seen.add(j.providerJobId); all.push(j) }
+    return all
+  }, [first.data, pages])
+
   if (!path) return null
-  if (result.error) return <ErrorNotice error={result.error} onRetry={result.reload} what={`live ${name} jobs`} />
-  if (!result.data) return <LoadingState label={`Fetching live ${name} jobs…`} waking={result.waking} />
-  const r = result.data
+  if (first.error) return <ErrorNotice error={first.error} onRetry={first.reload} what={`live ${name} jobs`} />
+  if (!first.data) return <LoadingState label={`Fetching live ${name} jobs…`} waking={first.waking} />
+  const r = first.data
+  const last = pages.at(-1) ?? r
+  const cursor = last.nextCursor ?? null
   if (r.status !== 'Ready') {
     return <section className="result-blocked">
       <Badge tone="warning">{r.status === 'NotConfigured' ? 'Live listings not set up' : 'Live listings unavailable'}</Badge>
@@ -20,18 +39,36 @@ export function BoardLiveResults({ board, path, searchUrl }: { board: JobBoard; 
       <a className="btn btn-secondary btn-sm" href={searchUrl} target="_blank" rel="noopener noreferrer">See these results on {name} ↗<span className="sr-only"> (opens in a new tab)</span></a>
     </section>
   }
+
+  async function loadMore() {
+    if (!cursor || !path) return
+    setLoadingMore(true); setMoreError(undefined)
+    try { const next = await api<BoardSearchResult>(`${path}&cursor=${encodeURIComponent(cursor)}`); setPages((p) => [...p, next]) }
+    catch (e) { setMoreError(e as Error) } finally { setLoadingMore(false) }
+  }
+
   const observed = r.observedAt ? new Date(r.observedAt).toLocaleString() : ''
+  const left = last.quotaRemaining
   return <section aria-label={`Live ${name} jobs`} className="stack-3">
     <div className="results-head">
-      <h3 className="results-title">{r.jobs.length} live {name} job{r.jobs.length === 1 ? '' : 's'}</h3>
+      <h3 className="results-title">{jobs.length} live {name} job{jobs.length === 1 ? '' : 's'}</h3>
       <Badge tone="success">Live</Badge>
       <span className="grow" />
-      <span className="muted-small">{r.jobs.length} of {r.providerResults} matches are on {name} · retrieved {observed}{r.fromCache ? ' (cached, no search used)' : ''}{r.quotaRemaining != null ? ` · ${r.quotaRemaining} searches left` : ''}</span>
+      <span className="muted-small">Retrieved {observed}{r.fromCache ? ' (cached, no search used)' : ''}{left != null ? ` · ${left} searches left` : ''}</span>
     </div>
-    {r.jobs.length === 0
+    {jobs.length > 0 && <div className="hero-strip">
+      <div className="hero-strip-text">
+        <strong>{workspace === 'sales' ? 'Turn this into leads' : 'Track these jobs'}</strong>
+        <p className="muted-small">{workspace === 'sales'
+          ? 'Start a campaign from this search: each hiring company becomes a scored lead with its postings as evidence, then outreach drafts, follow-ups and a staffing deal.'
+          : 'Start a campaign from this search: jobs are scored against your profile, suggested for approval, and tracked until applied.'}</p>
+      </div>
+      <div className="row wrap hero-strip-actions"><Link className="btn btn-primary btn-sm" to={campaignFromSearchPath(workspace, { query, location }, board, name)}>Start a campaign from this search</Link></div>
+    </div>}
+    {jobs.length === 0
       ? <p className="muted-small">{r.message}</p>
       : <ul className="result-list">
-        {r.jobs.map((job) => {
+        {jobs.map((job) => {
           const salary = formatSalary(job)
           const href = safeHref(job.boardUrl) ?? undefined
           return <li key={job.providerJobId} className="result-card">
@@ -48,5 +85,9 @@ export function BoardLiveResults({ board, path, searchUrl }: { board: JobBoard; 
           </li>
         })}
       </ul>}
+    {moreError && <ErrorNotice error={moreError} onRetry={() => void loadMore()} what={`more ${name} jobs`} />}
+    {cursor
+      ? <div className="row"><button type="button" className="btn btn-secondary" disabled={loadingMore} onClick={() => void loadMore()}>{loadingMore ? 'Loading…' : 'Load more jobs'}</button><span className="muted-small">Each page uses 1 of your free searches{left != null ? ` (${left} left)` : ''}.</span></div>
+      : jobs.length > 0 && <p className="muted-small">No more results for this search.</p>}
   </section>
 }

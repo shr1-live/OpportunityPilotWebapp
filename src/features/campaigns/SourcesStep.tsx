@@ -14,6 +14,7 @@ import {
   type JobSourceKind,
   PASTE_MAX_CHARS,
   SOURCE_KIND_LABELS,
+  type SearchBoard,
   SOURCE_STATUS_LABELS,
   sourceKindAllowed,
 } from './campaignModel'
@@ -48,9 +49,9 @@ const ADD_OPTIONS: { kind: AddKind; label: string; description: string }[] = [
   { kind: 'RemoteOk', label: 'Remote OK jobs', description: 'Board-wide remote job feed' },
 ]
 
-export function SourcesStep({ campaign }: { campaign: Campaign }) {
+export function SourcesStep({ campaign, preferBoard }: { campaign: Campaign; preferBoard?: SearchBoard }) {
   const sources = useApi<Source[]>(`/api/v1/campaigns/${campaign.id}/sources`)
-  const [adding, setAdding] = useState<AddKind>('Paste')
+  const [adding, setAdding] = useState<AddKind>(preferBoard ? 'JobSearch' : 'Paste')
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<Error>()
   const [announcement, setAnnouncement] = useState('')
@@ -203,7 +204,7 @@ export function SourcesStep({ campaign }: { campaign: Campaign }) {
           {adding === 'Adzuna' && campaign.mode === 'Job' && (
             <AdzunaForm campaign={campaign} onAdded={() => added('Adzuna search')} />
           )}
-          {adding === 'JobSearch' && <JobSearchForm campaign={campaign} onAdded={(label) => added(label)} />}
+          {adding === 'JobSearch' && <JobSearchForm campaign={campaign} initialBoard={preferBoard} onAdded={(label) => added(label)} />}
           {(adding === 'Remotive' || adding === 'RemoteOk') && campaign.mode === 'Job' && (
             <AggregateBoardForm campaign={campaign} kind={adding} onAdded={() => added(SOURCE_KIND_LABELS[adding])} />
           )}

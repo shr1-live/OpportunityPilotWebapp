@@ -15,6 +15,8 @@ import {
   draftProblems,
   MODE_LABELS,
   newDraft,
+  SEARCH_BOARDS,
+  type SearchBoard,
   type SupportedMode,
   suggestedMode,
 } from './campaignModel'
@@ -50,7 +52,9 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
   const profiles = useApi<ProfileSummary[]>('/api/v1/profiles')
 
   const [saved, setSaved] = useState<Campaign | undefined>(existing)
-  const [draft, setDraft] = useState<CampaignDraft>(() => (existing ? draftFromCampaign(existing) : newDraft()))
+  // A campaign started from a job-board search keeps that board for the source step (step changes reset the address).
+  const [preferBoard] = useState<SearchBoard | undefined>(() => SEARCH_BOARDS.find((b) => b.value === params.get('board'))?.value)
+  const [draft, setDraft] = useState<CampaignDraft>(() => (existing ? draftFromCampaign(existing) : draftFromSearch(newDraft(), params)))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<Error>()
   const [justSaved, setJustSaved] = useState(false)
@@ -231,7 +235,7 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
           />
         )}
         {step === 2 && <FiltersStep draft={draft} setDraft={setDraft} mode={mode} fieldErrors={fieldErrors} />}
-        {step === 3 && saved && <SourcesStep campaign={saved} />}
+        {step === 3 && saved && <SourcesStep campaign={saved} preferBoard={preferBoard} />}
         {step === 4 && saved && (
           <ReviewStep campaign={saved} draft={draft} mode={mode} profile={profile} profileLoading={!profiles.data} dirty={changed} onEdit={goTo} />
         )}
@@ -278,4 +282,20 @@ function Builder({ existing, onReload }: { existing?: Campaign; onReload?: () =>
       </div>
     </div>
   )
+}
+
+/** Pre-fills a new campaign from a job-board search (?mode=&keywords=&location=&name=). Unknown values are ignored. */
+function draftFromSearch(draft: CampaignDraft, params: URLSearchParams): CampaignDraft {
+  const mode = params.get('mode')
+  const keywords = params.get('keywords')?.trim().slice(0, 200)
+  const location = params.get('location')?.trim().slice(0, 100)
+  const name = params.get('name')?.trim().slice(0, 120)
+  if (!keywords && !location && !mode) return draft
+  return {
+    ...draft,
+    mode: mode === 'Job' || mode === 'Customer' ? mode : draft.mode,
+    name: name || draft.name,
+    goal: keywords ? `Find ${keywords}${location ? ` in ${location}` : ''}.` : draft.goal,
+    criteria: { ...draft.criteria, keywords: keywords ? [keywords] : draft.criteria.keywords, locations: location ? [location] : draft.criteria.locations },
+  }
 }
